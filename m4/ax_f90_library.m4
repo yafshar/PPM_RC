@@ -35,73 +35,81 @@
 #serial 8
 
 AC_DEFUN([AX_F90_LIBRARY],[
-AS_VAR_PUSHDEF([ax_ldflags],[ax_cv_f90_ldflags_$1])
-AS_VAR_PUSHDEF([ax_libs],[ax_cv_f90_libs_$1])
-AC_MSG_CHECKING([$1 fortran 90 library])
-AC_LANG_PUSH(Fortran)
-AS_VAR_SET([ax_ldflags],"")
-AS_VAR_SET([ax_libs],"not found")
-if test "x$4" = x ; then
-ax_search="$prefix:$ac_default_prefix"
-for ax_base in "" `echo $LD_LIBRARY_PATH | tr ':' '\012'` ; do
-  if test "x$ax_base" != x ; then
-    changequote(,)dnl
-    ax_base=`echo $ax_base | sed 's,/[^/]*$,,'`
-    changequote([,])dnl
-    ax_search="${ax_search}:${ax_base}"
-  fi
-done
-else
-ax_search="$4"
-fi
-ax_save_LDFLAGS="$LDFLAGS"
-ax_save_LIBS="$LIBS"
-for ax_base in `echo $ax_search | tr ':' '\012'` ; do
- if test "AS_VAR_GET(ax_libs)" = "not found" ; then
-   for ax_lib in "" `find $ax_base -follow -path '*.git*' -prune -o -name '$2' -print` ; do
-     if test "x$ax_lib" != x ; then
-       changequote(,)dnl
-       ax_dir=`echo $ax_lib | sed 's,/[^/]*$,,'`
-       ax_lib=`echo $ax_lib | sed 's,.*/\([^/]*\)$,\1,'`
-       changequote([,])dnl
-       case "$ax_lib" in
-         lib*)
-           changequote(,)dnl
-           ax_lib="`echo $ax_lib | sed 's,lib\(.*\)\.[^.]*$,\1,'`"
-           changequote([,])dnl
-           AS_VAR_SET([ax_ldflags],"-L$ax_dir")
-           AS_VAR_SET([ax_libs],"-l$ax_lib")
-           ;;
-         *)
-           AS_VAR_SET([ax_ldflags],"")
-           AS_VAR_SET(ax_libs,"$ax_lib")
-           ;;
-       esac
-       LDFLAGS="$ax_save_LDFLAGS AS_VAR_GET(ax_ldflags)"
-       LIBS="AS_VAR_GET(ax_libs) $ax_save_LIBS"
-       AC_LINK_IFELSE([program conftest_program
-$3
-          end program conftest_program
-         ],[],[AS_VAR_SET(ax_ldflags,"")
-          AS_VAR_SET(ax_libs,"not found")
-         ])
-     fi
-   done
- fi
-done
-AC_LANG_POP(Fortran)
-AC_MSG_RESULT([AS_VAR_GET(ax_ldflags) AS_VAR_GET(ax_libs)])
-if test "AS_VAR_GET(ax_libs)" = "not found"; then
- AS_TR_SH(F90_LDFLAGS_$1)=""
- AS_TR_SH(F90_LIBS_$1)=""
- $6
-else
- AS_TR_SH(F90_LDFLAGS_$1)=AS_VAR_GET(ax_ldflags)
- AS_TR_SH(F90_LIBS_$1)=AS_VAR_GET(ax_libs)
- $5
-fi
-AC_SUBST(AS_TR_SH(F90_LDFLAGS_$1))
-AC_SUBST(AS_TR_SH(F90_LIBS_$1))
-AS_VAR_POPDEF([ax_libs])
-AS_VAR_POPDEF([ax_ldflags])
+	AS_VAR_PUSHDEF([ax_ldflags],[ax_cv_f90_ldflags_$1])
+	AS_VAR_PUSHDEF([ax_libs],[ax_cv_f90_libs_$1])
+	AC_MSG_CHECKING([$1 fortran 90 library])
+	AC_LANG_PUSH(Fortran)
+	AS_VAR_SET([ax_ldflags],"")
+	AS_VAR_SET([ax_libs],"not found")
+	if test "x$4" = x ; then
+		ax_search="$prefix:$ac_default_prefix"
+		for ax_base in "" `echo $LD_LIBRARY_PATH | tr ':' '\012'` ; do
+  			if test "x$ax_base" != x ; then
+    				changequote(,)dnl
+    				ax_base=`echo $ax_base | sed 's,/[^/]*$,,'`
+    				changequote([,])dnl
+				ax_search="${ax_search}:${ax_base}"
+  			fi
+		done
+	else
+		ax_search="$4"
+	fi
+
+	ax_save_LDFLAGS="$LDFLAGS"
+	ax_save_LIBS="$LIBS"
+
+	for ax_base in `echo $ax_search | tr ':' '\012'` ; do
+		if test "AS_VAR_GET(ax_libs)" = "not found" ; then
+			for ax_lib in "" `find $ax_base -follow -path '*.git*' -prune -o -name '$2' -print` ; do
+				if test "x$ax_lib" != x ; then
+					changequote(,)dnl
+					ax_dir=`echo $ax_lib | sed 's,/[^/]*$,,'`
+					ax_lib=`echo $ax_lib | sed 's,.*/\([^/]*\)$,\1,'`
+					changequote([,])dnl
+					case "$ax_lib" in
+					lib*)
+						changequote(,)dnl
+						ax_lib="`echo $ax_lib | sed 's,lib\(.*\)\.[^.]*$,\1,'`"
+						changequote([,])dnl
+						AS_VAR_SET([ax_ldflags],"-L$ax_dir")
+						AS_VAR_SET([ax_libs],"-l$ax_lib")
+						;;
+					*)
+						AS_VAR_SET([ax_ldflags],"")
+						AS_VAR_SET(ax_libs,"$ax_lib")
+						;;
+					esac
+					LDFLAGS="$ax_save_LDFLAGS AS_VAR_GET(ax_ldflags)"
+					LIBS="AS_VAR_GET(ax_libs) $ax_save_LIBS"
+					AC_LINK_IFELSE([program conftest_program
+						$3
+						end program conftest_program
+						],[],[AS_VAR_SET(ax_ldflags,"")
+						AS_VAR_SET(ax_libs,"not found")]
+					)
+				fi
+			done
+		fi
+	done
+
+	LDFLAGS=$ax_save_LDFLAGS
+	LIBS=$ax_save_LIBS
+
+	AC_LANG_POP(Fortran)
+	AC_MSG_RESULT([AS_VAR_GET(ax_ldflags) AS_VAR_GET(ax_libs)])
+
+	if test "AS_VAR_GET(ax_libs)" = "not found"; then
+		AS_TR_SH(F90_LDFLAGS_$1)=""
+		AS_TR_SH(F90_LIBS_$1)=""
+ 		$6
+	else
+		AS_TR_SH(F90_LDFLAGS_$1)=AS_VAR_GET(ax_ldflags)
+		AS_TR_SH(F90_LIBS_$1)=AS_VAR_GET(ax_libs)
+		$5
+	fi
+
+	AC_SUBST(AS_TR_SH(F90_LDFLAGS_$1))
+	AC_SUBST(AS_TR_SH(F90_LIBS_$1))
+	AS_VAR_POPDEF([ax_libs])
+	AS_VAR_POPDEF([ax_ldflags])
 ])

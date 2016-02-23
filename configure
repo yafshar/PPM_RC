@@ -15808,92 +15808,100 @@ fi
 
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking ppm fortran 90 library" >&5
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking ppm fortran 90 library" >&5
 $as_echo_n "checking ppm fortran 90 library... " >&6; }
-ac_ext=${ac_fc_srcext-f}
+	ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
-ax_cv_f90_ldflags_ppm=""
-ax_cv_f90_libs_ppm="not found"
-if test "x$withval" = x ; then
-ax_search="$prefix:$ac_default_prefix"
-for ax_base in "" `echo $LD_LIBRARY_PATH | tr ':' '\012'` ; do
-  if test "x$ax_base" != x ; then
-        ax_base=`echo $ax_base | sed 's,/[^/]*$,,'`
-        ax_search="${ax_search}:${ax_base}"
-  fi
-done
-else
-ax_search="$withval"
-fi
-ax_save_LDFLAGS="$LDFLAGS"
-ax_save_LIBS="$LIBS"
-for ax_base in `echo $ax_search | tr ':' '\012'` ; do
- if test "$ax_cv_f90_libs_ppm" = "not found" ; then
-   for ax_lib in "" `find $ax_base -follow -path '*.git*' -prune -o -name 'libppm*' -print` ; do
-     if test "x$ax_lib" != x ; then
-              ax_dir=`echo $ax_lib | sed 's,/[^/]*$,,'`
-       ax_lib=`echo $ax_lib | sed 's,.*/\([^/]*\)$,\1,'`
-              case "$ax_lib" in
-         lib*)
-                      ax_lib="`echo $ax_lib | sed 's,lib\(.*\)\.[^.]*$,\1,'`"
-                      ax_cv_f90_ldflags_ppm="-L$ax_dir"
-           ax_cv_f90_libs_ppm="-l$ax_lib"
-           ;;
-         *)
-           ax_cv_f90_ldflags_ppm=""
-           ax_cv_f90_libs_ppm="$ax_lib"
-           ;;
-       esac
-       LDFLAGS="$ax_save_LDFLAGS $ax_cv_f90_ldflags_ppm"
-       LIBS="$ax_cv_f90_libs_ppm $ax_save_LIBS"
-       cat > conftest.$ac_ext <<_ACEOF
+	ax_cv_f90_ldflags_ppm=""
+	ax_cv_f90_libs_ppm="not found"
+	if test "x$withval" = x ; then
+		ax_search="$prefix:$ac_default_prefix"
+		for ax_base in "" `echo $LD_LIBRARY_PATH | tr ':' '\012'` ; do
+  			if test "x$ax_base" != x ; then
+    				    				ax_base=`echo $ax_base | sed 's,/[^/]*$,,'`
+    								ax_search="${ax_search}:${ax_base}"
+  			fi
+		done
+	else
+		ax_search="$withval"
+	fi
+
+	ax_save_LDFLAGS="$LDFLAGS"
+	ax_save_LIBS="$LIBS"
+
+	for ax_base in `echo $ax_search | tr ':' '\012'` ; do
+		if test "$ax_cv_f90_libs_ppm" = "not found" ; then
+			for ax_lib in "" `find $ax_base -follow -path '*.git*' -prune -o -name 'libppm*' -print` ; do
+				if test "x$ax_lib" != x ; then
+										ax_dir=`echo $ax_lib | sed 's,/[^/]*$,,'`
+					ax_lib=`echo $ax_lib | sed 's,.*/\([^/]*\)$,\1,'`
+										case "$ax_lib" in
+					lib*)
+												ax_lib="`echo $ax_lib | sed 's,lib\(.*\)\.[^.]*$,\1,'`"
+												ax_cv_f90_ldflags_ppm="-L$ax_dir"
+						ax_cv_f90_libs_ppm="-l$ax_lib"
+						;;
+					*)
+						ax_cv_f90_ldflags_ppm=""
+						ax_cv_f90_libs_ppm="$ax_lib"
+						;;
+					esac
+					LDFLAGS="$ax_save_LDFLAGS $ax_cv_f90_ldflags_ppm"
+					LIBS="$ax_cv_f90_libs_ppm $ax_save_LIBS"
+					cat > conftest.$ac_ext <<_ACEOF
 program conftest_program
 
 			  use ppm_module_finalize
 			  integer :: info
 			  call ppm_finalize(info)
-          end program conftest_program
+						end program conftest_program
 
 _ACEOF
 if ac_fn_fc_try_link "$LINENO"; then :
 
 else
   ax_cv_f90_ldflags_ppm=""
-          ax_cv_f90_libs_ppm="not found"
+						ax_cv_f90_libs_ppm="not found"
 
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-     fi
-   done
- fi
-done
-ac_ext=${ac_fc_srcext-f}
+				fi
+			done
+		fi
+	done
+
+	LDFLAGS=$ax_save_LDFLAGS
+	LIBS=$ax_save_LIBS
+
+	ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_f90_ldflags_ppm $ax_cv_f90_libs_ppm" >&5
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_f90_ldflags_ppm $ax_cv_f90_libs_ppm" >&5
 $as_echo "$ax_cv_f90_ldflags_ppm $ax_cv_f90_libs_ppm" >&6; }
-if test "$ax_cv_f90_libs_ppm" = "not found"; then
- F90_LDFLAGS_ppm=""
- F90_LIBS_ppm=""
- as_fn_error $? "cannot compile ppm_rc without ppm core.
+
+	if test "$ax_cv_f90_libs_ppm" = "not found"; then
+		F90_LDFLAGS_ppm=""
+		F90_LIBS_ppm=""
+ 		as_fn_error $? "cannot compile ppm_rc without ppm core.
 	If --with-ppm=path is correctly set to ppm library, then:
 	Interoperability of ppm Library Created by Different
 	Compilers or with differnet mode from here, Parallel vs.
 	Non-parallel could cause this." "$LINENO" 5
-else
- F90_LDFLAGS_ppm=$ax_cv_f90_ldflags_ppm
- F90_LIBS_ppm=$ax_cv_f90_libs_ppm
+	else
+		F90_LDFLAGS_ppm=$ax_cv_f90_ldflags_ppm
+		F90_LIBS_ppm=$ax_cv_f90_libs_ppm
 
     LDFLAGS="$LDFLAGS $F90_LDFLAGS_ppm"
     LIBS="$F90_LIBS_ppm $LIBS"
 
-fi
+	fi
+
 
 
 
