@@ -1,0 +1,14 @@
+# basic settings
+
+conf.mpi                   = @MPI_ENABLED@
+conf.ppm_rc.build.ldflags  = "@LDFLAGS@ @LIBS@"
+conf.ppm_rc.build.fcflags  = "@FCFLAGS@"
+conf.ppm_rc.build.cflags   = "@CFLAGS@"
+conf.ppm_rc.build.cxxflags = "@CXXFLAGS@"
+
+conf.build.fcompiler       = "@FC@"
+conf.build.ccompiler       = "@CC@"
+conf.build.cxxcompiler     = "@CXX@"
+conf.build.sed             = "@SED@"
+
+conf.ppm_rc.dims = [2,3]

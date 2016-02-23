@@ -1,0 +1,193 @@
+#-------------------------------------------------------------------------
+#  File         :  Makefile
+#-------------------------------------------------------------------------
+#
+#  Purpose      :  Makefile template
+#
+#  Remarks      :
+#
+#  References   :
+#
+#  Revisions    :
+#-------------------------------------------------------------------------
+
+#----------------------------------------------------------------------
+# METIS Library
+#----------------------------------------------------------------------
+METISDIR=@METISDIR@
+#----------------------------------------------------------------------
+# PPM Library
+#----------------------------------------------------------------------
+PPMDIR=@PPMDIR@
+#----------------------------------------------------------------------
+# LibTIFF
+#----------------------------------------------------------------------
+TIFFDIR=@TIFFDIR@
+#----------------------------------------------------------------------
+# BOOST
+#----------------------------------------------------------------------
+BOOSTDIR=@BOOSTDIR@
+#----------------------------------------------------------------------
+# PPM_RC
+#----------------------------------------------------------------------
+srcdir=@srcdir@
+builddir=@builddir@
+prefix=@prefix@
+
+LIBS=@LIBS@ 
+CLIBS=@CLIBS@
+
+CFLAGS=@CFLAGS@
+CXXFLAGS=@CXXFLAGS@
+FCFLAGS=@FCFLAGS@
+LDFLAGS=@LDFLAGS@
+CPPFLAGS=@CPPFLAGS@
+MODFLAGS=@MODFLAGS@
+
+CDEBUG=@CDEBUG@
+DEBUG=@DEBUG@
+
+FC=@FC@
+CC=@CC@
+CXX=@CXX@
+
+SED=@SED@
+CPP=@CPP@
+SHELL=@SHELL@
+
+# These are important build directories
+SRC_DIR := $(srcdir)
+OBJ_DIR := $(builddir)/objects
+MODULES_DIR := $(builddir)/include
+RUN_DIR := $(builddir)/run
+
+# These variables are standard
+PROGRAM := ppm_rc
+TARGET  := $(RUN_DIR)/$(PROGRAM)
+CG      := ppm pp -M $(PPMDIR)/$(srcdir)/macros/:$(srcdir)/macros/
+DEPS    := $(builddir)/utils/deps.sh
+RUN     := $(builddir)/utils/runcmd.sh
+LOG     := compile.log
+
+# These are paths that get included during pre-processing
+CPPVPATH := $(SRC_DIR):
+CPPVPATH += $(MODULES_DIR):
+CPPINCLS := $(patsubst %,-I%, $(subst :, ,$(CPPVPATH)))
+
+# These are paths that get included during compilation
+VPATH := $(patsubst %,-I%, $(subst :, ,$(SRC_DIR))):
+VPATH += $(patsubst %,$(MODFLAGS)%, $(subst :, ,$(MODULES_DIR))):
+INCLS := $(subst :, ,$(VPATH))
+
+# These are the files that get generated and used during compilation
+FSOURCES   := $(notdir $(wildcard $(SRC_DIR)/ppm_rc*.f))
+CSOURCES   := $(notdir $(wildcard $(SRC_DIR)/**/ppm_rc*.c))
+CVPATH     := src/cutil
+#$(dir    $(wildcard $(SRC_DIR)/**/ppm_rc*.c))
+CXXSOURCES := $(notdir $(wildcard $(SRC_DIR)/**/ppm_rc*.cc))
+CXXVPATH   := src/ccutil
+#$(dir    $(wildcard $(SRC_DIR)/**/ppm_rc*.cc))
+
+FOBJECTS   := $(FSOURCES:%.f=$(OBJ_DIR)/%.o)
+COBJECTS   := $(CSOURCES:%.c=$(OBJ_DIR)/%.o)
+CXXOBJECTS := $(CXXSOURCES:%.cc=$(OBJ_DIR)/%.o)
+
+MODULES      := $(FSOURCES:%.f=$(MODULES_DIR)/%.mod)
+DEPENDENCIES := $(CSOURCES:%.c=$(OBJ_DIR)/%.d)
+DEPENDENCIES += $(CXXSOURCES:%.cc=$(OBJ_DIR)/%.d)
+DEPENDENCIES += $(FSOURCES:%.f=$(OBJ_DIR)/%.d)
+
+# This creates the install directories if they don't exist
+$(warning Checking for directories...)
+$(shell test -d $(OBJ_DIR) || mkdir $(OBJ_DIR))
+$(shell test -d $(MODULES_DIR) || mkdir -p $(MODULES_DIR))
+$(shell test -d $(RUN_DIR) || mkdir -p $(RUN_DIR))
+$(shell test -e $(LOG) && rm $(LOG))
+$(warning done.)
+
+.PHONY: all clean install
+
+.DEFAULT: ;
+
+all: $(PROGRAM)
+
+# Dont delete the given intermediate files
+#$(DEPENDENCIES)
+.SECONDARY: 
+
+# Implicit rules
+ifneq ($(MAKECMDGOALS),clean)
+CPPCMD = $(CPP) $(CPPFLAGS) $(CPPINCLS) -traditional-cpp -P $< | $(CG) > $@
+$(OBJ_DIR)/%.f : $(SRC_DIR)/%.f
+	@printf "  PPM  %-42s" $<; \
+	$(RUN) "$(CPPCMD)" $(LOG) "Preprocessing Error"
+
+ENV = CPP="$(CPP)" SED="$(SED)" INC="$(CPPINCLS)" DEFINE="$(CPPFLAGS)" OBJDIR="$(OBJ_DIR)" SRCDIR="$(SRC_DIR)"
+DEPCMD = $(DEPS) --ppm_rc $< $@
+$(OBJ_DIR)/%.d : $(SRC_DIR)/%.f $(OBJ_DIR)/%.f
+	@printf "  DEP  %-42s" $<; \
+	$(ENV) $(RUN) "$(DEPCMD)" $(LOG) "Dependency Error"
+
+CPCMD = cp $< $@
+$(OBJ_DIR)/%.c : $(CVPATH)/%.c
+	@printf "  PPM  %-42s" $<; \
+	$(RUN) "$(CPCMD)" $(LOG) "Error copying C File"
+
+$(OBJ_DIR)/%.d : $(CVPATH)/%.c $(OBJ_DIR)/%.c
+	@printf "  DEP  %-42s" $<; \
+	$(ENV) $(RUN) "$(DEPCMD)" $(LOG) "Dependency Error"
+
+CXXPCMD = cp $< $@
+$(OBJ_DIR)/%.cc : $(CXXVPATH)/%.cc
+	@printf "  PPM  %-42s" $<; \
+	$(RUN) "$(CXXPCMD)" $(LOG) "Error copying CXX File"
+
+$(OBJ_DIR)/%.d : $(CXXVPATH)/%.cc $(OBJ_DIR)/%.cc
+	@printf "  DEP  %-42s" $<; \
+	$(ENV) $(RUN) "$(DEPCMD)" $(LOG) "Dependency Error"
+
+endif
+
+CCOMPILECMD = $(CC) $(CPPFLAGS) $(CFLAGS) -I$(CVPATH) $(CDEBUG) -Llib -c -o $@ $<
+$(OBJ_DIR)/%.o : $(OBJ_DIR)/%.c
+	@printf "   CC   %-42s" $<; \
+	$(RUN) "$(CCOMPILECMD)" $(LOG) "Compile Error"
+
+CLINKCMD = $(CC) $(COBJECTS) -o $@ $(LDFLAGS) $(CLIBS)
+
+CXXCOMPILECMD = $(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(CXXVPATH) $(CDEBUG) -Llib -c -o $@ $<
+$(OBJ_DIR)/%.o : $(OBJ_DIR)/%.cc
+	@printf "  CXX   %-42s" $<; \
+	$(RUN) "$(CXXCOMPILECMD)" $(LOG) "Compile Error"
+
+CXXLINKCMD = $(CXX) $(CXXOBJECTS) -o $@ $(LDFLAGS) $(CLIBS)
+
+COMPILECMD = $(FC) $(INCLS) $(FCFLAGS) $(DEBUG) -Llib -c -o $@ $<
+$(OBJ_DIR)/%.o : $(OBJ_DIR)/%.f $(OBJ_DIR)/%.d
+	@printf "   FC   %-42s" $<; \
+	$(RUN) "$(COMPILECMD)" $(LOG) "Compile Error" \
+
+FLINKCMD = $(FC) $(FOBJECTS) $(COBJECTS) $(CXXOBJECTS) -o $@ $(LDFLAGS) $(LIBS) $(CLIBS)
+
+$(PROGRAM): $(FOBJECTS) $(COBJECTS) $(CXXOBJECTS)
+	@printf "  LINK  %-42s" $@; \
+	$(RUN) "$(FLINKCMD)" $(LOG) "Linking Error"\
+	$(RUN) "$(CLINKCMD)" $(LOG) "Linking Error"\
+	$(RUN) "$(CXXLINKCMD)" $(LOG) "Linking Error"\
+	&& mv $(builddir)/*.mod $(MODULES_DIR) 2>/dev/null; \
+	mv $(PROGRAM) $(TARGET)
+
+# This is used to clean up the files created when running make
+clean:
+	rm -fR $(OBJ_DIR)
+	rm -fR $(MODULES_DIR)
+	rm -fR $(builddir)/lib
+	rm -fR $(builddir)/*.mod
+
+install:
+	cp -r $(TARGET) $(prefix)/bin
+
+# This ensures all dependency files are up-to-date
+# WARNING: The directive below will fail silently, in case of problems
+# remove the leading s: include $(DEPENDENCIES)
+sinclude $(DEPENDENCIES)
