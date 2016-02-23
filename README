@@ -193,19 +193,21 @@ Here two examples on how you could run the configure command
 
 `.configure` on Linux cluster using OpenMPI (and intel compilers, wrapped)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ ./configure CPP=cpp --enable-mpi --enable-linux --with-ppm=/home/usr/ppmcore --with-metis=/home/usr/metis --with-boost=/home/usr/boost_1_58_2
+$ ./configure CPP=cpp --enable-mpi --enable-linux --with-ppm=/home/usr/ppmcore 
+--with-metis=/home/usr/metis --with-boost=/home/usr/boost_1_58_2 --with-tiff=/home/usr/tiff4
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `./configure` on Mac OS X workstation with HomeBrew compilers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ ./configure CPP=cpp-5 --enable-mpi --with-ppm=/home/usr/ppmcore --with-metis=/home/usr/metis --with-boost=/home/usr/boost_1_58_2 
+$ ./configure CPP=cpp-5 --enable-mpi --with-ppm=/home/usr/ppmcore 
+--with-metis=/home/usr/metis --with-boost=/home/usr/boost_1_58_2 --with-tiff=/home/usr/tiff4
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `./configure` on a computer with OpenMPI installed in a non-standard location
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ./configure --enable-mpi FC=/opt/openmpi/1.10.2/bin/mpif90 CC=/opt/openmpi/1.10.2/bin/mpicc CXX=/opt/openmpi/1.10.2/bin/mpic++ 
---with-ppm=/home/usr/ppmcore --with-metis=/home/usr/metis --with-boost=/home/usr/boost_1_58_2
+--with-ppm=/home/usr/ppmcore --with-metis=/home/usr/metis --with-boost=/home/usr/boost_1_58_2 --with-tiff=/home/usr/tiff4
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Step 2: Compiling PPM_RC
