@@ -40,10 +40,12 @@ following files and directories:
 -   653B NOTICE
 -    14K README        This file
 -    28K README.md   
+-    46K autogen.sh
 -    42K config.guess
 -    35K config.sub
 -   524K configure     The build configure script
 -    11K configure.ac  Thie build configure script template
+-    14K install-sh
 -   405B settings.in
 -   782B m4            Contains build scripts
 -   1.1K src           Contains the source code
@@ -203,7 +205,7 @@ Here two examples on how you could run the configure command
 
 `./configure` on a computer with OpenMPI installed in a non-standard location
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-./configure --enable-mpi FC=/opt/openmpi/1.5/bin/mpif90 CC=/opt/openmpi/1.5/bin/mpicc CXX=/opt/openmpi/1.5/bin/mpic++ 
+./configure --enable-mpi FC=/opt/openmpi/1.10.2/bin/mpif90 CC=/opt/openmpi/1.10.2/bin/mpicc CXX=/opt/openmpi/1.10.2/bin/mpic++ 
 --with-ppm=/home/usr/ppmcore --with-metis=/home/usr/metis --with-boost=/home/usr/boost_1_58_2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
