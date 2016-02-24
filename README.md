@@ -1,7 +1,3 @@
-# README
-Program : PPM\_RC
-#
-
 PPM\_RC program README
 =======================
 v1.0, Feb 2016
@@ -38,7 +34,8 @@ $ git clone git@github.com:yafshar/PPM_RC.git
 $ git clone https://github.com/yafshar/PPM_RC.git
 ````
 
-#### Package contents
+Package contents
+------------
 
 The package you checked out by GIT access should contain on the toplevel the
 following files and directories:
