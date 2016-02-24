@@ -43,6 +43,6 @@ DTYPE(hi)]),
 		./confgiure CPP=gnucpp 
 		The current version of the program for processing Fortran MACROS 
 		is only a gnu-compatible. 
-		clang,intel, and other preprocessors don't work.])
+		clang preprocessor ond many other ones don't work.])
 	fi
 ])

@@ -60,29 +60,31 @@
 #serial 8
 
 AC_DEFUN([PPM_LIBRARY_SETUP],[
- AC_ARG_WITH([$1],[AS_HELP_STRING([--with-$1=path],[set the path to the ppm core library - THIS FLAG IS MANDATORY])],
-   [if test x${withval} = xno -o x${withval} = xyes; then
-     AC_MSG_ERROR([you must provide --with-$1=path to point to the $1 library])
-    fi],[
-     AC_MSG_ERROR([you must provide --with-$1=path to point to the $1 library])
-    ])
- PPMDIR=$withval
- if test x$2 != x ; then
-   AX_F90_HEADER([$1],[$2],[$5],$withval,[
-      FCFLAGS="$FCFLAGS $AS_TR_SH(F90_HEADER_$1)"
-     ],[])
- fi
- if test x$3 != x ; then
-   AX_F90_MODULE([$1],[$3],[$5],$withval,[
-      FCFLAGS="$FCFLAGS $AS_TR_SH(F90_MODULE_$1)"
-     ],[])
- fi
- AX_F90_LIBRARY([$1],[$4],[$5],$withval,[
-    LDFLAGS="$LDFLAGS $AS_TR_SH(F90_LDFLAGS_$1)"
-    LIBS="$AS_TR_SH(F90_LIBS_$1) $LIBS"
-   ],[AC_MSG_ERROR([cannot compile ppm_rc without ppm core.
-	If --with-$1=path is correctly set to $1 library, then:
-	Interoperability of $1 Library Created by Different 
-	Compilers or with differnet mode from here, Parallel vs. 
-	Non-parallel could cause this.])])
+	AC_ARG_WITH([$1],[AS_HELP_STRING([--with-$1=path],[set the path to the ppm core library - THIS FLAG IS MANDATORY])],
+   		[if test x${withval} = xno -o x${withval} = xyes; then
+     			AC_MSG_ERROR([you must provide --with-$1=path to point to the $1 library])
+    		fi],
+		[AC_MSG_ERROR([you must provide --with-$1=path to point to the $1 library])]
+	)
+	 PPMDIR=$withval
+	if test x$2 != x ; then
+		AX_F90_HEADER([$1],[$2],[$5],$withval,[
+		FCFLAGS="$FCFLAGS $AS_TR_SH(F90_HEADER_$1)"
+		],[])
+	fi
+	if test x$3 != x ; then
+		AX_F90_MODULE([$1],[$3],[$5],$withval,[
+		FCFLAGS="$FCFLAGS $AS_TR_SH(F90_MODULE_$1)"
+		],[])
+	fi
+
+	AX_F90_LIBRARY([$1],[$4],[$5],$withval,[
+		LDFLAGS="$LDFLAGS $AS_TR_SH(F90_LDFLAGS_$1)"
+		LIBS="$AS_TR_SH(F90_LIBS_$1) $LIBS"
+		],[AC_MSG_ERROR([cannot compile ppm_rc without ppm core.
+		If --with-$1=path is correctly set to $1 library, then:
+		Interoperability of $1 Library Created by Different 
+		Compilers or with differnet mode from here, Parallel vs. 
+		Non-parallel could cause this.])]
+	)
 ])

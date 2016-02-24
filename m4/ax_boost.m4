@@ -1,62 +1,62 @@
-dnl ===========================================================================
-dnl                http://autoconf-archive.cryp.to/ax_boost.html
-dnl ===========================================================================
-dnl
-dnl OBSOLETE MACRO
-dnl
-dnl   Use AX_BOOST_BASE in combination with library-specific macros.
-dnl
-dnl SYNOPSIS
-dnl
-dnl   AX_BOOST([MINIMUM-VERSION], [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
-dnl
-dnl DESCRIPTION
-dnl
-dnl   Test for the Boost C++ libraries of a particular version (or newer)
-dnl
-dnl   If no path to the installed boost library is given the macro searchs
-dnl   under /usr, /usr/local, and /opt, and evaluates the $BOOST_ROOT
-dnl   environment variable. Further documentation is available at
-dnl   <http://randspringer.de/boost/index.html>.
-dnl
-dnl   This macro calls:
-dnl
-dnl     AC_SUBST(BOOST_CPPFLAGS) / AC_SUBST(BOOST_LDFLAGS)
-dnl     AC_SUBST(BOOST_FILESYSTEM_LIB)
-dnl     AC_SUBST(BOOST_PROGRAM_OPTIONS_LIB)
-dnl     AC_SUBST(BOOST_THREAD_LIB)
-dnl     AC_SUBST(BOOST_IOSTREAMS_LIB)
-dnl     AC_SUBST(BOOST_SERIALIZATION_LIB)
-dnl     AC_SUBST(BOOST_WSERIALIZATION_LIB)
-dnl     AC_SUBST(BOOST_SIGNALS_LIB)
-dnl     AC_SUBST(BOOST_DATE_TIME_LIB)
-dnl     AC_SUBST(BOOST_REGEX_LIB)
-dnl     AC_SUBST(BOOST_UNIT_TEST_FRAMEWORK_LIB)
-dnl
-dnl   And sets:
-dnl
-dnl     HAVE_BOOST
-dnl     HAVE_BOOST_FILESYSTEM
-dnl     HAVE_BOOST_PROGRAM_OPTIONS
-dnl     HAVE_BOOST_THREAD
-dnl     HAVE_BOOST_IOSTREAMS
-dnl     HAVE_BOOST_SERIALIZATION
-dnl     HAVE_BOOST_SIGNALS
-dnl     HAVE_BOOST_DATE_TIME
-dnl     HAVE_BOOST_REGEX
-dnl     HAVE_BOOST_UNIT_TEST_FRAMEWORK
-dnl
-dnl LAST MODIFICATION
-dnl
-dnl   2008-04-12
-dnl
-dnl COPYLEFT
-dnl
-dnl   Copyright (c) 2008 Thomas Porschberg <thomas@randspringer.de>
-dnl
-dnl   Copying and distribution of this file, with or without modification, are
-dnl   permitted in any medium without royalty provided the copyright notice
-dnl   and this notice are preserved.
+# ===========================================================================
+#                http://autoconf-archive.cryp.to/ax_boost.html
+# ===========================================================================
+#
+# OBSOLETE MACRO
+#
+#   Use AX_BOOST_BASE in combination with library-specific macros.
+#
+# SYNOPSIS
+#
+#   AX_BOOST([MINIMUM-VERSION], [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+#
+# DESCRIPTION
+#
+#   Test for the Boost C++ libraries of a particular version (or newer)
+#
+#   If no path to the installed boost library is given the macro searchs
+#   under /usr, /usr/local, and /opt, and evaluates the $BOOST_ROOT
+#   environment variable. Further documentation is available at
+#   <http://randspringer.de/boost/index.html>.
+#
+#   This macro calls:
+#
+#     AC_SUBST(BOOST_CPPFLAGS) / AC_SUBST(BOOST_LDFLAGS)
+#     AC_SUBST(BOOST_FILESYSTEM_LIB)
+#     AC_SUBST(BOOST_PROGRAM_OPTIONS_LIB)
+#     AC_SUBST(BOOST_THREAD_LIB)
+#     AC_SUBST(BOOST_IOSTREAMS_LIB)
+#     AC_SUBST(BOOST_SERIALIZATION_LIB)
+#     AC_SUBST(BOOST_WSERIALIZATION_LIB)
+#     AC_SUBST(BOOST_SIGNALS_LIB)
+#     AC_SUBST(BOOST_DATE_TIME_LIB)
+#     AC_SUBST(BOOST_REGEX_LIB)
+#     AC_SUBST(BOOST_UNIT_TEST_FRAMEWORK_LIB)
+#
+#   And sets:
+#
+#     HAVE_BOOST
+#     HAVE_BOOST_FILESYSTEM
+#     HAVE_BOOST_PROGRAM_OPTIONS
+#     HAVE_BOOST_THREAD
+#     HAVE_BOOST_IOSTREAMS
+#     HAVE_BOOST_SERIALIZATION
+#     HAVE_BOOST_SIGNALS
+#     HAVE_BOOST_DATE_TIME
+#     HAVE_BOOST_REGEX
+#     HAVE_BOOST_UNIT_TEST_FRAMEWORK
+#
+# LAST MODIFICATION
+#
+#   2008-04-12
+#
+# COPYLEFT
+#
+#   Copyright (c) 2008 Thomas Porschberg <thomas@randspringer.de>
+#
+#   Copying and distribution of this file, with or without modification, are
+#   permitted in any medium without royalty provided the copyright notice
+#   and this notice are preserved.
 
 AC_DEFUN([AX_BOOST],
 [

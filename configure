@@ -3150,6 +3150,65 @@ fi
 
 
 # m4 include
+# ===========================================================================
+#                http://autoconf-archive.cryp.to/ax_boost.html
+# ===========================================================================
+#
+# OBSOLETE MACRO
+#
+#   Use AX_BOOST_BASE in combination with library-specific macros.
+#
+# SYNOPSIS
+#
+#   AX_BOOST([MINIMUM-VERSION], [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+#
+# DESCRIPTION
+#
+#   Test for the Boost C++ libraries of a particular version (or newer)
+#
+#   If no path to the installed boost library is given the macro searchs
+#   under /usr, /usr/local, and /opt, and evaluates the $BOOST_ROOT
+#   environment variable. Further documentation is available at
+#   <http://randspringer.de/boost/index.html>.
+#
+#   This macro calls:
+#
+#     AC_SUBST(BOOST_CPPFLAGS) / AC_SUBST(BOOST_LDFLAGS)
+#     AC_SUBST(BOOST_FILESYSTEM_LIB)
+#     AC_SUBST(BOOST_PROGRAM_OPTIONS_LIB)
+#     AC_SUBST(BOOST_THREAD_LIB)
+#     AC_SUBST(BOOST_IOSTREAMS_LIB)
+#     AC_SUBST(BOOST_SERIALIZATION_LIB)
+#     AC_SUBST(BOOST_WSERIALIZATION_LIB)
+#     AC_SUBST(BOOST_SIGNALS_LIB)
+#     AC_SUBST(BOOST_DATE_TIME_LIB)
+#     AC_SUBST(BOOST_REGEX_LIB)
+#     AC_SUBST(BOOST_UNIT_TEST_FRAMEWORK_LIB)
+#
+#   And sets:
+#
+#     HAVE_BOOST
+#     HAVE_BOOST_FILESYSTEM
+#     HAVE_BOOST_PROGRAM_OPTIONS
+#     HAVE_BOOST_THREAD
+#     HAVE_BOOST_IOSTREAMS
+#     HAVE_BOOST_SERIALIZATION
+#     HAVE_BOOST_SIGNALS
+#     HAVE_BOOST_DATE_TIME
+#     HAVE_BOOST_REGEX
+#     HAVE_BOOST_UNIT_TEST_FRAMEWORK
+#
+# LAST MODIFICATION
+#
+#   2008-04-12
+#
+# COPYLEFT
+#
+#   Copyright (c) 2008 Thomas Porschberg <thomas@randspringer.de>
+#
+#   Copying and distribution of this file, with or without modification, are
+#   permitted in any medium without royalty provided the copyright notice
+#   and this notice are preserved.
 
 
 
@@ -3159,6 +3218,24 @@ fi
 
 
 
+
+# @synopsis AC_CHECK_LIBTIFF
+#
+# Tests for presence of TIFF library. If libtiff has been found,
+# `HAVE_LIBTIFF' will be defined. If the libtiff requires additional
+# libraries (usualy zlib for deflate and libjpeg for JPEG compression),
+# they will be added to LIBS.
+#
+# The test also checks the presence of different codecs in libtiff:
+# HAVE_TIFFINITZIP tells deflate codec has been compiled in,
+# HAVE_TIFFINITJPEG tells JPEG codec has been compiled in,
+# HAVE_TIFFINITSGILOG tells SGI logLuv codec has been compuiled in,
+# HAVE_TIFFLZWENCODER tells the LZW encoder is present.
+#
+# @version $Id$
+# @author Jan Prikryl <prikryl@acm.org>
+#
+# Modifications and addition by Yaser Afshar (afshar@mpi-cbg.de)
 
 
 
@@ -3652,18 +3729,16 @@ fi
 #serial 9
 
 
-
-#AX_FC_VERSION_OUTPUT([FLAG = $ac_cv_prog_fc_version])
+# AX_FC_VERSION_OUTPUT([FLAG = $ac_cv_prog_fc_version])
 # -------------------------------------------------
 # Link a trivial Fortran program, compiling with a version output FLAG
 # (which default value, $ac_cv_prog_fc_version, is computed by
 # AX_FC_VERSION), and return the output in $ac_fc_version_output.
-# AX_FC_VERSION_OUTPUT
+
+
 
 # AX_FC_VERSION
 # --------------
-#
-# AX_FC_VERSION
 
 # ===========================================================================
 #       http://www.nongnu.org/autoconf-archive/ax_f90_module_flag.html
@@ -3701,8 +3776,80 @@ fi
 
 
 
-
-
+# ===========================================================================
+#                http://autoconf-archive.cryp.to/acx_mpi.html
+# ===========================================================================
+#
+# SYNOPSIS
+#
+#   PPM_RC_MPI([ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
+#
+# DESCRIPTION
+#
+#   This macro tries to find out how to compile programs that use MPI
+#   (Message Passing Interface), a standard API for parallel process
+#   communication (see http://www-unix.mcs.anl.gov/mpi/)
+#
+#   On success, it sets the MPICC, MPICXX, MPIF77, or MPIFC output variable
+#   to the name of the MPI compiler, depending upon the current language.
+#   (This may just be $CC/$CXX/$F77/$FC, but is more often something like
+#   mpicc/mpiCC/mpif77/mpif90.) It also sets MPILIBS to any libraries that
+#   are needed for linking MPI (e.g. -lmpi or -lfmpi, if a special
+#   MPICC/MPICXX/MPIF77/MPIFC was not found).
+#
+#   If you want to compile everything with MPI, you should set:
+#
+#       CC="MPICC" #OR# CXX="MPICXX" #OR# F77="MPIF77" #OR# FC="MPIFC"
+#       LIBS="$MPILIBS $LIBS"
+#
+#   NOTE: The above assumes that you will use $CC (or whatever) for linking
+#   as well as for compiling. (This is the default for automake and most
+#   Makefiles.)
+#
+#   The user can force a particular library/compiler by setting the
+#   MPICC/MPICXX/MPIF77/MPIFC and/or MPILIBS environment variables.
+#
+#   ACTION-IF-FOUND is a list of shell commands to run if an MPI library is
+#   found, and ACTION-IF-NOT-FOUND is a list of commands to run if it is not
+#   found. If ACTION-IF-FOUND is not specified, the default action will
+#   define HAVE_MPI.
+#
+# LAST MODIFICATION
+#
+#   2008-04-12
+#
+# COPYLEFT
+#
+#   Copyright (c) 2008 Steven G. Johnson <stevenj@alum.mit.edu>
+#   Copyright (c) 2008 Julian C. Cummings <cummings@cacr.caltech.edu>
+#
+#   This program is free software: you can redistribute it and/or modify it
+#   under the terms of the GNU General Public License as published by the
+#   Free Software Foundation, either version 3 of the License, or (at your
+#   option) any later version.
+#
+#   This program is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+#   Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+#   As a special exception, the respective Autoconf Macro's copyright owner
+#   gives unlimited permission to copy, distribute and modify the configure
+#   scripts that are the output of Autoconf when processing the Macro. You
+#   need not follow the terms of the GNU General Public License when using
+#   or distributing such scripts, even though portions of the text of the
+#   Macro appear in them. The GNU General Public License (GPL) does govern
+#   all other use of the material that constitutes the Autoconf Macro.
+#
+#   This special exception to the GPL applies to versions of the Autoconf
+#   Macro released by the Autoconf Macro Archive. When you make and
+#   distribute a modified version of the Autoconf Macro, you may extend this
+#   special exception to the GPL to apply to your modified version as well.
+#
+#   Modifications & amendment by Yaser Afshar (afshar@mpi-cbg.de)
 
 
 
@@ -5539,7 +5686,7 @@ $as_echo "yes" >&6; }
 		./confgiure CPP=gnucpp
 		The current version of the program for processing Fortran MACROS
 		is only a gnu-compatible.
-		clang,intel, and other preprocessors don't work." "$LINENO" 5
+		clang preprocessor ond many other ones don't work." "$LINENO" 5
 	fi
 
 
@@ -5744,7 +5891,7 @@ if test "${enable_mpi+set}" = set; then :
   enableval=$enable_mpi;
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -5787,15 +5934,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -5838,17 +5985,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -5864,14 +6011,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -5914,23 +6061,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5970,10 +6117,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6013,10 +6160,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6056,10 +6203,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6099,20 +6246,20 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
 
 			# compilers should be chosen
 			use_mpi=yes
@@ -6125,12 +6272,11 @@ fi
 
 if  test x"$use_mpi" = x"no" ; then
 
-
-if test "x$CC" = xmpicc; then :
-
+	if test "x$CC" = xmpicc; then :
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -6173,15 +6319,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -6224,17 +6370,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -6250,14 +6396,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -6300,23 +6446,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6356,10 +6502,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6399,10 +6545,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6442,10 +6588,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6485,28 +6631,28 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-if  test x"$use_mpi" = x"no" ; then
-	if test "x$CC" = xhcc; then :
+	if  test x"$use_mpi" = x"no" ; then
+		if test "x$CC" = xhcc; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -6549,15 +6695,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -6600,17 +6746,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -6626,14 +6772,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -6676,23 +6822,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6732,10 +6878,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6775,10 +6921,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6818,10 +6964,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6861,29 +7007,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-	if test "x$CC" = xmpxlc_r; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+		if test "x$CC" = xmpxlc_r; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -6926,15 +7072,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -6977,17 +7123,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -7003,14 +7149,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -7053,23 +7199,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7109,10 +7255,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7152,10 +7298,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7195,10 +7341,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7238,29 +7384,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-	if test "x$CC" = xmpxlc; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+		if test "x$CC" = xmpxlc; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -7303,15 +7449,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -7354,17 +7500,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -7380,14 +7526,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -7430,23 +7576,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7486,10 +7632,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7529,10 +7675,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7572,10 +7718,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7615,29 +7761,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$CC" = xmpcc; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$CC" = xmpcc; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -7680,15 +7826,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -7731,17 +7877,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -7757,14 +7903,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -7807,23 +7953,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7863,10 +8009,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7906,10 +8052,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7949,10 +8095,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7992,29 +8138,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$CC" = xcmpicc; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$CC" = xcmpicc; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -8057,15 +8203,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -8108,17 +8254,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -8134,14 +8280,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -8184,23 +8330,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8240,10 +8386,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8283,10 +8429,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8326,10 +8472,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8369,29 +8515,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-	if test "x$CXX" = xmpic++; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+		if test "x$CXX" = xmpic++; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -8434,15 +8580,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -8485,17 +8631,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -8511,14 +8657,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -8561,23 +8707,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8617,10 +8763,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8660,10 +8806,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8703,10 +8849,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8746,29 +8892,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-	if test "x$CXX" = xmpicxx; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+		if test "x$CXX" = xmpicxx; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -8811,15 +8957,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -8862,17 +9008,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -8888,14 +9034,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -8938,23 +9084,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8994,10 +9140,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9037,10 +9183,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9080,10 +9226,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9123,29 +9269,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-	if test "x$CXX" = xmpiCC; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+		if test "x$CXX" = xmpiCC; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -9188,15 +9334,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -9239,17 +9385,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -9265,14 +9411,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -9315,23 +9461,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9371,10 +9517,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9414,10 +9560,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9457,10 +9603,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9500,29 +9646,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$CXX" = xhcp; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$CXX" = xhcp; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -9565,15 +9711,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -9616,17 +9762,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -9642,14 +9788,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -9692,23 +9838,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9748,10 +9894,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9791,10 +9937,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9834,10 +9980,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9877,29 +10023,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$CXX" = xmpxlC_r; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$CXX" = xmpxlC_r; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -9942,15 +10088,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -9993,17 +10139,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -10019,14 +10165,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -10069,23 +10215,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10125,10 +10271,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10168,10 +10314,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10211,10 +10357,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10254,29 +10400,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$CXX" = xmpxlC; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$CXX" = xmpxlC; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -10319,15 +10465,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -10370,17 +10516,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -10396,14 +10542,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -10446,23 +10592,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10502,10 +10648,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10545,10 +10691,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10588,10 +10734,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10631,29 +10777,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$CXX" = xmpCC; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$CXX" = xmpCC; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -10696,15 +10842,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -10747,17 +10893,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -10773,14 +10919,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -10823,23 +10969,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10879,10 +11025,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10922,10 +11068,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10965,10 +11111,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -11008,29 +11154,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$CXX" = xcmpic++; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$CXX" = xcmpic++; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -11073,15 +11219,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -11124,17 +11270,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -11150,14 +11296,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -11200,23 +11346,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -11256,10 +11402,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -11299,10 +11445,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -11342,10 +11488,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -11385,29 +11531,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$FC" = xmpifort; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$FC" = xmpifort; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -11450,15 +11596,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -11501,17 +11647,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -11527,14 +11673,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -11577,23 +11723,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -11633,10 +11779,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -11676,10 +11822,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -11719,10 +11865,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -11762,29 +11908,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$FC" = xmpif90; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$FC" = xmpif90; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -11827,15 +11973,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -11878,17 +12024,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -11904,14 +12050,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -11954,23 +12100,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12010,10 +12156,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12053,10 +12199,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12096,10 +12242,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12139,29 +12285,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$FC" = xmpxlf95_r; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$FC" = xmpxlf95_r; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -12204,15 +12350,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -12255,17 +12401,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -12281,14 +12427,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -12331,23 +12477,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12387,10 +12533,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12430,10 +12576,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12473,10 +12619,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12516,29 +12662,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$FC" = xmpxlf90_r; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$FC" = xmpxlf90_r; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -12581,15 +12727,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -12632,17 +12778,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -12658,14 +12804,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -12708,23 +12854,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12764,10 +12910,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12807,10 +12953,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12850,10 +12996,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -12893,29 +13039,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$FC" = xmpxlf95; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$FC" = xmpxlf95; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -12958,15 +13104,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -13009,17 +13155,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -13035,14 +13181,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -13085,23 +13231,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -13141,10 +13287,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -13184,10 +13330,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -13227,10 +13373,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -13270,29 +13416,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$FC" = xmpxlf90; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$FC" = xmpxlf90; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -13335,15 +13481,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -13386,17 +13532,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -13412,14 +13558,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -13462,23 +13608,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -13518,10 +13664,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -13561,10 +13707,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -13604,10 +13750,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -13647,29 +13793,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$FC" = xmpf90; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$FC" = xmpf90; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -13712,15 +13858,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -13763,17 +13909,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -13789,14 +13935,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -13839,23 +13985,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -13895,10 +14041,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -13938,10 +14084,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -13981,10 +14127,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -14024,29 +14170,29 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
-if  test x"$use_mpi" = x"no" ; then
-        if test "x$FC" = xcmpif90c; then :
+	fi
+	if  test x"$use_mpi" = x"no" ; then
+	        if test "x$FC" = xcmpif90c; then :
 
 
 
-for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc
+		for ac_prog in mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpigcc tmcc mpcc_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -14089,15 +14235,15 @@ fi
 done
 test -n "$MPICC" || MPICC="no"
 
-if test "x$MPICC" = xno; then :
+	if test "x$MPICC" = xno; then :
   as_fn_error $? "Could not find mpicc for MPI" "$LINENO" 5
 else
   CC="$MPICC"
 fi
-CC="$MPICC"
+	CC="$MPICC"
 
 
-for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++
+		for ac_prog in mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++i mpig++ mpicpc tmCC mpCC_r
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -14140,17 +14286,17 @@ fi
 done
 test -n "$MPICXX" || MPICXX="no"
 
-if test "x$MPICXX" = xno; then :
+	if test "x$MPICXX" = xno; then :
   as_fn_error $? "Could not find mpic++ for MPI" "$LINENO" 5
 else
   CXX="$MPICXX"
 fi
-CXX="$MPICXX"
+	CXX="$MPICXX"
 
-if test x != x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
+	if test x != x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpi.h" >&5
 $as_echo_n "checking for mpi.h... " >&6; }
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <mpi.h>
 int
@@ -14166,14 +14312,14 @@ if ac_fn_c_try_compile "$LINENO"; then :
 $as_echo "yes" >&6; }
 else
   MPILIBS=""
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
+	fi
 
 
-for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c
+		for ac_prog in mpifort mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpigfortran tmf90 mpxf90_
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -14216,23 +14362,23 @@ fi
 done
 test -n "$MPIFC" || MPIFC="no"
 
-if test "x$MPIFC" = xno; then :
+	if test "x$MPIFC" = xno; then :
   as_fn_error $? "Could not find mpif90 for MPI" "$LINENO" 5
 else
   FC="$MPIFC"
 fi
-FC="$MPIFC"
+	FC="$MPIFC"
 
-if test x = x"$MPILIBS"; then
-        ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
+	if test x = x"$MPILIBS"; then
+		ac_fn_c_check_func "$LINENO" "MPI_Iallgather" "ac_cv_func_MPI_Iallgather"
 if test "x$ac_cv_func_MPI_Iallgather" = xyes; then :
   MPILIBS=" "
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpi... " >&6; }
 if ${ac_cv_lib_mpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -14272,10 +14418,10 @@ if test "x$ac_cv_lib_mpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lfmpi" >&5
 $as_echo_n "checking for MPI_Iallgather in -lfmpi... " >&6; }
 if ${ac_cv_lib_fmpi_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -14315,10 +14461,10 @@ if test "x$ac_cv_lib_fmpi_MPI_Iallgather" = xyes; then :
   MPILIBS="-lfmpi"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpichf90" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpichf90... " >&6; }
 if ${ac_cv_lib_mpichf90_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -14358,10 +14504,10 @@ if test "x$ac_cv_lib_mpichf90_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpichf90"
 fi
 
-fi
+	fi
 
-if test x = x"$MPILIBS"; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
+	if test x = x"$MPILIBS"; then
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for MPI_Iallgather in -lmpich" >&5
 $as_echo_n "checking for MPI_Iallgather in -lmpich... " >&6; }
 if ${ac_cv_lib_mpich_MPI_Iallgather+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -14401,23 +14547,23 @@ if test "x$ac_cv_lib_mpich_MPI_Iallgather" = xyes; then :
   MPILIBS="-lmpich"
 fi
 
-fi
+	fi
 
 
 
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
+	# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+	if test x = x"$MPILIBS"; then
 
-        :
-else
+	        :
+	else
 
 $as_echo "#define HAVE_MPI 1" >>confdefs.h
 
-        :
-fi
+	        :
+	fi
  use_mpi=yes
 fi
-fi
+	fi
 
 fi
 if  test x"$use_mpi" = x"no" ; then
@@ -15197,7 +15343,7 @@ _ACEOF
 
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking fortran modules inclusion flag" >&5
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking fortran modules inclusion flag" >&5
 $as_echo_n "checking fortran modules inclusion flag... " >&6; }
 if ${ax_cv_fc_modflag+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -15207,63 +15353,67 @@ ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
-i=0
-while test \( -f tmpdir_$i \) -o \( -d tmpdir_$i \) ; do
-  i=`expr $i + 1`
-done
-mkdir tmpdir_$i
-cd tmpdir_$i
-cat > conftest.$ac_ext <<_ACEOF
+			i=0
+			while test \( -f tmpdir_$i \) -o \( -d tmpdir_$i \) ; do
+				i=`expr $i + 1`
+			done
+			mkdir tmpdir_$i
+			cd tmpdir_$i
+			cat > conftest.$ac_ext <<_ACEOF
 
-!234567
-      module conftest_module
-      contains
-      subroutine conftest_routine
-      write(*,'(a)') 'gotcha!'
-      end subroutine conftest_routine
-      end module conftest_module
+				!234567
+				module conftest_module
+				contains
+				subroutine conftest_routine
+				write(*,'(a)') 'gotcha!'
+				end subroutine conftest_routine
+				end module conftest_module
 
 _ACEOF
 if ac_fn_fc_try_compile "$LINENO"; then :
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-cd ..
-ax_cv_fc_modflag="not found"
-for ax_flag in "-I" "-J" "-M" "-p"; do
-  if test "$ax_cv_fc_modflag" = "not found" ; then
-    ax_save_FCFLAGS="$FCFLAGS"
-    FCFLAGS="$ax_save_FCFLAGS ${ax_flag}tmpdir_$i"
-    cat > conftest.$ac_ext <<_ACEOF
 
-!234567
-      program conftest_program
-      use conftest_module
-      call conftest_routine
-      end program conftest_program
+			cd ..
+			ax_cv_fc_modflag="not found"
+			for ax_flag in "-I" "-J" "-M" "-p"; do
+				if test "$ax_cv_fc_modflag" = "not found" ; then
+					ax_save_FCFLAGS="$FCFLAGS"
+					FCFLAGS="$ax_save_FCFLAGS ${ax_flag}tmpdir_$i"
+					cat > conftest.$ac_ext <<_ACEOF
+
+						!234567
+						program conftest_program
+						use conftest_module
+						call conftest_routine
+						end program conftest_program
 
 _ACEOF
 if ac_fn_fc_try_compile "$LINENO"; then :
   ax_cv_fc_modflag="$ax_flag"
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-    FCFLAGS="$ax_save_FCFLAGS"
-  fi
-done
-rm -fr tmpdir_$i
-if test "$ax_cv_fc_modflag" = "not found" ; then
-  as_fn_error $? "unable to find compiler flag for modules inclusion" "$LINENO" 5
-fi
-ac_ext=c
+					FCFLAGS="$ax_save_FCFLAGS"
+				fi
+			done
+			rm -fr tmpdir_$i
+
+			if test "$ax_cv_fc_modflag" = "not found" ; then
+  				as_fn_error $? "unable to find compiler flag for modules inclusion" "$LINENO" 5
+			fi
+			ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ax_cv_fc_modflag" >&5
 $as_echo "$ax_cv_fc_modflag" >&6; }
+
 
 
 CPPFLAGS=""
@@ -15656,16 +15806,15 @@ $as_echo "$ax_cv_f90_modflag" >&6; }
 # Check whether --with-ppm was given.
 if test "${with_ppm+set}" = set; then :
   withval=$with_ppm; if test x${withval} = xno -o x${withval} = xyes; then
-     as_fn_error $? "you must provide --with-ppm=path to point to the ppm library" "$LINENO" 5
-    fi
+     			as_fn_error $? "you must provide --with-ppm=path to point to the ppm library" "$LINENO" 5
+    		fi
 else
-
-     as_fn_error $? "you must provide --with-ppm=path to point to the ppm library" "$LINENO" 5
+  as_fn_error $? "you must provide --with-ppm=path to point to the ppm library" "$LINENO" 5
 
 fi
 
- PPMDIR=$withval
- if test x != x ; then
+	 PPMDIR=$withval
+	if test x != x ; then
 
 
 
@@ -15726,15 +15875,15 @@ if test "$ax_cv_f90_headmod_" = "not found"; then
 else
  F90_HEADER_ppm="$ax_cv_f90_headmod_"
 
-      FCFLAGS="$FCFLAGS $F90_HEADER_ppm"
+		FCFLAGS="$FCFLAGS $F90_HEADER_ppm"
 
 fi
 
 
 
 
- fi
- if test xppm_module_finalize.$ax_cv_f90_modext != x ; then
+	fi
+	if test xppm_module_finalize.$ax_cv_f90_modext != x ; then
 
 
 
@@ -15797,14 +15946,15 @@ if test "`eval 'as_val=${'$as_ax_include'};$as_echo "$as_val"'`" = "not found"; 
 else
  F90_MODULE_ppm="`eval 'as_val=${'$as_ax_include'};$as_echo "$as_val"'`"
 
-      FCFLAGS="$FCFLAGS $F90_MODULE_ppm"
+		FCFLAGS="$FCFLAGS $F90_MODULE_ppm"
 
 fi
 
 
 
 
- fi
+	fi
+
 
 
 
@@ -15889,16 +16039,17 @@ $as_echo "$ax_cv_f90_ldflags_ppm $ax_cv_f90_libs_ppm" >&6; }
 		F90_LDFLAGS_ppm=""
 		F90_LIBS_ppm=""
  		as_fn_error $? "cannot compile ppm_rc without ppm core.
-	If --with-ppm=path is correctly set to ppm library, then:
-	Interoperability of ppm Library Created by Different
-	Compilers or with differnet mode from here, Parallel vs.
-	Non-parallel could cause this." "$LINENO" 5
+		If --with-ppm=path is correctly set to ppm library, then:
+		Interoperability of ppm Library Created by Different
+		Compilers or with differnet mode from here, Parallel vs.
+		Non-parallel could cause this." "$LINENO" 5
+
 	else
 		F90_LDFLAGS_ppm=$ax_cv_f90_ldflags_ppm
 		F90_LIBS_ppm=$ax_cv_f90_libs_ppm
 
-    LDFLAGS="$LDFLAGS $F90_LDFLAGS_ppm"
-    LIBS="$F90_LIBS_ppm $LIBS"
+		LDFLAGS="$LDFLAGS $F90_LDFLAGS_ppm"
+		LIBS="$F90_LIBS_ppm $LIBS"
 
 	fi
 
@@ -15968,26 +16119,27 @@ $as_echo "yes" >&6; }
                                 fi
                         fi
 
+
 fi
 
         #
         # locate METIS library
         #
-                if test -n "$with_metis" ; then
-                        old_CFLAGS=$CFLAGS
-                        old_LDFLAGS=$LDFLAGS
-                        CFLAGS="-I$with_metis/include"
-                        LDFLAGS="-L$with_metis/lib"
+        if test -n "$with_metis" ; then
+                old_CFLAGS=$CFLAGS
+                old_LDFLAGS=$LDFLAGS
+                CFLAGS="-I$with_metis/include"
+                LDFLAGS="-L$with_metis/lib"
 
 
-                        ac_ext=c
+                ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-                        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for METIS_PartMeshDual in -lmetis" >&5
+                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for METIS_PartMeshDual in -lmetis" >&5
 $as_echo_n "checking for METIS_PartMeshDual in -lmetis... " >&6; }
 if ${ac_cv_lib_metis_METIS_PartMeshDual+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -16029,7 +16181,7 @@ else
   metis_lib=yes
 fi
 
-                        ac_fn_c_check_header_compile "$LINENO" "metis.h" "ac_cv_header_metis_h" "/* check */
+                ac_fn_c_check_header_compile "$LINENO" "metis.h" "ac_cv_header_metis_h" "/* check */
 "
 if test "x$ac_cv_header_metis_h" = xyes; then :
   metis_h=yes
@@ -16039,45 +16191,45 @@ fi
 
 
 
-                        ac_ext=c
+                ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-                        CFLAGS=$old_CFLAGS
-                        LDFLAGS=$old_LDFLAGS
+                CFLAGS=$old_CFLAGS
+                LDFLAGS=$old_LDFLAGS
 
-                        { $as_echo "$as_me:${as_lineno-$LINENO}: checking METIS in $with_metis" >&5
+                { $as_echo "$as_me:${as_lineno-$LINENO}: checking METIS in $with_metis" >&5
 $as_echo_n "checking METIS in $with_metis... " >&6; }
-                        if test "$metis_lib" = "yes" -a "$metis_h" = "yes" ; then
-                                METIS_INCLUDE=-I$with_metis/include
+                if test "$metis_lib" = "yes" -a "$metis_h" = "yes" ; then
+                        METIS_INCLUDE=-I$with_metis/include
 
-                                METIS_LIB=-L$with_metis/lib
+                        METIS_LIB=-L$with_metis/lib
 
-				METIS_DIR=$with_metis
+			METIS_DIR=$with_metis
 
-                                { $as_echo "$as_me:${as_lineno-$LINENO}: result: ok" >&5
+                        { $as_echo "$as_me:${as_lineno-$LINENO}: result: ok" >&5
 $as_echo "ok" >&6; }
-                        else
-                                { $as_echo "$as_me:${as_lineno-$LINENO}: result: failed" >&5
-$as_echo "failed" >&6; }
-                        fi
-                fi
-                #
-                #
-                #
-                if test x = x"$METIS_LIB" ; then
-                        echo "Cannot detect metis, use the --with-metis=path option if it is not installed in the default location"
-                    exit 201
-                        :
                 else
+                        { $as_echo "$as_me:${as_lineno-$LINENO}: result: failed" >&5
+$as_echo "failed" >&6; }
+                fi
+        fi
+        #
+        #
+        #
+        if test x = x"$METIS_LIB" ; then
+                echo "Cannot detect metis, use the --with-metis=path option if it is not installed in the default location"
+                    exit 201
+                :
+        else
 
 $as_echo "#define HAVE_METIS 1" >>confdefs.h
 
-                        :
-                fi
+                :
+        fi
 
 have_metis=$HAVE_METIS
 if test "x${have_metis}" = xno; then
@@ -18587,27 +18739,28 @@ $as_echo "yes" >&6; }
                                 fi
                         fi
 
+
 fi
 
         #
         # locate TIFF library
         #
-                if test -n "$with_tiff" ; then
-                        old_CFLAGS=$CFLAGS
-                        old_LDFLAGS=$LDFLAGS
-                        CFLAGS="-I$with_tiff/include"
-                        LDFLAGS="-L$with_tiff/lib"
+        if test -n "$with_tiff" ; then
+                old_CFLAGS=$CFLAGS
+                old_LDFLAGS=$LDFLAGS
+                CFLAGS="-I$with_tiff/include"
+                LDFLAGS="-L$with_tiff/lib"
 
 
-                        ac_ext=c
+                ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-			tiff_lib=yes
-                        ac_fn_c_check_header_compile "$LINENO" "tiffio.h" "ac_cv_header_tiffio_h" "/* check */
+		tiff_lib=yes
+                ac_fn_c_check_header_compile "$LINENO" "tiffio.h" "ac_cv_header_tiffio_h" "/* check */
 "
 if test "x$ac_cv_header_tiffio_h" = xyes; then :
   tiff_h=yes
@@ -18617,50 +18770,50 @@ fi
 
 
 
-                        ac_ext=c
+                ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-                        CFLAGS=$old_CFLAGS
-                        LDFLAGS=$old_LDFLAGS
+                CFLAGS=$old_CFLAGS
+                LDFLAGS=$old_LDFLAGS
 
-                        { $as_echo "$as_me:${as_lineno-$LINENO}: checking TIFF in $with_tiff" >&5
+                { $as_echo "$as_me:${as_lineno-$LINENO}: checking TIFF in $with_tiff" >&5
 $as_echo_n "checking TIFF in $with_tiff... " >&6; }
-                        if test "$tiff_lib" = "yes" -a "$tiff_h" = "yes" ; then
-                                TIFF_INCLUDE=-I$with_tiff/include
+                if test "$tiff_lib" = "yes" -a "$tiff_h" = "yes" ; then
+                        TIFF_INCLUDE=-I$with_tiff/include
 
-                                TIFF_LIB=-L$with_tiff/lib
+                        TIFF_LIB=-L$with_tiff/lib
 
-                                TIFF_DIR=$with_tiff
+                        TIFF_DIR=$with_tiff
 
-                                { $as_echo "$as_me:${as_lineno-$LINENO}: result: ok" >&5
+                        { $as_echo "$as_me:${as_lineno-$LINENO}: result: ok" >&5
 $as_echo "ok" >&6; }
-                        else
-                                { $as_echo "$as_me:${as_lineno-$LINENO}: result: failed" >&5
-$as_echo "failed" >&6; }
-                        fi
-                fi
-                #
-                #
-                if test x = x"$TIFF_LIB" ; then
-                        as_fn_error $? "Failed to find valid TIFF library" "$LINENO" 5
-                        :
                 else
+                        { $as_echo "$as_me:${as_lineno-$LINENO}: result: failed" >&5
+$as_echo "failed" >&6; }
+                fi
+        fi
+        #
+        #
+        if test x = x"$TIFF_LIB" ; then
+                as_fn_error $? "Failed to find valid TIFF library" "$LINENO" 5
+                :
+        else
 
 $as_echo "#define HAVE_TIFF 1" >>confdefs.h
 
-                        :
-                fi
+                :
+        fi
 
-                ac_save_libs=$LIBS
-		LIBS="$LIBS $TIFF_LIB"
+        ac_save_libs=$LIBS
+	LIBS="$LIBS $TIFF_LIB"
 
 
-				  		olibs=$LIBS
-  		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for jpeg_start_compress in -ljpeg" >&5
+		  	olibs=$LIBS
+  	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for jpeg_start_compress in -ljpeg" >&5
 $as_echo_n "checking for jpeg_start_compress in -ljpeg... " >&6; }
 if ${ac_cv_lib_jpeg_jpeg_start_compress+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -18705,7 +18858,7 @@ _ACEOF
 
 fi
 
-  		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for zlibVersion in -lz" >&5
+  	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for zlibVersion in -lz" >&5
 $as_echo_n "checking for zlibVersion in -lz... " >&6; }
 if ${ac_cv_lib_z_zlibVersion+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -18750,18 +18903,18 @@ _ACEOF
 
 fi
 
-  		zjlibs=$LIBS
-						 		have_tiff=no
-		have_bigtiff=no
-		with_zj=no
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for TIFFOpen in -ltiff" >&5
+  	zjlibs=$LIBS
+			 	have_tiff=no
+	have_bigtiff=no
+	with_zj=no
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for TIFFOpen in -ltiff" >&5
 $as_echo_n "checking for TIFFOpen in -ltiff... " >&6; }
-		if ${ac_cv_have_libtiff+:} false; then :
+	if ${ac_cv_have_libtiff+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
-			LIBS="-ltiff $olibs"
-			cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		LIBS="-ltiff $olibs"
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
 /* Override any GCC internal prototype to avoid an error.
@@ -18783,8 +18936,8 @@ if ac_fn_c_try_link "$LINENO"; then :
    have_tiff=yes
 else
    if test "$olibs" != "$zjlibs" ; then
-		        	LIBS="-ltiff $zjlibs"
-		        	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+	        	LIBS="-ltiff $zjlibs"
+	        	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
 /* Override any GCC internal prototype to avoid an error.
@@ -18807,40 +18960,40 @@ if ac_fn_c_try_link "$LINENO"; then :
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-			fi
+		fi
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-			ac_cv_have_libtiff="have_tiff=$have_tiff with_zj=$with_zj"
+		ac_cv_have_libtiff="have_tiff=$have_tiff with_zj=$with_zj"
 fi
 
-		  		eval "$ac_cv_have_libtiff"
-		  		if test $have_tiff = yes ; then
-    			if test $with_zj = yes ; then
-      				LIBS="-ltiff $zjlibs"
-				      				oes=`echo $olibs`
-      				res="yes, requires "`echo $zjlibs | sed "s%$oes%%g"`
-    			else
-      				LIBS="-ltiff $olibs"
-      				res="yes"
-    			fi
-  		else
-    			LIBS="$olibs"
-    			res="no"
-  		fi
-  		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $res" >&5
+	  	eval "$ac_cv_have_libtiff"
+	  	if test $have_tiff = yes ; then
+    		if test $with_zj = yes ; then
+      			LIBS="-ltiff $zjlibs"
+			      			oes=`echo $olibs`
+      			res="yes, requires "`echo $zjlibs | sed "s%$oes%%g"`
+    		else
+      			LIBS="-ltiff $olibs"
+      			res="yes"
+    		fi
+  	else
+    		LIBS="$olibs"
+    		res="no"
+  	fi
+  	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $res" >&5
 $as_echo "$res" >&6; }
 
 $as_echo "#define HAVE_LIBTIFF /**/" >>confdefs.h
 
-				if test $have_tiff = yes ; then
-    			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for available nonstandard codecs in -ltiff" >&5
+		if test $have_tiff = yes ; then
+    		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for available nonstandard codecs in -ltiff" >&5
 $as_echo_n "checking for available nonstandard codecs in -ltiff... " >&6; }
-    			if ${ac_cv_tiff_codecs+:} false; then :
+    		if ${ac_cv_tiff_codecs+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
-      			cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+      		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
 /* Override any GCC internal prototype to avoid an error.
@@ -18865,8 +19018,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-      				ac_cv_tiff_codecs="have_tiffzip=$have_tiffzip "
-      			cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+      			ac_cv_tiff_codecs="have_tiffzip=$have_tiffzip "
+      		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
 /* Override any GCC internal prototype to avoid an error.
@@ -18891,8 +19044,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-      				ac_cv_tiff_codecs=$ac_cv_tiff_codecs"have_tiffjpg=$have_tiffjpg "
-      			cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+      			ac_cv_tiff_codecs=$ac_cv_tiff_codecs"have_tiffjpg=$have_tiffjpg "
+      		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
 /* Override any GCC internal prototype to avoid an error.
@@ -18917,57 +19070,57 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-      				ac_cv_tiff_codecs=$ac_cv_tiff_codecs"have_tiffsgi=$have_tiffsgi "
+      			ac_cv_tiff_codecs=$ac_cv_tiff_codecs"have_tiffsgi=$have_tiffsgi "
 fi
 
-		    			eval "$ac_cv_tiff_codecs"
-		    			res=""
-    			if test $have_tiffzip = yes ; then
-      				res=$res"zip "
+	    		eval "$ac_cv_tiff_codecs"
+	    		res=""
+    		if test $have_tiffzip = yes ; then
+      			res=$res"zip "
 
 $as_echo "#define HAVE_TIFFINITZIP /**/" >>confdefs.h
 
-			fi
-			if test $have_tiffjpg = yes ; then
-			 	res=$res"jpeg "
+		fi
+		if test $have_tiffjpg = yes ; then
+		 	res=$res"jpeg "
 
 $as_echo "#define HAVE_TIFFINITJPEG /**/" >>confdefs.h
 
-			fi
-			if test $have_tiffsgi = yes ; then
-			 	res=$res"sgilog "
+		fi
+		if test $have_tiffsgi = yes ; then
+		 	res=$res"sgilog "
 
 $as_echo "#define HAVE_TIFFINITSGILOG /**/" >>confdefs.h
 
-			fi
-			if test "x$res" = x ; then
-			 	res="none"
-			fi
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $res" >&5
+		fi
+		if test "x$res" = x ; then
+		 	res="none"
+		fi
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $res" >&5
 $as_echo "$res" >&6; }
-			    			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for LZW encoder in -ltiff" >&5
+		    		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for LZW encoder in -ltiff" >&5
 $as_echo_n "checking for LZW encoder in -ltiff... " >&6; }
-			if ${ac_cv_tiff_lzwenc+:} false; then :
+		if ${ac_cv_tiff_lzwenc+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
-      			if test "$cross_compiling" = yes; then :
+      		if test "$cross_compiling" = yes; then :
 
-        			ac_cv_tiff_lzwenc=no
+        		ac_cv_tiff_lzwenc=no
 else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <tiffio.h>
-  			int main(void)
-  			{
-  			 	 uint16 compress;
-  	 			 TIFF *tif = TIFFOpen("conftest.tif", "w");
-  				 TIFFSetField(tif, TIFFTAG_COMPRESSION, COMPRESSION_LZW);
-  				 TIFFGetField(tif, TIFFTAG_COMPRESSION, &compress);
-  				 if (compress != COMPRESSION_LZW) exit(-1);
-  	 			 exit(0);
-				 return 0;
- 			}
+  		int main(void)
+  		{
+  		 	 uint16 compress;
+  			 TIFF *tif = TIFFOpen("conftest.tif", "w");
+  			 TIFFSetField(tif, TIFFTAG_COMPRESSION, COMPRESSION_LZW);
+  			 TIFFGetField(tif, TIFFTAG_COMPRESSION, &compress);
+  			 if (compress != COMPRESSION_LZW) exit(-1);
+  			 exit(0);
+			 return 0;
+ 		}
 _ACEOF
 if ac_fn_c_try_run "$LINENO"; then :
    ac_cv_tiff_lzwenc=yes
@@ -18981,25 +19134,25 @@ fi
 
 fi
 
-						if test $ac_cv_tiff_lzwenc = yes ; then
+				if test $ac_cv_tiff_lzwenc = yes ; then
 
 $as_echo "#define HAVE_TIFFLZWENCODER /**/" >>confdefs.h
 
-    			fi
-    			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_tiff_lzwenc" >&5
+    		fi
+    		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_tiff_lzwenc" >&5
 $as_echo "$ac_cv_tiff_lzwenc" >&6; }
-  		fi
+  	fi
 
 $as_echo "#define HAVE_BIGTIFF /**/" >>confdefs.h
 
-  		if test $have_tiff = yes ; then
-     			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for BIGTIFF in -ltiff" >&5
+  	if test $have_tiff = yes ; then
+     		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for BIGTIFF in -ltiff" >&5
 $as_echo_n "checking for BIGTIFF in -ltiff... " >&6; }
-     			if ${ac_cv_have_bigtiff+:} false; then :
+     		if ${ac_cv_have_bigtiff+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
-        			cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+        		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
 /* Override any GCC internal prototype to avoid an error.
@@ -19024,14 +19177,14 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-        			ac_cv_have_bigtiff=$have_bigtiff
+        		ac_cv_have_bigtiff=$have_bigtiff
 fi
 
-    			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_have_bigtiff" >&5
+    		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_have_bigtiff" >&5
 $as_echo "$ac_cv_have_bigtiff" >&6; }
-  		fi
+  	fi
 
-                LIBS=$ac_save_libs
+        LIBS=$ac_save_libs
 
 TIFFDIR=$TIFF_DIR
 

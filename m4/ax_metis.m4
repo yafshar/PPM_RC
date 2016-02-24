@@ -37,47 +37,48 @@ AC_DEFUN([AX_METIS], [
                                         AC_MSG_RESULT(yes)
                                 fi
                         fi
-                ])
+                ]
+	)
         #
         # locate METIS library
         #
-                if test -n "$with_metis" ; then
-                        old_CFLAGS=$CFLAGS
-                        old_LDFLAGS=$LDFLAGS
-                        CFLAGS="-I$with_metis/include"
-                        LDFLAGS="-L$with_metis/lib"
+        if test -n "$with_metis" ; then
+                old_CFLAGS=$CFLAGS
+                old_LDFLAGS=$LDFLAGS
+                CFLAGS="-I$with_metis/include"
+                LDFLAGS="-L$with_metis/lib"
 
-                        AC_LANG_SAVE
-                        AC_LANG_C
+                AC_LANG_SAVE
+                AC_LANG_C
 
-                        AC_CHECK_LIB(metis, METIS_PartMeshDual,
-                                [metis_lib=yes], [metis_lib=yes], [-lm])
-                        AC_CHECK_HEADER(metis.h, [metis_h=yes],
-                                [metis_h=no], [/* check */])
+                AC_CHECK_LIB(metis, METIS_PartMeshDual,
+                        [metis_lib=yes], [metis_lib=yes], [-lm])
+                AC_CHECK_HEADER(metis.h, [metis_h=yes],
+                        [metis_h=no], [/* check */])
 
-                        AC_LANG_RESTORE
+                AC_LANG_RESTORE
 
-                        CFLAGS=$old_CFLAGS
-                        LDFLAGS=$old_LDFLAGS
+                CFLAGS=$old_CFLAGS
+                LDFLAGS=$old_LDFLAGS
 
-                        AC_MSG_CHECKING(METIS in $with_metis)
-                        if test "$metis_lib" = "yes" -a "$metis_h" = "yes" ; then
-                                AC_SUBST(METIS_INCLUDE, [-I$with_metis/include])
-                                AC_SUBST(METIS_LIB, [-L$with_metis/lib])
-				AC_SUBST(METIS_DIR, [$with_metis])
-                                AC_MSG_RESULT(ok)
-                        else
-                                AC_MSG_RESULT(failed)
-                        fi
-                fi
-                #
-                #
-                #
-                if test x = x"$METIS_LIB" ; then
-                        ifelse([$2],,[AC_MSG_ERROR(Failed to find valid METIS library)],[$2])
-                        :
+                AC_MSG_CHECKING(METIS in $with_metis)
+                if test "$metis_lib" = "yes" -a "$metis_h" = "yes" ; then
+                        AC_SUBST(METIS_INCLUDE, [-I$with_metis/include])
+                        AC_SUBST(METIS_LIB, [-L$with_metis/lib])
+			AC_SUBST(METIS_DIR, [$with_metis])
+                        AC_MSG_RESULT(ok)
                 else
-                        ifelse([$1],,[AC_DEFINE(HAVE_METIS,1,[Define if you have METIS library])],[$1])
-                        :
+                        AC_MSG_RESULT(failed)
                 fi
-        ])dnl AX_METIS
+        fi
+        #
+        #
+        #
+        if test x = x"$METIS_LIB" ; then
+                ifelse([$2],,[AC_MSG_ERROR(Failed to find valid METIS library)],[$2])
+                :
+        else
+                ifelse([$1],,[AC_DEFINE(HAVE_METIS,1,[Define if you have METIS library])],[$1])
+                :
+        fi
+])dnl AX_METIS
