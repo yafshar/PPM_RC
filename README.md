@@ -1,5 +1,5 @@
-PPM\_RC program README
-=======================
+PPM\_RC program
+===============
 v1.0, Feb 2016
 
 Introduction
