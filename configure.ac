@@ -4,8 +4,8 @@
 ## Take all the options with the exception of --enable-install-req
 AC_PREREQ(2.59)
 
-AC_INIT(PPM_RC, 1.0, afshar@mpi-cbg.de)
-AC_CONFIG_SRCDIR([src])
+AC_INIT(PPM_RC, 1.0, [afshar@mpi-cbg.de],[],[https://github.com/yafshar/PPM_RC])
+AC_CONFIG_SRCDIR([src/ppm_rc.f])
 AM_INIT_AUTOMAKE
 
 # m4 include

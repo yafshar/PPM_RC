@@ -583,9 +583,9 @@ PACKAGE_TARNAME='ppm_rc'
 PACKAGE_VERSION='1.0'
 PACKAGE_STRING='PPM_RC 1.0'
 PACKAGE_BUGREPORT='afshar@mpi-cbg.de'
-PACKAGE_URL=''
+PACKAGE_URL='https://github.com/yafshar/PPM_RC'
 
-ac_unique_file="src"
+ac_unique_file="src/ppm_rc.f"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -1458,6 +1458,7 @@ Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
 
 Report bugs to <afshar@mpi-cbg.de>.
+PPM_RC home page: <https://github.com/yafshar/PPM_RC>.
 _ACEOF
 ac_status=$?
 fi
@@ -19837,7 +19838,8 @@ $config_files
 Configuration commands:
 $config_commands
 
-Report bugs to <afshar@mpi-cbg.de>."
+Report bugs to <afshar@mpi-cbg.de>.
+PPM_RC home page: <https://github.com/yafshar/PPM_RC>."
 
 _ACEOF
 cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1

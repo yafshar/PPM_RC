@@ -10,7 +10,13 @@
 #
 #  Revisions    :
 #-------------------------------------------------------------------------
-
+# Identity of this package.
+PACKAGE_NAME=@PACKAGE_NAME@
+PACKAGE_TARNAME=@PACKAGE_TARNAME@
+PACKAGE_VERSION=@PACKAGE_VERSION@
+PACKAGE_STRING=@PACKAGE_STRING@
+PACKAGE_BUGREPORT=@PACKAGE_BUGREPORT@
+PACKAGE_URL=@PACKAGE_URL@
 #----------------------------------------------------------------------
 # METIS Library
 #----------------------------------------------------------------------

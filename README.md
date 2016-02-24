@@ -24,8 +24,19 @@ orchestrate to collectively solve the global segmentation problem.
    numbers of connected regions. IEEE Trans. Image Process., 21(8):3531–3545, 2012
 
 
-
 Initial release of PPM\_RC source program.
+
+Getting the code
+------------
+You can download the latest version from [here](https://github.com/yafshar/PPM_RC). 
+The very latest version is always available via 'github' by invoking one of the following:
+````
+## For the traditional ssh-based Git interaction:
+$ git clone git@github.com:yafshar/PPM_RC.git
+
+## For HTTP-based Git interaction
+$ git clone https://github.com/yafshar/PPM_RC.git
+````
 
 #### Package contents
 
