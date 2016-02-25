@@ -1,13 +1,12 @@
         ! Connectivity information.
         !
-        ! This class describes the k-neighbors of a point in a digital space of
-        ! dimension n.
+        ! This TYPE describes the k-neighbors of a point in a digital space of
+        ! dimension 2 or 3.
         ! The definition used for this connectivity is the one using cell
         ! decomposition, as defined by Malandain in "On Topology in Multidimensional
         ! Discrete Spaces", ftp://ftp.inria.fr/INRIA/publication/RR/RR-2098.ps.gz
         !
-        ! The advantage of this definition instead of the 4- or 8-connectivity (in 2D)
-        ! or 6-, 18- and 26-connectivity (in 3D) is that it is consistent and
+        ! The advantage of this definition is that it is consistent and
         ! extensible in n-dimensions.
         !
         ! In 2D, 4- and 8-connectivity are respectively corresponding to 1- and
@@ -66,9 +65,9 @@
           &            PointIsInNeighborhood, &
           &            OffsetIsInNeighborhood
 
-          !Convert an offset to a point, in a 3x3x3 cube
+          !Convert an offset to a point, in a 2x2 or 3x3x3 cube
           PROCEDURE :: OffsetToPoint
-          !Convert a point to an offset, in a 3x3x3 cube
+          !Convert a point to an offset, in a 2x2 or 3x3x3 cube
           PROCEDURE :: PointToOffset
 
         END TYPE Connectivity
@@ -93,25 +92,21 @@
         !  For each point in the n'-neighborhood of 0, characterizes which of
         !  its surrounding points are n-neighbors and belong to the [-1, 1] cube.
         !
-        !  Connectivity : the image connectivity, noted n in the description
-        !  NeighborhoodConnectivity : the neighborhood connectivity, noted n'
-        !  in the description.
+        !  Connectivity : the image connectivity, (n in the description)
+        !  NeighborhoodConnectivity : the neighborhood connectivity, (n' in the description)
         !
         !  In 3D, use (6,18) or (26,26) for (n, n') to get significant result for
         !  topological numbers.
         !
         !  The criterion returns true for (p1, p2) if p1 is n'-adjacent to 0 and
         !  (p1, p1+p2) are n-adjacent and (p1+p2) is in [-1, 1]^3.
+        !!! constructor
         INTERFACE UnitCubeNeighbors
           MODULE PROCEDURE constructor
-          !!! construct/initialize a
         END INTERFACE UnitCubeNeighbors
 
-        ! Functor counting the number of connected components restricted in a
-        ! unit cube. This class is used for topological number computation, and
-        ! should be mostly useless in any other cases.
-        !TOCHECK
-        !static std::vector<bool> const m_NeighborhoodConnectivityTest;
+        ! Counting the number of connected components restricted in a
+        ! unit cube. This is used for topological number computation.
         TYPE UnitCubeCCCounter
           TYPE(Connectivity),      POINTER     :: TConnectivity => NULL()
           TYPE(Connectivity),      POINTER     :: TNeighborhoodConnectivity => NULL()
@@ -148,7 +143,7 @@
           &            ForegroundTopologicalNumberType_create2
         END TYPE ForegroundTopologicalNumberType
 
-        ! Compute the topological numbers of an image at given index.
+        ! Compute the topological numbers of an image at a given index.
         !
         ! Topological numbers characterize the topological properties of a point. They
         ! are defined in an article by G. Bertrand and G. Malandain : "A new
