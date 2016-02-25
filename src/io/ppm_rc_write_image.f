@@ -721,7 +721,11 @@
 
                  !The TIFF file format uses 32bit offsets and, as such, is limited to 4 gigabytes
 #if   __DIME == __2D
-                 IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)/1024._MK.GE.4194304._MK
+                 IF (PRESENT(idn)) THEN
+                    IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)/1024._MK.GE.4194304._MK
+                 ELSE
+                    IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)*REAL(maxiter,MK)/1024._MK.GE.4194304._MK
+                 ENDIF
 #elif __DIME == __3D
                  IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)*REAL(Nm(3),MK)/1024._MK.GE.4194304._MK
 #endif

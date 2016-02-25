@@ -118,7 +118,7 @@ int open_write_tiff(char *filename) {
 
 int open_write_bigtiff(char *filename) {
 
-  tif = TIFFOpen(filename,"w8");
+  tif = TIFFOpen(filename,"a8+");
 
   if (!tif) {
     return -1;
