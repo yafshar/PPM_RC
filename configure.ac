@@ -255,6 +255,8 @@ if test x"$debuger" = x"yes"; then
 	AC_SUBST(CXXFLAGS,["$CXXFLAGS -O0"])
 	AC_SUBST(CFLAGS,["$CFLAGS -O0"])
 	AC_SUBST(FCFLAGS,["$FCFLAGS -O0"])
+
+	AC_SUBST(CPPFLAGS,["$CPPFLAGS -D__DEBUG"])
 else
     	if test "x${vendor}" = xintel; then
     		AC_SUBST(FCFLAGS,["$FCFLAGS -O3 -diag-disable 5462"])
