@@ -124,7 +124,7 @@
         stdout_f('(A,I0)',"   Case dimensions:          ", ppm_rc_dim)
         CALL ppm_log(caller,cbuf,info)
 
-        stdout_f('(A,3I6)',"   Number of pixels:          ",'Ngrid(1:ppm_rc_dim)')
+        stdout_f('(A,3I8)',"   Number of pixels:          ",'Ngrid(1:ppm_rc_dim)')
         CALL ppm_log(caller,cbuf,info)
 
         stdout_f('(A,I8)',"   Max number of iterations:  ",maxiter)
@@ -161,7 +161,7 @@
         stdout_f('(A)',"---- RESULT DATA OUTPUT ---------------------------")
         CALL ppm_log(caller,cbuf,info)
 
-        stdout_f('(A,I6)',"   Time steps between output:",freqoutput)
+        stdout_f('(A,I8)',"   Time steps between output:",freqoutput)
         CALL ppm_log(caller,cbuf,info)
 
         stdout_f('(2A)',"   Output file name:         ",'TRIM(outputfile)')
@@ -192,27 +192,27 @@
         CALL ppm_rc_uppercase(init_mode)
         SELECT CASE (TRIM(init_mode))
         CASE ("E_RECT","RECT")
-           stdout_f('(A,3I5)',"                              ",'INT(init_rd(1:ppm_rc_dim))')
+           stdout_f('(A,3I8)',"                              ",'INT(init_rd(1:ppm_rc_dim))')
            CALL ppm_log(caller,cbuf,info)
-           stdout_f('(A,3I5)',"                              ",'INT(init_sp(1:ppm_rc_dim))')
+           stdout_f('(A,3I8)',"                              ",'INT(init_sp(1:ppm_rc_dim))')
            CALL ppm_log(caller,cbuf,info)
 
         CASE ("E_SPHERE","SPHERE")
-           stdout_f('(A,3I5)',"                              ",'INT(init_rd(1:ppm_rc_dim))')
+           stdout_f('(A,3I8)',"                              ",'INT(init_rd(1:ppm_rc_dim))')
            CALL ppm_log(caller,cbuf,info)
-           stdout_f('(A,3I5)',"                              ",'INT(init_sp(1:ppm_rc_dim))')
+           stdout_f('(A,3I8)',"                              ",'INT(init_sp(1:ppm_rc_dim))')
            CALL ppm_log(caller,cbuf,info)
 
         CASE ("E_OTSU","OTSU")
-           stdout_f('(A,4I5)',"                              ",'INT(m_lowerBound)','INT(m_upperBound)',histSize)
+           stdout_f('(A,3I8)',"                              ",'INT(m_lowerBound)','INT(m_upperBound)',histSize)
            CALL ppm_log(caller,cbuf,info)
 
         CASE ("E_LOCALMAX","LOCALMAX")
-           stdout_f('(A,3I5)',"                              ",'INT(init_rd(1:ppm_rc_dim))')
+           stdout_f('(A,3I8)',"                              ",'INT(init_rd(1:ppm_rc_dim))')
            CALL ppm_log(caller,cbuf,info)
 
         CASE DEFAULT
-           stdout_f('(A,3I5)',"                              ",'INT(init_rd(1:ppm_rc_dim))')
+           stdout_f('(A,3I8)',"                              ",'INT(init_rd(1:ppm_rc_dim))')
            CALL ppm_log(caller,cbuf,info)
 
         END SELECT
@@ -226,8 +226,65 @@
         stdout_f('(A,A)',"   External energy term is:   ",'TRIM(energy_ext_name)')
         CALL ppm_log(caller,cbuf,info)
 
+        stdout_f('(A)',"")
+        CALL ppm_log(caller,cbuf,info)
+
+        stdout_f('(A,f18.8)',"   Data term coefficient:                ",energy_coeff_data)
+        CALL ppm_log(caller,cbuf,info)
+
+        stdout_f('(A)',"")
+        CALL ppm_log(caller,cbuf,info)
+
+        stdout_f('(A,f18.8)',"   Threshold prior for region merging:   ",energy_region_merge_ths)
+        CALL ppm_log(caller,cbuf,info)
+
+        SELECT CASE (TRIM(energy_ext_name))
+        CASE ("PS","PSGAUSSIAN","PSPOISSON")
+           stdout_f('(A)',"")
+           CALL ppm_log(caller,cbuf,info)
+
+           stdout_f('(A,f18.8)',"   Radius of the spherical patches:      ",energy_local_window_radius)
+           CALL ppm_log(caller,cbuf,info)
+
+           stdout_f('(A)',"   (Radius of mask for local energy support in pixel)")
+           CALL ppm_log(caller,cbuf,info)
+
+           stdout_f('(A)',"")
+           CALL ppm_log(caller,cbuf,info)
+
+           stdout_f('(A,f18.8)',"   Outward balloon flow coefficient:     ",energy_coeff_balloon)
+           CALL ppm_log(caller,cbuf,info)
+        END SELECT
+
+        stdout_f('(A)',"")
+        CALL ppm_log(caller,cbuf,info)
+
         stdout_f('(A,A)',"   Internal energy term is:   ",'TRIM(energy_int_name)')
         CALL ppm_log(caller,cbuf,info)
+
+        stdout_f('(A,f18.8)',"   Length term coefficient:              ",energy_coeff_length)
+        CALL ppm_log(caller,cbuf,info)
+
+        SELECT CASE (TRIM(energy_int_name))
+        CASE ("CURV")
+           stdout_f('(A)',"")
+           CALL ppm_log(caller,cbuf,info)
+
+           stdout_f('(A)',"   Curvature mask radius for regularizing")
+           CALL ppm_log(caller,cbuf,info)
+
+           stdout_f('(A,f18.8)',"   flows. (See Kybic and Kratky) :       ",energy_curvature_mask_radius)
+           CALL ppm_log(caller,cbuf,info)
+        END SELECT
+
+        IF (energy_coeff_outward_flow.GT.smallest.OR. &
+        &   energy_coeff_outward_flow.LT.-smallest) THEN
+           stdout_f('(A)',"")
+           CALL ppm_log(caller,cbuf,info)
+
+           stdout_f('(A,f18.8)',"   Coefficient of constant outward flow: ",energy_coeff_outward_flow)
+           CALL ppm_log(caller,cbuf,info)
+        ENDIF
 
         !----------------------------------------------------------------------
         !  Digital topology (control)
@@ -255,16 +312,16 @@
            stdout_f('(A)',"---- MCMC algorithm related options ---------------")
            CALL ppm_log(caller,cbuf,info)
 
-           stdout_f('(A,I8)',"   MC step size:                         ",MCMCstepsize)
+           stdout_f('(A,I8)',"   MCMC step size:                       ",MCMCstepsize)
            CALL ppm_log(caller,cbuf,info)
 
-           stdout_f('(A,g12.5)',"   MC temperature:                       ",MCMCtemperature)
+           stdout_f('(A,f18.8)',"   MCMC temperature:                     ",MCMCtemperature)
            CALL ppm_log(caller,cbuf,info)
 
-           stdout_f('(A,g12.5)',"   MCMC burn in factor:                  ",MCMCburnInFactor)
+           stdout_f('(A,f18.8)',"   MCMC burn in factor:                  ",MCMCburnInFactor)
            CALL ppm_log(caller,cbuf,info)
 
-!            stdout_f('(A,g12.5)',"   MCMC off-boundary samples percentage: ",MCMCsampleOffBoundaryPercentage)
+!            stdout_f('(A,f18.8)',"   MCMC off-boundary samples percentage: ",MCMCsampleOffBoundaryPercentage)
 !            CALL ppm_log(caller,cbuf,info)
 
            stdout_f('(A,L4)',"   Continue (no relabeling at init):     ",MCMCcontinue)
