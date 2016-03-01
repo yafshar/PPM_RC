@@ -107,10 +107,10 @@
         !----------------------------------------------------------------------
         ! Public
         !----------------------------------------------------------------------
-        PUBLIC :: initforestfire_2d
-        PUBLIC :: initforestfire_3d
-        PUBLIC :: forestfire_2d
-        PUBLIC :: forestfire_3d
+        PUBLIC :: ppm_rc_initforestfire_2d
+        PUBLIC :: ppm_rc_initforestfire_3d
+        PUBLIC :: ppm_rc_forestfire_2d
+        PUBLIC :: ppm_rc_forestfire_3d
         PUBLIC :: ppm_rc_floodFill_2d
         PUBLIC :: ppm_rc_floodFill_3d
         PUBLIC :: ppm_rc_ghost_copy_2d

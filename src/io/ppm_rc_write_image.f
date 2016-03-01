@@ -53,9 +53,9 @@
         USE ppm_module_topo_typedef, ONLY : ppm_t_topo,ppm_topo
         USE ppm_module_interfaces, ONLY : ppm_t_discr_info_
 
-        USE ppm_rc_module_tiff, ONLY : open_write_tiff,open_write_bigtiff, &
-        &   close_tiff,write_tiff_header,write_tiff_strip,bitsPerSampleW,  &
-        &   write_tiff_scanline
+        USE ppm_rc_module_tiff, ONLY : ppm_rc_open_write_tiff,ppm_rc_open_write_bigtiff, &
+        &   ppm_rc_close_tiff,ppm_rc_write_tiff_header,ppm_rc_write_tiff_strip,bitsPerSampleW,  &
+        &   ppm_rc_write_tiff_scanline
         IMPLICIT NONE
 
         !-------------------------------------------------------------------------
@@ -203,15 +203,13 @@
 
                  SELECT CASE (IsBigTIFF)
                  CASE (.TRUE.)
-                    info=open_write_bigtiff(filename)
-
+                    info=ppm_rc_open_write_bigtiff(filename)
                  CASE DEFAULT
-                    info=open_write_tiff(filename)
-
+                    info=ppm_rc_open_write_tiff(filename)
                  END SELECT !(IsBigTIFF)
                  or_fail('Error opening tiff file to write in.')
 
-                 info=write_tiff_header(bitsPerSampleW,1,Nm(1),Nm(2))
+                 info=ppm_rc_write_tiff_header(bitsPerSampleW,1,Nm(1),Nm(2))
                  or_fail('Error writing tiff file header.')
 
                  SELECT CASE (FieldIn%data_type)
@@ -220,15 +218,15 @@
                     or_fail("Failed to get field wp_i.")
 
 #if   __DIME == __2D
-                    info=write_tiff_strip(DTYPE(wp_i)(1:Nm(1),1:Nm(2)),bitsPerSampleW,Nm(1),Nm(2),0,1)
-                    or_fail("write_tiff_strip")
+                    info=ppm_rc_write_tiff_strip(DTYPE(wp_i)(1:Nm(1),1:Nm(2)),bitsPerSampleW,Nm(1),Nm(2),0,1)
+                    or_fail("ppm_rc_write_tiff_strip")
 #elif __DIME == __3D
                     DO istrip=1,Nm(3)
-                       info=write_tiff_header(istrip-1,Nm(3))
+                       info=ppm_rc_write_tiff_header(istrip-1,Nm(3))
                        or_fail('Error writing tiff file header.')
 
-                       info=write_tiff_strip(DTYPE(wp_i)(1:Nm(1),1:Nm(2),istrip),bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
-                       or_fail("write_tiff_strip")
+                       info=ppm_rc_write_tiff_strip(DTYPE(wp_i)(1:Nm(1),1:Nm(2),istrip),bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                       or_fail("ppm_rc_write_tiff_strip")
                     ENDDO ! loop through slices
 #endif
 
@@ -262,27 +260,27 @@
                              bufr(x,y)=DTYPE(wp_r)(x,y)*Normalfac
                           END FORALL
 
-                          info=write_tiff_strip(bufr,bitsPerSampleW,Nm(1),Nm(2),0,1)
-                          or_fail("write_tiff_strip")
+                          info=ppm_rc_write_tiff_strip(bufr,bitsPerSampleW,Nm(1),Nm(2),0,1)
+                          or_fail("ppm_rc_write_tiff_strip")
 
                        CASE DEFAULT
                           FORALL (x=1:Nm(1),y=1:Nm(2))
                              bufi(x,y)=INT(DTYPE(wp_r)(x,y)*Normalfac)
                           END FORALL
 
-                          info=write_tiff_strip(bufi,bitsPerSampleW,Nm(1),Nm(2),0,1)
-                          or_fail("write_tiff_strip")
+                          info=ppm_rc_write_tiff_strip(bufi,bitsPerSampleW,Nm(1),Nm(2),0,1)
+                          or_fail("ppm_rc_write_tiff_strip")
 
                        END SELECT !(bitsPerSampleW)
 
                     CASE (.FALSE.)
-                       info=write_tiff_strip(DTYPE(wp_r)(1:Nm(1),1:Nm(2)),bitsPerSampleW,Nm(1),Nm(2),0,1)
-                       or_fail("write_tiff_strip")
+                       info=ppm_rc_write_tiff_strip(DTYPE(wp_r)(1:Nm(1),1:Nm(2)),bitsPerSampleW,Nm(1),Nm(2),0,1)
+                       or_fail("ppm_rc_write_tiff_strip")
 
                     END SELECT !(lNormalize)
 #elif __DIME == __3D
                     DO istrip=1,Nm(3)
-                       info=write_tiff_header(istrip-1,Nm(3))
+                       info=ppm_rc_write_tiff_header(istrip-1,Nm(3))
                        or_fail('Error writing tiff file header.')
 
                        SELECT CASE (lNormalize)
@@ -293,24 +291,24 @@
                                 bufr(x,y)=DTYPE(wp_r)(x,y,istrip)*Normalfac
                              END FORALL
 
-                             info=write_tiff_strip(bufr,bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
-                             or_fail("write_tiff_strip")
-!                              info=write_tiff_scanline(bufr,0,bitsPerSampleW,0,Nm(1),Nm(2),istrip-1,Nm(3))
-!                              or_fail("write_tiff_scanline")
+                             info=ppm_rc_write_tiff_strip(bufr,bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                             or_fail("ppm_rc_write_tiff_strip")
+!                              info=ppm_rc_write_tiff_scanline(bufr,0,bitsPerSampleW,0,Nm(1),Nm(2),istrip-1,Nm(3))
+!                              or_fail("ppm_rc_write_tiff_scanline")
 
                           CASE DEFAULT
                              FORALL (x=1:Nm(1),y=1:Nm(2))
                                 bufi(x,y)=INT(DTYPE(wp_r)(x,y,istrip)*Normalfac)
                              END FORALL
 
-                             info=write_tiff_strip(bufi,bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
-                             or_fail("write_tiff_strip")
+                             info=ppm_rc_write_tiff_strip(bufi,bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                             or_fail("ppm_rc_write_tiff_strip")
 
                           END SELECT !(bitsPerSampleW)
 
                        CASE (.FALSE.)
-                          info=write_tiff_strip(DTYPE(wp_r)(1:Nm(1),1:Nm(2),istrip),bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
-                          or_fail("write_tiff_strip")
+                          info=ppm_rc_write_tiff_strip(DTYPE(wp_r)(1:Nm(1),1:Nm(2),istrip),bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                          or_fail("ppm_rc_write_tiff_strip")
 
                        END SELECT !(lNormalize)
                     ENDDO ! loop through slices
@@ -348,27 +346,27 @@
                              bufrs(x,y)=DTYPE(wp_rs)(x,y)*Normalfacs
                           END FORALL
 
-                          info=write_tiff_strip(bufrs,bitsPerSampleW,Nm(1),Nm(2),0,1)
-                          or_fail("write_tiff_strip")
+                          info=ppm_rc_write_tiff_strip(bufrs,bitsPerSampleW,Nm(1),Nm(2),0,1)
+                          or_fail("ppm_rc_write_tiff_strip")
 
                        CASE DEFAULT
                           FORALL (x=1:Nm(1),y=1:Nm(2))
                              bufi(x,y)=INT(DTYPE(wp_rs)(x,y)*Normalfacs)
                           END FORALL
 
-                          info=write_tiff_strip(bufi,bitsPerSampleW,Nm(1),Nm(2),0,1)
-                          or_fail("write_tiff_strip")
+                          info=ppm_rc_write_tiff_strip(bufi,bitsPerSampleW,Nm(1),Nm(2),0,1)
+                          or_fail("ppm_rc_write_tiff_strip")
 
                        END SELECT !(bitsPerSampleW)
 
                     CASE (.FALSE.)
-                       info=write_tiff_strip(DTYPE(wp_rs)(1:Nm(1),1:Nm(2)),bitsPerSampleW,Nm(1),Nm(2),0,1)
-                       or_fail("write_tiff_strip")
+                       info=ppm_rc_write_tiff_strip(DTYPE(wp_rs)(1:Nm(1),1:Nm(2)),bitsPerSampleW,Nm(1),Nm(2),0,1)
+                       or_fail("ppm_rc_write_tiff_strip")
 
                     END SELECT !(lNormalize)
 #elif __DIME == __3D
                     DO istrip=1,Nm(3)
-                       info=write_tiff_header(istrip-1,Nm(3))
+                       info=ppm_rc_write_tiff_header(istrip-1,Nm(3))
                        or_fail('Error writing tiff file header.')
 
                        SELECT CASE (lNormalize)
@@ -379,24 +377,24 @@
                                 bufrs(x,y)=DTYPE(wp_rs)(x,y,istrip)*Normalfacs
                              END FORALL
 
-                             info=write_tiff_strip(bufrs,bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
-                             or_fail("write_tiff_strip")
-!                              info=write_tiff_scanline(bufr,0,bitsPerSampleW,0,Nm(1),Nm(2),istrip-1,Nm(3))
-!                              or_fail("write_tiff_scanline")
+                             info=ppm_rc_write_tiff_strip(bufrs,bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                             or_fail("ppm_rc_write_tiff_strip")
+!                              info=ppm_rc_write_tiff_scanline(bufr,0,bitsPerSampleW,0,Nm(1),Nm(2),istrip-1,Nm(3))
+!                              or_fail("ppm_rc_write_tiff_scanline")
 
                           CASE DEFAULT
                              FORALL (x=1:Nm(1),y=1:Nm(2))
                                 bufi(x,y)=INT(DTYPE(wp_rs)(x,y,istrip)*Normalfac)
                              END FORALL
 
-                             info=write_tiff_strip(bufi,bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
-                             or_fail("write_tiff_strip")
+                             info=ppm_rc_write_tiff_strip(bufi,bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                             or_fail("ppm_rc_write_tiff_strip")
 
                           END SELECT !(bitsPerSampleW)
 
                        CASE (.FALSE.)
-                          info=write_tiff_strip(DTYPE(wp_rs)(1:Nm(1),1:Nm(2),istrip),bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
-                          or_fail("write_tiff_strip")
+                          info=ppm_rc_write_tiff_strip(DTYPE(wp_rs)(1:Nm(1),1:Nm(2),istrip),bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                          or_fail("ppm_rc_write_tiff_strip")
 
                        END SELECT !(lNormalize)
                     ENDDO ! loop through slices
@@ -407,7 +405,7 @@
 
                  END SELECT !(FieldIn%data_type)
 
-                 info=close_tiff()
+                 info=ppm_rc_close_tiff()
                  or_fail('Error closing tiff file.')
 
               END SELECT !SELECT TYPE
@@ -475,8 +473,8 @@
         USE ppm_module_topo_typedef, ONLY : ppm_t_topo,ppm_topo
         USE ppm_module_interfaces, ONLY : ppm_t_discr_info_
 
-        USE ppm_rc_module_tiff, ONLY : open_write_tiff,open_write_bigtiff, &
-        &   close_tiff,write_tiff_header,write_tiff_strip !,bitsPerSampleW
+        USE ppm_rc_module_tiff, ONLY : ppm_rc_open_write_tiff,ppm_rc_open_write_bigtiff, &
+        &   ppm_rc_close_tiff,ppm_rc_write_tiff_header,ppm_rc_write_tiff_strip !,bitsPerSampleW
         IMPLICIT NONE
 
         !-------------------------------------------------------------------------
@@ -732,18 +730,16 @@
 
                  SELECT CASE (IsBigTIFF)
                  CASE (.TRUE.)
-                    info=open_write_bigtiff(filename)
-
+                    info=ppm_rc_open_write_bigtiff(filename)
                  CASE DEFAULT
-                    info=open_write_tiff(filename)
-
+                    info=ppm_rc_open_write_tiff(filename)
                  END SELECT
                  or_fail('Error opening tiff file to write in.')
 
-!                  info=write_tiff_header(bitsPerSampleW,1,Nm(1),Nm(2))
+!                  info=ppm_rc_write_tiff_header(bitsPerSampleW,1,Nm(1),Nm(2))
 !                  or_fail('Error writing tiff file header.')
 
-                 info=write_tiff_header(8,1,Nm(1),Nm(2))
+                 info=ppm_rc_write_tiff_header(8,1,Nm(1),Nm(2))
                  or_fail('Error writing tiff file header.')
 
                  SELECT CASE (FieldIn%data_type)
@@ -774,8 +770,8 @@
                           ENDDO
                        ENDDO
 
-                       info=write_tiff_strip(buf,8,Nm(1),Nm(2),0,1)
-                       or_fail("write_tiff_strip")
+                       info=ppm_rc_write_tiff_strip(buf,8,Nm(1),Nm(2),0,1)
+                       or_fail("ppm_rc_write_tiff_strip")
 #elif __DIME == __3D
                        DO istrip=1,Nm(3)
                           !Take each labeled regoin
@@ -790,11 +786,11 @@
                              ENDDO
                           ENDDO
 
-                          info=write_tiff_header(istrip-1,Nm(3))
+                          info=ppm_rc_write_tiff_header(istrip-1,Nm(3))
                           or_fail('Error writing tiff file header.')
 
-                          info=write_tiff_strip(buf,8,Nm(1),Nm(2),istrip-1,Nm(3))
-                          or_fail("libtiff_write_tiff_scanline")
+                          info=ppm_rc_write_tiff_strip(buf,8,Nm(1),Nm(2),istrip-1,Nm(3))
+                          or_fail("libtiff_write_tiff_strip")
                        ENDDO ! loop through slices
 #endif
 
@@ -812,15 +808,15 @@
                           ENDDO
                        ENDDO
 
-                       info=write_tiff_strip(buf,8,Nm(1),Nm(2),0,1)
-                       or_fail("write_tiff_strip")
+                       info=ppm_rc_write_tiff_strip(buf,8,Nm(1),Nm(2),0,1)
+                       or_fail("ppm_rc_write_tiff_strip")
 #elif __DIME == __3D
                        DO istrip=1,Nm(3)
                           !Only take the boundary of each labeled regoin
                           DO y=1,Nm(2)
                              DO x=1,Nm(1)
                                 IF (DTYPE(wp_i)(x,y,istrip).LT.0) THEN
-                                   !white=MOD(ABS(DTYPE(wp_i)(x,y,istrip)),150)+106
+                                   white=MOD(ABS(DTYPE(wp_i)(x,y,istrip)),150)+106
                                    buf(x,y)=white
                                 ELSE
                                    buf(x,y)=0
@@ -828,11 +824,11 @@
                              ENDDO
                           ENDDO
 
-                          info=write_tiff_header(istrip-1,Nm(3))
+                          info=ppm_rc_write_tiff_header(istrip-1,Nm(3))
                           or_fail('Error writing tiff file header.')
 
-                          info=write_tiff_strip(buf,8,Nm(1),Nm(2),istrip-1,Nm(3))
-                          or_fail("libtiff_write_tiff_scanline")
+                          info=ppm_rc_write_tiff_strip(buf,8,Nm(1),Nm(2),istrip-1,Nm(3))
+                          or_fail("libtiff_write_tiff_strip")
                        ENDDO ! loop through slices
 #endif
 
@@ -843,7 +839,7 @@
 
                  END SELECT !(FieldIn%data_type)
 
-                 info=close_tiff()
+                 info=ppm_rc_close_tiff()
                  or_fail('Error closing tiff file.')
 
               END SELECT !SELECT TYPE

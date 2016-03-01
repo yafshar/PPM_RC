@@ -526,7 +526,7 @@
           USE ppm_module_error, ONLY : ppm_error,ppm_err_alloc,ppm_err_sub_failed
           USE ppm_module_util_qsort, ONLY : ppm_util_qsort
 
-          USE ppm_rc_module_util, ONLY : label_exist
+          USE ppm_rc_module_util, ONLY : ppm_rc_label_exist
           IMPLICIT NONE
           !-------------------------------------------------------------------------
           !  Includes
@@ -549,7 +549,7 @@
           !-------------------------------------------------------------------------
           CALL substart(caller,t0,info)
 
-          IF (.NOT.label_exist(LabelIn,MCMCRegionLabel,MCMCRegionLabelSize)) THEN
+          IF (.NOT.ppm_rc_label_exist(LabelIn,MCMCRegionLabel,MCMCRegionLabelSize)) THEN
              IF (MCMCRegionLabelSize+1.GT.SIZE(MCMCRegionLabel)) THEN
                 ALLOCATE(tmp1_i(MCMCRegionLabelSize*2),STAT=info)
                 or_fail_alloc("tmp1_i",ppm_error=ppm_error_fatal)
@@ -1204,7 +1204,7 @@
           USE ppm_module_data, ONLY : ppm_kind_int64
 
           USE ppm_rc_module_global, ONLY : FORBIDDEN
-          USE ppm_rc_module_rnd, ONLY : GetImageDistrIndex
+          USE ppm_rc_module_rnd, ONLY : ppm_rc_GetImageDistrIndex
           USE ppm_rc_module_util, ONLY : id_gtl_2d
           IMPLICIT NONE
           !-------------------------------------------------------------------------
@@ -1225,7 +1225,7 @@
           !  Initialize
           !-------------------------------------------------------------------------
           DO
-             lindex=GetImageDistrIndex()
+             lindex=ppm_rc_GetImageDistrIndex()
              CALL id_gtl_2d(Nm,lindex,index_)
              IF (labels_(index_(1),index_(2)).NE.FORBIDDEN) THEN
                 EXIT
@@ -1245,7 +1245,7 @@
           USE ppm_module_data, ONLY : ppm_kind_int64
 
           USE ppm_rc_module_global, ONLY : FORBIDDEN
-          USE ppm_rc_module_rnd, ONLY : GetImageDistrIndex
+          USE ppm_rc_module_rnd, ONLY : ppm_rc_GetImageDistrIndex
           USE ppm_rc_module_util, ONLY : id_gtl_3d
           IMPLICIT NONE
           !-------------------------------------------------------------------------
@@ -1266,7 +1266,7 @@
           !  Initialize
           !-------------------------------------------------------------------------
           DO
-             lindex=GetImageDistrIndex()
+             lindex=ppm_rc_GetImageDistrIndex()
              CALL id_gtl_3d(Nm,lindex,index_)
              IF (labels_(index_(1),index_(2),index_(3)).NE.FORBIDDEN) THEN
                 EXIT
@@ -3193,7 +3193,7 @@
           USE ppm_module_mesh_typedef, ONLY : ppm_t_subpatch_
 
           USE ppm_rc_module_global, ONLY : half,mesh,labels
-          USE ppm_rc_module_rnd, ONLY : SaruGetRealVariate
+          USE ppm_rc_module_rnd, ONLY : ppm_rc_SaruGetRealVariate
           IMPLICIT NONE
           !-------------------------------------------------------------------------
           !  Includes
@@ -3254,7 +3254,7 @@
                    !!! insert particle
 
                    !!! the target-distribution probability ratio
-                   Child=SaruGetRealVariate().GT.half
+                   Child=ppm_rc_SaruGetRealVariate().GT.half
 
                    tmpParticle%candlabel=MERGE(LabelIn,0,Child)
                    !!! TO CHECK
@@ -3313,7 +3313,7 @@
           USE ppm_module_mesh_typedef, ONLY : ppm_t_subpatch_
 
           USE ppm_rc_module_global, ONLY : half,mesh,labels
-          USE ppm_rc_module_rnd, ONLY : SaruGetRealVariate
+          USE ppm_rc_module_rnd, ONLY : ppm_rc_SaruGetRealVariate
           IMPLICIT NONE
           !-------------------------------------------------------------------------
           !  Includes
@@ -3374,7 +3374,7 @@
                    !!! insert particle
 
                    !!! the target-distribution probability ratio
-                   Child=SaruGetRealVariate().GT.half
+                   Child=ppm_rc_SaruGetRealVariate().GT.half
 
                    tmpParticle%candlabel=MERGE(LabelIn,0,Child)
                    !!! TO CHECK
@@ -3422,7 +3422,7 @@
 !           !       MCMCOffBoundarySample=.FALSE.
 !           !       RETURN
 !           !    ENDIF
-!           !    ParticleIndex = SaruGetIntegerVariate(NumberOfFloatingParticles)
+!           !    ParticleIndex = ppm_rc_SaruGetIntegerVariate(NumberOfFloatingParticles)
 !           !    Particle = MCMCFloatingParticles(ParticleIndex)
 !           !    EdgeWeight = m_EdgeImage->GetPixel(vParticle.m_Index)
 !           !    !!! the backward probability:
@@ -3642,8 +3642,8 @@
 
           USE ppm_rc_module_global, ONLY : one,mesh,labels,MCMCstepsize, &
           &   MCMCuseBiasedProposal
-          USE ppm_rc_module_rnd, ONLY : GetPartDistrIndex,SaruGetIntegerVariate,  &
-          &   DestroyParticlesDiscrDistr,GenerateParticlesFwdProposalsDiscrDistr
+          USE ppm_rc_module_rnd, ONLY : ppm_rc_GetPartDistrIndex,ppm_rc_SaruGetIntegerVariate,  &
+          &   ppm_rc_DestroyParticlesDiscrDistr,ppm_rc_GenerateParticlesFwdProposalsDiscrDistr
           IMPLICIT NONE
           !-------------------------------------------------------------------------
           !  Includes
@@ -3693,8 +3693,8 @@
              or_fail("MCMCUpdateAllParticlesFwdProposals",ppm_error=ppm_error_fatal)
 
              !!! Create a discrete distribution over particles
-             info=GenerateParticlesFwdProposalsDiscrDistr(MCMCAllParticlesFwdProposals,MCMCActiveCandidatesSize)
-             or_fail("GenerateParticlesFwdProposalsDiscrDistr",ppm_error=ppm_error_fatal)
+             info=ppm_rc_GenerateParticlesFwdProposalsDiscrDistr(MCMCAllParticlesFwdProposals,MCMCActiveCandidatesSize)
+             or_fail("ppm_rc_GenerateParticlesFwdProposalsDiscrDistr",ppm_error=ppm_error_fatal)
           ELSE
              MCMCActiveCandidatesSize=MCMCActiveCandidates%size()
           ENDIF
@@ -3711,10 +3711,10 @@
                 !!! Find particle A:
                 DO PC=1,MCMCstepsize
                    IF (MCMCuseBiasedProposal.AND..NOT.ParticleAIsFloating) THEN
-                      ParticleIndex=GetPartDistrIndex()
+                      ParticleIndex=ppm_rc_GetPartDistrIndex()
                       MCMC_q_A(PC)=MCMCAllParticlesFwdProposals(ParticleIndex)
                    ELSE
-                      ParticleIndex=SaruGetIntegerVariate(MCMCActiveCandidatesSize)
+                      ParticleIndex=ppm_rc_SaruGetIntegerVariate(MCMCActiveCandidatesSize)
                       MCMC_q_A(PC)=one
                    ENDIF
 
@@ -3788,10 +3788,10 @@
                 !!! Find particle A:
                 DO PC=1,MCMCstepsize
                    IF (MCMCuseBiasedProposal.AND..NOT.ParticleAIsFloating) THEN
-                      ParticleIndex=GetPartDistrIndex()
+                      ParticleIndex=ppm_rc_GetPartDistrIndex()
                       MCMC_q_A(PC)=MCMCAllParticlesFwdProposals(ParticleIndex)
                    ELSE
-                      ParticleIndex=SaruGetIntegerVariate(MCMCActiveCandidatesSize)
+                      ParticleIndex=ppm_rc_SaruGetIntegerVariate(MCMCActiveCandidatesSize)
                       MCMC_q_A(PC)=one
                    ENDIF
 
@@ -3859,8 +3859,8 @@
         8888 CONTINUE
           IF (MCMCuseBiasedProposal.AND..NOT.ParticleAIsFloating) THEN
              !!! make sure that there is no discrete distribution available in memory
-             info=DestroyParticlesDiscrDistr()
-             or_fail("DestroyParticlesDiscrDistr")
+             info=ppm_rc_DestroyParticlesDiscrDistr()
+             or_fail("ppm_rc_DestroyParticlesDiscrDistr")
           ENDIF
         !-------------------------------------------------------------------------
         !  Return
@@ -4909,8 +4909,8 @@
 
           USE ppm_rc_module_global, ONLY : one,mesh,image,labels,MCMCstepsize, &
           &   MCMCuseBiasedProposal
-          USE ppm_rc_module_rnd, ONLY : GetPartDistrIndex,SaruGetIntegerVariate,  &
-          &   DestroyParticlesDiscrDistr,GenerateParticlesFwdProposalsDiscrDistr
+          USE ppm_rc_module_rnd, ONLY : ppm_rc_GetPartDistrIndex,ppm_rc_SaruGetIntegerVariate,  &
+          &   ppm_rc_DestroyParticlesDiscrDistr,ppm_rc_GenerateParticlesFwdProposalsDiscrDistr
           IMPLICIT NONE
           !-------------------------------------------------------------------------
           !  Includes
@@ -5009,18 +5009,18 @@
                       Normalizer_Q_B_A=SUM(ProposalsVector)
 
                       !!! Create a discrete distribution over particles
-                      info=GenerateParticlesFwdProposalsDiscrDistr(ProposalsVector,nsize)
-                      or_fail("GenerateParticlesFwdProposalsDiscrDistr", &
+                      info=ppm_rc_GenerateParticlesFwdProposalsDiscrDistr(ProposalsVector,nsize)
+                      or_fail("ppm_rc_GenerateParticlesFwdProposalsDiscrDistr", &
                       & ppm_error=ppm_error_fatal)
 
-                      ParticleIndex=GetPartDistrIndex()
+                      ParticleIndex=ppm_rc_GetPartDistrIndex()
 
                       Part_B=Parts_Q_BgivenA(ParticleIndex)
 
                       !!! The value m_Proposal of B is currently equal to Q_B_A.
                       MCMC_q_B_A(PC)=Part_B%proposal/Normalizer_Q_B_A
                    ELSE
-                      ParticleIndex=SaruGetIntegerVariate(nsize)
+                      ParticleIndex=ppm_rc_SaruGetIntegerVariate(nsize)
 
                       Part_B=Parts_Q_BgivenA(ParticleIndex)
 
@@ -5099,8 +5099,8 @@
                       or_fail_dealloc("ProposalsVector")
 
                       !!! make sure that there is no discrete distribution available in memory
-                      info=DestroyParticlesDiscrDistr()
-                      or_fail("DestroyParticlesDiscrDistr")
+                      info=ppm_rc_DestroyParticlesDiscrDistr()
+                      or_fail("ppm_rc_DestroyParticlesDiscrDistr")
                    ENDIF
                 ENDDO !PC=1,MCMCstepsize
 
@@ -5156,18 +5156,18 @@
                       Normalizer_Q_B_A=SUM(ProposalsVector)
 
                       !!! Create a discrete distribution over particles
-                      info=GenerateParticlesFwdProposalsDiscrDistr(ProposalsVector,nsize)
-                      or_fail("GenerateParticlesFwdProposalsDiscrDistr", &
+                      info=ppm_rc_GenerateParticlesFwdProposalsDiscrDistr(ProposalsVector,nsize)
+                      or_fail("ppm_rc_GenerateParticlesFwdProposalsDiscrDistr", &
                       & ppm_error=ppm_error_fatal)
 
-                      ParticleIndex=GetPartDistrIndex()
+                      ParticleIndex=ppm_rc_GetPartDistrIndex()
 
                       Part_B=Parts_Q_BgivenA(ParticleIndex)
 
                       !!! The value m_Proposal of B is currently equal to Q_B_A.
                       MCMC_q_B_A(PC)=Part_B%proposal/Normalizer_Q_B_A
                    ELSE
-                      ParticleIndex=SaruGetIntegerVariate(nsize)
+                      ParticleIndex=ppm_rc_SaruGetIntegerVariate(nsize)
 
                       Part_B=Parts_Q_BgivenA(ParticleIndex)
 
@@ -5246,8 +5246,8 @@
                       or_fail_dealloc("ProposalsVector")
 
                       !!! make sure that there is no discrete distribution available in memory
-                      info=DestroyParticlesDiscrDistr()
-                      or_fail("DestroyParticlesDiscrDistr")
+                      info=ppm_rc_DestroyParticlesDiscrDistr()
+                      or_fail("ppm_rc_DestroyParticlesDiscrDistr")
                    ENDIF
                 ENDDO !PC=1,MCMCstepsize
 
@@ -5277,8 +5277,8 @@
 
           USE ppm_rc_module_global, ONLY : one,mesh,image,labels,MCMCstepsize, &
           &   MCMCuseBiasedProposal,MCMCusePairProposal
-          USE ppm_rc_module_rnd, ONLY : GetPartDistrIndex,SaruGetIntegerVariate,  &
-          &   DestroyParticlesDiscrDistr,GenerateParticlesFwdProposalsDiscrDistr
+          USE ppm_rc_module_rnd, ONLY : ppm_rc_GetPartDistrIndex,ppm_rc_SaruGetIntegerVariate,  &
+          &   ppm_rc_DestroyParticlesDiscrDistr,ppm_rc_GenerateParticlesFwdProposalsDiscrDistr
           USE ppm_rc_module_linkedlist, ONLY : MCMCAppliedParticleOrigLabels, &
           &   ppm_rc_link
           IMPLICIT NONE
@@ -5641,7 +5641,7 @@
 !                 IF (HastingsRatio.GE.one) THEN
 !                    Accept=.TRUE.
 !                 ELSE
-!                    IF (HastingsRatio.GT.SaruGetRealVariate()) THEN
+!                    IF (HastingsRatio.GT.ppm_rc_SaruGetRealVariate()) THEN
 !                       Accept=.TRUE.
 !                    ELSE
 !                       Accept=.FALSE.

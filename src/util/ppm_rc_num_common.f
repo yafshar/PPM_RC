@@ -1,5 +1,5 @@
       !-------------------------------------------------------------------------
-      !  Subroutine   :                    compute_num_common
+      !  Subroutine   :                    ppm_rc_compute_num_common
       !-------------------------------------------------------------------------
       ! Copyright (c) 2016 MOSAIC Group (MPI-CBG Dresden)
       !
@@ -22,7 +22,7 @@
       ! see <http://www.gnu.org/licenses/>.
       !-------------------------------------------------------------------------
 
-      SUBROUTINE compute_num_common(a,b,c,n,info)
+      SUBROUTINE ppm_rc_compute_num_common(a,b,c,n,info)
 
         IMPLICIT NONE
 
@@ -40,7 +40,7 @@
 
         INTEGER :: i,iopt
 
-        CHARACTER(LEN=ppm_char) :: caller='compute_num_common'
+        CHARACTER(LEN=ppm_char) :: caller='ppm_rc_compute_num_common'
 
         LOGICAL, DIMENSION(SIZE(a)) :: MASK
 
@@ -52,7 +52,7 @@
 
         iopt=ppm_param_alloc_grow
         CALL ppm_alloc(c,(/n/),iopt,info)
-        or_fail_alloc("compute_num_common c")
+        or_fail_alloc("c")
 
         c=PACK(a,MASK)
         !-------------------------------------------------------------------------
@@ -60,5 +60,5 @@
         !-------------------------------------------------------------------------
       9999 CONTINUE
         CALL substop(caller,t0,info)
-      END SUBROUTINE compute_num_common
+      END SUBROUTINE ppm_rc_compute_num_common
 

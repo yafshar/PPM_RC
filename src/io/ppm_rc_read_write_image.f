@@ -54,8 +54,8 @@
         USE ppm_module_field_typedef, ONLY : ppm_t_field_
         USE ppm_module_mesh_typedef, ONLY : ppm_t_subpatch_
 
-        USE ppm_rc_module_tiff, ONLY : open_tiff,read_tiff_scanline, &
-        &   close_tiff,read_tiff_info,bitsPerSample
+        USE ppm_rc_module_tiff, ONLY : ppm_rc_open_tiff,ppm_rc_read_tiff_scanline, &
+        &   ppm_rc_close_tiff,ppm_rc_read_tiff_info,bitsPerSample
         IMPLICIT NONE
 
         !-------------------------------------------------------------------------
@@ -164,32 +164,32 @@
                  WRITE(filename,'(A,A1,I5.5,A4,A1)') TRIM(InputFileName),'_',i,'.tif',CHAR(0)
               END SELECT
 
-              info=read_tiff_info(filename,Ngrid_)
+              info=ppm_rc_read_tiff_info(filename,Ngrid_)
               or_fail('Error in reading a tiff header file!')
 
-              info=open_tiff(filename)
+              info=ppm_rc_open_tiff(filename)
               or_fail('Error opening tiff file.')
 
               DO page=1,Ngrid_(3)
                  z=z+1
                  SELECT CASE (FieldIn%data_type)
                  CASE (ppm_type_real_single)
-                    info=read_tiff_scanline(DTYPE(wp_rs)(1:Nm(1),1:Nm(2),z), &
+                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_rs)(1:Nm(1),1:Nm(2),z), &
                     &    0,bitsPerSample,0,Nm(1),Nm(2),page-1,Ngrid_(3))
 
                  CASE (ppm_type_real)
-                    info=read_tiff_scanline(DTYPE(wp_r)(1:Nm(1),1:Nm(2),z), &
+                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_r)(1:Nm(1),1:Nm(2),z), &
                     &    0,bitsPerSample,0,Nm(1),Nm(2),page-1,Ngrid_(3))
 
                  CASE (ppm_type_int)
-                    info=read_tiff_scanline(DTYPE(wp_i)(1:Nm(1),1:Nm(2),z), &
+                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_i)(1:Nm(1),1:Nm(2),z), &
                     &    0,bitsPerSample,0,Nm(1),Nm(2),page-1,Ngrid_(3))
 
                  END SELECT
-                 or_fail('Error in read_tiff_scanline !!!')
+                 or_fail('Error in ppm_rc_read_tiff_scanline !!!')
               ENDDO
 
-              info=close_tiff()
+              info=ppm_rc_close_tiff()
               or_fail('Error closing tiff file.')
            ENDDO !i=1,ninputimage
 

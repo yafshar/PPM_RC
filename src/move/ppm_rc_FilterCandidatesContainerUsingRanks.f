@@ -54,7 +54,7 @@
         USE ppm_module_mpi
         USE ppm_module_util_qsort, ONLY : ppm_util_qsort
 
-        USE ppm_rc_module_util, ONLY : label_exist
+        USE ppm_rc_module_util, ONLY : ppm_rc_label_exist
         IMPLICIT NONE
 
         !-------------------------------------------------------------------------
@@ -196,7 +196,7 @@
               i=i+1
               ppart=Candidates_list(i)
 
-              IF (label_exist(ppart,vSortedList,vSortedListranking,nsize)) THEN
+              IF (ppm_rc_label_exist(ppart,vSortedList,vSortedListranking,nsize)) THEN
                  seed => Candidates(ipatch)%prev()
                  CYCLE
               ELSE IF (ppart.GT.Mpart) THEN

@@ -67,7 +67,7 @@
         USE ppm_module_util_qsort, ONLY : ppm_util_qsort
         USE ppm_module_util_time, ONLY : ppm_util_time
 
-        USE ppm_rc_module_util, ONLY : label_exist
+        USE ppm_rc_module_util, ONLY : ppm_rc_label_exist,ppm_rc_label_index
         IMPLICIT NONE
 
         !-------------------------------------------------------------------------
@@ -117,12 +117,12 @@
         INTEGER                                        :: ppart,qpart
         INTEGER                                        :: ipart
         INTEGER,             DIMENSION(:), ALLOCATABLE :: vCheckedLabels
-        INTEGER,             DIMENSION(:), POINTER     :: vCheckedLabelsranking
         INTEGER,             DIMENSION(:), POINTER     :: list_del_parts_ranking
         INTEGER                                        :: vCurrentLabel,vCandidateLabel
         INTEGER                                        :: vLabel,vLabel1,vLabel2,val
         INTEGER                                        :: vNSplits
         INTEGER                                        :: nneigh
+        INTEGER                                        :: labelindex
         INTEGER                                        :: i,j,l,ii
 #if   __DIME == __3D
         INTEGER                                        :: k
@@ -1001,8 +1001,6 @@
            ALLOCATE(vCheckedLabels(nsize),STAT=info)
            or_fail_alloc("vCheckedLabels")
 
-           NULLIFY(vCheckedLabelsranking)
-
            nb=vNSplits
 
            sbpitr => mesh%subpatch%begin()
@@ -1056,8 +1054,8 @@
                     CYCLE
                  ENDIF
 
-                 IF (label_exist(vLabel1,vCheckedLabels,il1).OR. &
-                 &   label_exist(vLabel2,vCheckedLabels,il1)) THEN
+                 IF (ppm_rc_label_exist(vLabel1,vCheckedLabels,il1).OR. &
+                 &   ppm_rc_label_exist(vLabel2,vCheckedLabels,il1)) THEN
                     !-------------------------------------------------------------------------
                     ! do nothing, since this label was already in a fusion-chain
                     !-------------------------------------------------------------------------
@@ -1069,32 +1067,39 @@
                     !-------------------------------------------------------------------------
                     CALL vLabelsToCheck%add(vLabel1)
 
+                    !-------------------------------------------------------------------------
+                    ! CheckedLabels contains all the labels that are already in.
+                    !-------------------------------------------------------------------------
+                    labelindex=ppm_rc_label_index(vLabel1,vCheckedLabels,il1)
+
                     il1=il1+1
                     IF (il1.GT.nsize) THEN
-                       ALLOCATE(bufi(nsize+1),STAT=info)
+                       ALLOCATE(bufi(nsize*2),STAT=info)
                        or_fail_alloc("Tmp array allocation failed!")
 
-                       FORALL (i=1:nsize) bufi(i)=vCheckedLabels(i)
+                       FORALL (i=1:labelindex-1) bufi(i)=vCheckedLabels(i)
+                       bufi(labelindex)=vLabel1
+                       FORALL (i=labelindex:nsize) bufi(i+1)=vCheckedLabels(i)
                        nsize=nsize*2
 
                        CALL MOVE_ALLOC(bufi,vCheckedLabels)
+                    ELSE
+                       IF      (labelindex.EQ.il1) THEN
+                          vCheckedLabels(il1)=vLabel1
+                       ELSE IF (labelindex.GT.1) THEN
+                          DO i=il1,labelindex+1,-1
+                             vCheckedLabels(i)=vCheckedLabels(i-1)
+                          ENDDO
+                          vCheckedLabels(labelindex)=vLabel1
+                       ELSE IF (labelindex.EQ.1) THEN
+                          DO i=il1,2,-1
+                             vCheckedLabels(i)=vCheckedLabels(i-1)
+                          ENDDO
+                          vCheckedLabels(1)=vLabel1
+                       ELSE IF (labelindex.EQ.0) THEN
+                          vCheckedLabels(il1)=vLabel1
+                       ENDIF
                     ENDIF
-                    !-------------------------------------------------------------------------
-                    ! CheckedLabels contains all labels that are already in.
-                    !-------------------------------------------------------------------------
-                    vCheckedLabels(il1)=vLabel1
-
-                    CALL ppm_util_qsort(vCheckedLabels,vCheckedLabelsranking,info,il1)
-                    or_fail("ppm_util_qsort")
-
-                    ALLOCATE(bufi(nsize),STAT=info)
-                    or_fail_alloc("bufi")
-
-                    DO i=1,il1
-                       bufi(i)=vCheckedLabels(vCheckedLabelsranking(i))
-                    ENDDO
-
-                    CALL MOVE_ALLOC(bufi,vCheckedLabels)
 
                     ALLOCATE(tseed,STAT=info)
                     or_fail_alloc("tseed")
@@ -1140,7 +1145,7 @@
 
                           IF (vLabel1.EQ.vLabel) THEN
 !                              IF (.NOT.ANY(vLabel2.EQ.vCheckedLabels)) THEN
-                             IF (.NOT.label_exist(vLabel2,vCheckedLabels,il1)) THEN
+                             IF (.NOT.ppm_rc_label_exist(vLabel2,vCheckedLabels,il1)) THEN
                                 ALLOCATE(tseed,STAT=info)
                                 or_fail_alloc("tseed")
 #if   __DIME == __2D
@@ -1163,32 +1168,36 @@
                                 ENDIF
                                 nlabels(nb)=loc_label
 
+                                labelindex=ppm_rc_label_index(vLabel2,vCheckedLabels,il1)
+
                                 il1=il1+1
                                 IF (il1.GT.nsize) THEN
-                                   ALLOCATE(bufi(nsize+1),STAT=info)
+                                   ALLOCATE(bufi(nsize*2),STAT=info)
                                    or_fail_alloc("Tmp array allocation failed!")
 
-                                   FORALL (i=1:nsize) bufi(i)=vCheckedLabels(i)
+                                   FORALL (i=1:labelindex-1) bufi(i)=vCheckedLabels(i)
+                                   bufi(labelindex)=vLabel2
+                                   FORALL (i=labelindex:nsize) bufi(i+1)=vCheckedLabels(i)
                                    nsize=nsize*2
 
                                    CALL MOVE_ALLOC(bufi,vCheckedLabels)
+                                ELSE
+                                   IF      (labelindex.EQ.il1) THEN
+                                      vCheckedLabels(il1)=vLabel2
+                                   ELSE IF (labelindex.GT.1) THEN
+                                      DO i=il1,labelindex+1,-1
+                                         vCheckedLabels(i)=vCheckedLabels(i-1)
+                                      ENDDO
+                                      vCheckedLabels(labelindex)=vLabel2
+                                   ELSE IF (labelindex.EQ.1) THEN
+                                      DO i=il1,2,-1
+                                         vCheckedLabels(i)=vCheckedLabels(i-1)
+                                      ENDDO
+                                      vCheckedLabels(1)=vLabel2
+                                   ELSE IF (labelindex.EQ.0) THEN
+                                      vCheckedLabels(1)=vLabel2
+                                   ENDIF
                                 ENDIF
-                                !-------------------------------------------------------------------------
-                                ! CheckedLabels contains all labels that are already in.
-                                !-------------------------------------------------------------------------
-                                vCheckedLabels(il1)=vLabel2
-
-                                CALL ppm_util_qsort(vCheckedLabels,vCheckedLabelsranking,info,il1)
-                                or_fail("ppm_util_qsort")
-
-                                ALLOCATE(bufi(nsize),STAT=info)
-                                or_fail_alloc("bufi")
-
-                                DO i=1,il1
-                                   bufi(i)=vCheckedLabels(vCheckedLabelsranking(i))
-                                ENDDO
-
-                                CALL MOVE_ALLOC(bufi,vCheckedLabels)
 
                                 CALL vLabelsToCheck%add(vLabel2)
                              ELSE IF (ANY(vseedn(__DIME+2:2*__DIME+1).LT.1.OR.vseedn(__DIME+2:2*__DIME+1).GT.Nm)) THEN
@@ -1220,7 +1229,7 @@
                           ENDIF
                           IF (vLabel2.EQ.vLabel) THEN
 !                              IF (.NOT.ANY(vLabel1.EQ.vCheckedLabels)) THEN
-                             IF (.NOT.label_exist(vLabel1,vCheckedLabels,il1)) THEN
+                             IF (.NOT.ppm_rc_label_exist(vLabel1,vCheckedLabels,il1)) THEN
                                 ALLOCATE(tseed,STAT=info)
                                 or_fail_alloc("tseed")
 #if   __DIME == __2D
@@ -1243,32 +1252,36 @@
                                 ENDIF
                                 nlabels(nb)=loc_label
 
+                                labelindex=ppm_rc_label_index(vLabel1,vCheckedLabels,il1)
+
                                 il1=il1+1
                                 IF (il1.GT.nsize) THEN
-                                   ALLOCATE(bufi(nsize+1),STAT=info)
+                                   ALLOCATE(bufi(nsize*2),STAT=info)
                                    or_fail_alloc("Tmp array allocation failed!")
 
-                                   FORALL (i=1:nsize) bufi(i)=vCheckedLabels(i)
+                                   FORALL (i=1:labelindex-1) bufi(i)=vCheckedLabels(i)
+                                   bufi(labelindex)=vLabel1
+                                   FORALL (i=labelindex:nsize) bufi(i+1)=vCheckedLabels(i)
                                    nsize=nsize*2
 
                                    CALL MOVE_ALLOC(bufi,vCheckedLabels)
+                                ELSE
+                                   IF      (labelindex.EQ.il1) THEN
+                                      vCheckedLabels(il1)=vLabel1
+                                   ELSE IF (labelindex.GT.1) THEN
+                                      DO i=il1,labelindex+1,-1
+                                         vCheckedLabels(i)=vCheckedLabels(i-1)
+                                      ENDDO
+                                      vCheckedLabels(labelindex)=vLabel1
+                                   ELSE IF (labelindex.EQ.1) THEN
+                                      DO i=il1,2,-1
+                                         vCheckedLabels(i)=vCheckedLabels(i-1)
+                                      ENDDO
+                                      vCheckedLabels(1)=vLabel1
+                                   ELSE IF (labelindex.EQ.0) THEN
+                                      vCheckedLabels(1)=vLabel1
+                                   ENDIF
                                 ENDIF
-                                !-------------------------------------------------------------------------
-                                ! CheckedLabels contains all labels that are already in.
-                                !-------------------------------------------------------------------------
-                                vCheckedLabels(il1)=vLabel1
-
-                                CALL ppm_util_qsort(vCheckedLabels,vCheckedLabelsranking,info,il1)
-                                or_fail("ppm_util_qsort")
-
-                                ALLOCATE(bufi(nsize),STAT=info)
-                                or_fail_alloc("bufi")
-
-                                DO i=1,il1
-                                   bufi(i)=vCheckedLabels(vCheckedLabelsranking(i))
-                                ENDDO
-
-                                CALL MOVE_ALLOC(bufi,vCheckedLabels)
 
                                 CALL vLabelsToCheck%add(vLabel1)
                              ELSE IF (ANY(vseedn(1:__DIME).LT.1.OR.vseedn(1:__DIME).GT.Nm)) THEN
@@ -1317,9 +1330,6 @@
            DEALLOCATE(vCheckedLabels,STAT=info)
            or_fail_dealloc("vCheckedLabels")
 
-           CALL ppm_alloc(vCheckedLabelsranking,ld,ppm_param_dealloc,info)
-           or_fail_dealloc("vCheckedLabelsranking")
-
            CALL vLabelsToCheck%destroy()
 
            IF (ALLOCATED(nlabels)) THEN
@@ -1337,8 +1347,8 @@
         ! The fire will make some of the boundary particles a seed point
         ! to fire to the other processor through the ghost update
         !-------------------------------------------------------------------------
-        CALL DTYPE(forestfire)(Part,mesh,.TRUE.,info)
-        or_fail("forestfire")
+        CALL DTYPE(ppm_rc_forestfire)(Part,mesh,.TRUE.,info)
+        or_fail("ppm_rc_forestfire")
 
 
         nsize=SIZE(list_del_parts)
@@ -1644,7 +1654,7 @@
                     !if the label of the ghost particle is equal to the newlabel
                     !then it is a hot particle which should fire in another
                     !processor
-                    IF (label_exist(ABS(wpl(1,ipart)),nlabels,nb,.TRUE.)) THEN
+                    IF (ppm_rc_label_exist(ABS(wpl(1,ipart)),nlabels,nb,.TRUE.)) THEN
                        wpl(1,ipart)=ABS(wpl(1,ipart))
                        ! The hot particles are positive in label
                        wpl(2,ipart)=0
@@ -1925,8 +1935,8 @@
         !-------------------------------------------------------------------------
         ! After the forestfire the label is uptodate
         !-------------------------------------------------------------------------
-        CALL DTYPE(forestfire)(Part,mesh,.FALSE.,info)
-        or_fail("forestfire")
+        CALL DTYPE(ppm_rc_forestfire)(Part,mesh,.FALSE.,info)
+        or_fail("ppm_rc_forestfire")
 
         IF (debug.GT.0) THEN
            CALL ppm_util_time(tm1)

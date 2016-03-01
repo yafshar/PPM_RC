@@ -54,7 +54,7 @@
         !-------------------------------------------------------------------------
         !  Modules
         !-------------------------------------------------------------------------
-        USE ppm_rc_module_tiff, ONLY : read_tiff_info
+        USE ppm_rc_module_tiff, ONLY : ppm_rc_read_tiff_info
         IMPLICIT NONE
 
         !-------------------------------------------------------------------------
@@ -106,7 +106,7 @@
 
            END SELECT
 
-           info=read_tiff_info(filename,Ngrid_)
+           info=ppm_rc_read_tiff_info(filename,Ngrid_)
            or_fail('Error in reading a tiff header file!')
 
            z=z+MERGE(Ngrid_(3),1,ppm_rc_dim.EQ.3)

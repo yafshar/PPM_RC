@@ -1,7 +1,7 @@
 
       SUBROUTINE DTYPE(initfire)(MeshIn,info)
 
-        USE ppm_rc_module_util, ONLY : label_exist
+        USE ppm_rc_module_util, ONLY : ppm_rc_label_exist
         IMPLICIT NONE
         !-------------------------------------------------------------------------
         !  Arguments
@@ -77,9 +77,9 @@
                seedn   => seedlnk%getValue()
 
 #if   __DIME == __2D
-               IF (label_exist(ABS(DTYPE(wpl)(seedn(1),seedn(2))),nlabels,iseed-1,.TRUE.)) THEN
+               IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(seedn(1),seedn(2))),nlabels,iseed-1,.TRUE.)) THEN
 #elif __DIME == __3D
-               IF (label_exist(ABS(DTYPE(wpl)(seedn(1),seedn(2),seedn(3))),nlabels,iseed-1,.TRUE.)) THEN
+               IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(seedn(1),seedn(2),seedn(3))),nlabels,iseed-1,.TRUE.)) THEN
 #endif
                    CALL ppm_rc_seeds(ipatch)%remove(info)
                    or_fail("ppm_rc_seeds(ipatch)%remove")
@@ -173,13 +173,13 @@
                            IF (ALL(ld.GE.0.AND.ld.LE.Nm+1)) THEN
 #if   __DIME == __2D
                               IF (ABS(DTYPE(wpl)(ld(1),ld(2))).EQ.nlabels(iseed)) CYCLE
-                              IF (label_exist(ABS(DTYPE(wpl)(seedn(1),seedn(2))),nlabels,iseed-1,.TRUE.)) THEN
+                              IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(seedn(1),seedn(2))),nlabels,iseed-1,.TRUE.)) THEN
                                  IF (DTYPE(wpl)(seedn(1),seedn(2)).NE.FORBIDDEN) THEN
                                     DTYPE(wpl)(seedn(1),seedn(2))=-nlabels(iseed)
                                  ENDIF
 #elif __DIME == __3D
                               IF (ABS(DTYPE(wpl)(ld(1),ld(2),ld(3))).EQ.nlabels(iseed)) CYCLE
-                              IF (label_exist(ABS(DTYPE(wpl)(seedn(1),seedn(2),seedn(3))),nlabels,iseed-1,.TRUE.)) THEN
+                              IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(seedn(1),seedn(2),seedn(3))),nlabels,iseed-1,.TRUE.)) THEN
                                  IF (DTYPE(wpl)(seedn(1),seedn(2),seedn(3)).NE.FORBIDDEN) THEN
                                     DTYPE(wpl)(seedn(1),seedn(2),seedn(3))=-nlabels(iseed)
                                  ENDIF
@@ -379,11 +379,11 @@
                            IF (ALL(ld.GE.0.AND.ld.LE.Nm+1)) THEN
 #if   __DIME == __2D
                               IF (ABS(DTYPE(wpl)(ld(1),ld(2))).EQ.nlabels(iseed)) CYCLE
-                              IF (label_exist(ABS(DTYPE(wpl)(ld(1),ld(2))),nlabels,iseed-1,.TRUE.)) THEN
+                              IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(ld(1),ld(2))),nlabels,iseed-1,.TRUE.)) THEN
                                  DTYPE(wpl)(seedn(1),seedn(2))=-nlabels(iseed)
 #elif __DIME == __3D
                               IF (ABS(DTYPE(wpl)(ld(1),ld(2),ld(3))).EQ.nlabels(iseed)) CYCLE
-                              IF (label_exist(ABS(DTYPE(wpl)(ld(1),ld(2),ld(3))),nlabels,iseed-1,.TRUE.)) THEN
+                              IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(ld(1),ld(2),ld(3))),nlabels,iseed-1,.TRUE.)) THEN
                                  DTYPE(wpl)(seedn(1),seedn(2),seedn(3))=-nlabels(iseed)
 #endif
                                  CYCLE
@@ -497,7 +497,7 @@
       SUBROUTINE DTYPE(fire)(MeshIn,info)
 
         USE ppm_rc_module_energy, ONLY : e_data
-        USE ppm_rc_module_util, ONLY : label_exist
+        USE ppm_rc_module_util, ONLY : ppm_rc_label_exist
         IMPLICIT NONE
         !-------------------------------------------------------------------------
         !  Arguments
@@ -592,7 +592,7 @@
                   iseed=iseed-1
                   CYCLE seed_loop
                ENDIF
-               IF (label_exist(oldlabel,nlabels(iseed:iseede),iseede-iseed+1,.TRUE.)) THEN
+               IF (ppm_rc_label_exist(oldlabel,nlabels(iseed:iseede),iseede-iseed+1,.TRUE.)) THEN
                   CALL ppm_rc_seeds(ipatch)%remove(info)
                   or_fail("ppm_rc_seeds(ipatch)%remove")
 

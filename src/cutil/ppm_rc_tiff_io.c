@@ -64,7 +64,7 @@ struct {
 } ppmTIFFTAG;
 
 
-int open_tiff(char *filename) {
+int ppm_rc_open_tiff(char *filename) {
 
   tif = TIFFOpen(filename,"r");
 
@@ -85,7 +85,7 @@ int open_tiff(char *filename) {
   return 0;
 }
 
-int open_bigtiff(char *filename) {
+int ppm_rc_open_bigtiff(char *filename) {
 
   tif = TIFFOpen(filename,"r8");
 
@@ -106,7 +106,7 @@ int open_bigtiff(char *filename) {
   return 0;
 }
 
-int open_write_tiff(char *filename) {
+int ppm_rc_open_write_tiff(char *filename) {
 
   tif = TIFFOpen(filename,"a+");
 
@@ -116,7 +116,7 @@ int open_write_tiff(char *filename) {
   return 0;
 }
 
-int open_write_bigtiff(char *filename) {
+int ppm_rc_open_write_bigtiff(char *filename) {
 
   tif = TIFFOpen(filename,"a8+");
 
@@ -126,7 +126,7 @@ int open_write_bigtiff(char *filename) {
   return 0;
 }
 
-int close_tiff() {
+int ppm_rc_close_tiff() {
 
   if (bufSc != NULL) {
     _TIFFfree(bufSc);

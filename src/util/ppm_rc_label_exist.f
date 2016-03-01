@@ -392,7 +392,7 @@
            ppm_rc_label_exist_dsc=.TRUE.
            RETURN
         ELSE IF (.NOT.descend) THEN
-           ppm_rc_label_exist_dsc=label_exist(label,arrayoflabels,arraysize)
+           ppm_rc_label_exist_dsc=ppm_rc_label_exist(label,arrayoflabels,arraysize)
            RETURN
         ELSE IF (label.GT.arrayoflabels(1)) THEN
            ppm_rc_label_exist_dsc=.FALSE.
@@ -472,7 +472,7 @@
            arrayindex=arraysize
            RETURN
         ELSE IF (.NOT.descend) THEN
-           ppm_rc_label_exist_dsc2=label_exist(label,arrayoflabels,arraysize,arrayindex)
+           ppm_rc_label_exist_dsc2=ppm_rc_label_exist(label,arrayoflabels,arraysize,arrayindex)
            RETURN
         ELSE IF (label.GT.arrayoflabels(1)) THEN
            ppm_rc_label_exist_dsc2=.FALSE.
@@ -552,7 +552,7 @@
            ppm_rc_label_exist_dsc3=.TRUE.
            RETURN
         ELSE IF (.NOT.descend) THEN
-           ppm_rc_label_exist_dsc3=label_exist(label,arrayoflabels,arrayofranks,arraysize)
+           ppm_rc_label_exist_dsc3=ppm_rc_label_exist(label,arrayoflabels,arrayofranks,arraysize)
            RETURN
         ELSE IF (label.GT.arrayoflabels(arrayofranks(1))) THEN
            ppm_rc_label_exist_dsc3=.FALSE.
@@ -635,7 +635,7 @@
            arrayindex=arrayofranks(arraysize)
            RETURN
         ELSE IF (.NOT.descend) THEN
-           ppm_rc_label_exist_dsc4=label_exist(label,arrayoflabels,arrayofranks,arraysize,arrayindex)
+           ppm_rc_label_exist_dsc4=ppm_rc_label_exist(label,arrayoflabels,arrayofranks,arraysize,arrayindex)
            RETURN
         ELSE IF (label.GT.arrayoflabels(arrayofranks(1))) THEN
            ppm_rc_label_exist_dsc4=.FALSE.

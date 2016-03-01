@@ -1,4 +1,4 @@
-      SUBROUTINE uniquers(a,b,info)
+      SUBROUTINE ppm_rc_uniquers(a,b,info)
 
         USE ppm_module_util_qsort, ONLY : ppm_util_qsort
         IMPLICIT NONE
@@ -64,9 +64,9 @@
         !-------------------------------------------------------------------------
       9999 CONTINUE
         CALL substop(caller,t0,info)
-      END SUBROUTINE uniquers
+      END SUBROUTINE ppm_rc_uniquers
 
-      SUBROUTINE uniquer(a,b,info)
+      SUBROUTINE ppm_rc_uniquer(a,b,info)
 
         USE ppm_module_util_qsort, ONLY : ppm_util_qsort
         IMPLICIT NONE
@@ -132,9 +132,9 @@
         !-------------------------------------------------------------------------
       9999 CONTINUE
         CALL substop(caller,t0,info)
-      END SUBROUTINE uniquer
+      END SUBROUTINE ppm_rc_uniquer
 
-      SUBROUTINE uniquei(a,b,info)
+      SUBROUTINE ppm_rc_uniquei(a,b,info)
 
         USE ppm_module_util_qsort, ONLY : ppm_util_qsort
         IMPLICIT NONE
@@ -198,9 +198,9 @@
         !-------------------------------------------------------------------------
       9999 CONTINUE
         CALL substop(caller,t0,info)
-      END SUBROUTINE uniquei
+      END SUBROUTINE ppm_rc_uniquei
 
-      SUBROUTINE uniqueli(a,b,info)
+      SUBROUTINE ppm_rc_uniqueli(a,b,info)
 
         USE ppm_module_util_qsort, ONLY : ppm_util_qsort
         IMPLICIT NONE
@@ -266,5 +266,5 @@
         !-------------------------------------------------------------------------
       9999 CONTINUE
         CALL substop(caller,t0,info)
-      END SUBROUTINE uniqueli
+      END SUBROUTINE ppm_rc_uniqueli
 

@@ -192,8 +192,8 @@
            ! Construct undirectde graph from candidate list of
            ! all particles we consider moving to another region
            !-------------------------------------------------------------------------
-           CALL create_graph(nsize,daughtersa,ndaughtersa,subgraph,info)
-           or_fail("create_graph")
+           CALL ppm_rc_create_graph(nsize,daughtersa,ndaughtersa,subgraph,info)
+           or_fail("ppm_rc_create_graph")
 
 #ifdef __MPI
            ALLOCATE(bufa(32),STAT=info)
@@ -912,8 +912,8 @@
            !-------------------------------------------------------------------------
            NULLIFY(subgraph1)
 
-           CALL create_graph(numpart,daughterst,ndaughterst,subgraph1,info)
-           or_fail("create_graph")
+           CALL ppm_rc_create_graph(numpart,daughterst,ndaughterst,subgraph1,info)
+           or_fail("ppm_rc_create_graph")
 
            !TO CHECK
            !This part will be done on every rank
@@ -1105,8 +1105,8 @@
               accepteda(bufa(i))=acceptedt(i)
            ENDDO
 
-           CALL destroy_graph(subgraph1,info)
-           or_fail("destroy_graph")
+           CALL ppm_rc_destroy_graph(subgraph1,info)
+           or_fail("ppm_rc_destroy_graph")
 
            NULLIFY(subgraph1)
 
@@ -1440,13 +1440,13 @@
            !-------------------------------------------------------------------------
            !  Create graph on every node
            !-------------------------------------------------------------------------
-           CALL destroy_graph(subgraph,info)
-           or_fail("destroy_graph")
+           CALL ppm_rc_destroy_graph(subgraph,info)
+           or_fail("ppm_rc_destroy_graph")
 
            NULLIFY(subgraph)
 
-           CALL create_graph(numpart,daughterst,ndaughterst,subgraph,info)
-           or_fail("create_graph")
+           CALL ppm_rc_create_graph(numpart,daughterst,ndaughterst,subgraph,info)
+           or_fail("ppm_rc_create_graph")
 
            !TO CHECK
            !This part will be done on every rank
@@ -1623,8 +1623,8 @@
 
         END SELECT
 
-        CALL destroy_graph(subgraph,info)
-        or_fail("destroy_graph")
+        CALL ppm_rc_destroy_graph(subgraph,info)
+        or_fail("ppm_rc_destroy_graph")
 
         NULLIFY(subgraph)
 
@@ -1649,8 +1649,8 @@
         DEALLOCATE(requestsr,STAT=info)
         or_fail_dealloc("requestsr")
 #else
-        CALL destroy_graph(subgraph,info)
-        or_fail("destroy_graph")
+        CALL ppm_rc_destroy_graph(subgraph,info)
+        or_fail("ppm_rc_destroy_graph")
 
         NULLIFY(subgraph)
 

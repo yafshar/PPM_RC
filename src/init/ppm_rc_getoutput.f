@@ -4,7 +4,6 @@
           USE ppm_module_mesh_typedef, ONLY : ppm_t_equi_mesh
           USE ppm_module_field_typedef, ONLY : ppm_t_field
 
-          USE ppm_rc_module_util, ONLY : DTYPE(normalize)
 #ifdef __Linux
           USE ppm_rc_module_util, ONLY : ppm_rc_mem_usage
 #endif
@@ -13,7 +12,7 @@
           USE ppm_rc_module_write, ONLY : DTYPE(ppm_rc_write_image), &
           &   DTYPE(ppm_rc_write_image_label)
           USE ppm_rc_module_filter, ONLY : OtsuThresholdImageFilter, &
-          &   DTYPE(GaussianImageFilter),DTYPE(SobelImageFilter)
+          &   DTYPE(ppm_rc_GaussianImageFilter),DTYPE(ppm_rc_SobelImageFilter)
           IMPLICIT NONE
 
           !-------------------------------------------------------------------------
@@ -600,7 +599,7 @@
              CALL image_gf%create(1,info,dtype=ppm_type_real_single,name="blured_pixel_intensity")
              or_fail("Create field failed!" )
 
-             CALL DTYPE(GaussianImageFilter)(REAL(elem%m_Size,MK),FieldIn,MeshIn,info, &
+             CALL DTYPE(ppm_rc_GaussianImageFilter)(REAL(elem%m_Size,MK),FieldIn,MeshIn,info, &
              &    image_gf,KernelFactor=1.95_MK)
 
 !              CALL DTYPE(ppm_rc_write_image)(image_gf,MeshIn,"Gaussian",info)

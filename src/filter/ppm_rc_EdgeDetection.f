@@ -60,7 +60,7 @@
         USE ppm_module_field_typedef, ONLY : ppm_t_field
 
         USE ppm_rc_module_write, ONLY : DTYPE(ppm_rc_write_image)
-        USE ppm_rc_module_rnd, ONLY : GenerateImageDiscrDistr
+        USE ppm_rc_module_rnd, ONLY : ppm_rc_GenerateImageDiscrDistr
         IMPLICIT NONE
 
         !-------------------------------------------------------------------------
@@ -122,8 +122,8 @@
 
         !First blur the image by a Gaussian kernel with sigma=2 (!rull of thumb)
         !then use the Sobel operator to calculate the image gradient
-        CALL DTYPE(GaussianImageFilter)((/two/),FieldIn,MeshIn,info,Fieldtmp)
-        or_fail("GaussianImageFilter!")
+        CALL DTYPE(ppm_rc_GaussianImageFilter)((/two/),FieldIn,MeshIn,info,Fieldtmp)
+        or_fail("ppm_rc_GaussianImageFilter!")
 
         IF (ppm_nproc.GT.1) THEN
            ghostsize=1
@@ -299,8 +299,8 @@
         !  magnitude of this gradient vector. The Sobel gradient magnitude
         !  (square-root sum of squares) is an indication of edge strength.
         !-------------------------------------------------------------------------
-        CALL DTYPE(SobelImageFilter)(Fieldtmp,MeshIn,info)
-        or_fail("SobelImageFilter!")
+        CALL DTYPE(ppm_rc_SobelImageFilter)(Fieldtmp,MeshIn,info)
+        or_fail("ppm_rc_SobelImageFilter!")
 
         sbpitr => MeshIn%subpatch%begin()
         DO WHILE (ASSOCIATED(sbpitr))
@@ -354,11 +354,11 @@
            !  The values of the range represent weights for the possible values of the distribution.
            !-------------------------------------------------------------------------
 #if   __DIME == __2D
-           info=GenerateImageDiscrDistr(DTYPE(wpi),Nm(1),Nm(2))
+           info=ppm_rc_GenerateImageDiscrDistr(DTYPE(wpi),Nm(1),Nm(2))
 #elif __DIME == __3D
-           info=GenerateImageDiscrDistr(DTYPE(wpi),Nm(1),Nm(2),Nm(3))
+           info=ppm_rc_GenerateImageDiscrDistr(DTYPE(wpi),Nm(1),Nm(2),Nm(3))
 #endif
-           or_fail("GenerateImageDiscrDistr")
+           or_fail("ppm_rc_GenerateImageDiscrDistr")
 
            sbpitr => MeshIn%subpatch%next()
         ENDDO

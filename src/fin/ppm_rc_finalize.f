@@ -64,8 +64,8 @@
       USE ppm_rc_module_topologicalnumber, ONLY : TopologicalNumberFunction, &
       &   FG_ConnectivityType
       USE ppm_rc_module_energy, ONLY : e_data,e_length,E_ContourLengthApprox
-      USE ppm_rc_module_rnd, ONLY : DestroyImageDiscrDistr, &
-      &   DestroyParticlesDiscrDistr
+      USE ppm_rc_module_rnd, ONLY : ppm_rc_DestroyImageDiscrDistr, &
+      &   ppm_rc_DestroyParticlesDiscrDistr
       USE ppm_rc_module_mcmc, ONLY : MCMClengthProposalMask,            &
       &   MCMCAllParticlesFwdProposals,MCMCchildren,MCMCparents,        &
       &   MCMC_CandidateMove,MCMC_CandidateMove_Index,MCMC_PartnerMove, &
@@ -413,11 +413,11 @@
             or_fail_dealloc("MCMCAllParticlesFwdProposals")
          ENDIF
 
-         info=DestroyImageDiscrDistr()
-         or_fail("DestroyImageDiscrDistr")
+         info=ppm_rc_DestroyImageDiscrDistr()
+         or_fail("ppm_rc_DestroyImageDiscrDistr")
 
-         info=DestroyParticlesDiscrDistr()
-         or_fail("DestroyParticlesDiscrDistr")
+         info=ppm_rc_DestroyParticlesDiscrDistr()
+         or_fail("ppm_rc_DestroyParticlesDiscrDistr")
 
          IF (ALLOCATED(MCMCparents)) THEN
             DO i=0,SIZE(MCMCparents)-1

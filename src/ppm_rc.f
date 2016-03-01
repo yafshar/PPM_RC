@@ -49,8 +49,6 @@
 #ifdef __Linux
         USE ppm_rc_module_util, ONLY : ppm_rc_mem_usage
 #endif
-        USE ppm_rc_module_rnd, ONLY : SaruGetIntegerVariate,SaruGetRealVariate, &
-        &   SaruGetRealVariateD,GetPartDistrIndex
         IMPLICIT NONE
 
         !-----------------------------------------------------------------------
@@ -67,27 +65,19 @@
         REAL(ppm_kind_double) :: tenergys,tcontours,tfilters
         REAL(ppm_kind_double) :: tosc, tmove, timg
         REAL(ppm_kind_double) :: toscs,tmoves,timgs
-        REAL(ppm_kind_double) :: rnd
 
         INTEGER :: info
 #ifdef __Linux
         INTEGER :: memory
 #endif
-        INTEGER :: i,j,ipatch,AcceptedMoves,RLabel,label_region,PC,ParticleIndex
-        INTEGER, DIMENSION(:), ALLOCATABLE :: index_
+        INTEGER :: i,j,ipatch
 #ifdef __MPI
         INTEGER :: request1,request2
 #endif
         CHARACTER(LEN=ppm_char) :: caller='ppm_rc'
 
-        LOGICAL :: OffBoundarySampling
-        LOGICAL :: Growth
         LOGICAL :: done
         LOGICAL :: Convergence
-        LOGICAL :: Accepted
-        LOGICAL :: ParticleAIsFloating
-        LOGICAL :: rejected
-
 
         !-------------------------------------------------------------------------
         !  initializing

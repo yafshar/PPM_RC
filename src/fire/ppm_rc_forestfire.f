@@ -1,5 +1,5 @@
 
-        SUBROUTINE DTYPE(initforestfire)(MeshIn,initghost_size,info)
+        SUBROUTINE DTYPE(ppm_rc_initforestfire)(MeshIn,initghost_size,info)
 
           !-------------------------------------------------------------------------
           !  Modules
@@ -45,7 +45,6 @@
           INTEGER, DIMENSION(:), ALLOCATABLE :: old_ghost
           INTEGER, DIMENSION(:),     POINTER :: Nm
           INTEGER, DIMENSION(:),     POINTER :: unique_new_regions
-          INTEGER, DIMENSION(:),     POINTER :: nlabels_tmp
           INTEGER, DIMENSION(__DIME)              :: ld,ldu
           INTEGER                            :: iopt,isize,nsize
           INTEGER                            :: i,j,l,ipatch
@@ -62,7 +61,7 @@
 
           INTEGER(ppm_kind_int64)            :: ll
 
-          CHARACTER(ppm_char) :: caller="initforestfire"
+          CHARACTER(ppm_char) :: caller="ppm_rc_initforestfire"
 
           LOGICAL                            :: MASK
           LOGICAL, DIMENSION(:), ALLOCATABLE :: MASKL
@@ -470,22 +469,9 @@
              ENDIF
           ENDIF
 
-          NULLIFY(nlabels_tmp)
-          CALL ppm_util_qsort(nlabels,nlabels_tmp,info,i)
+          !!! In-place sorting
+          CALL ppm_util_qsort(nlabels,info,i)
           or_fail("ppm_util_qsort")
-
-          ALLOCATE(tmp1_i(i),STAT=info)
-          or_fail_alloc("tmp1_i")
-
-          DO j=1,i
-             tmp1_i(j)=nlabels(nlabels_tmp(j))
-          ENDDO
-
-          CALL MOVE_ALLOC(tmp1_i,nlabels)
-
-          iopt=ppm_param_dealloc
-          CALL ppm_alloc(nlabels_tmp,ld,iopt,info)
-          or_fail_dealloc("nlabels_tmp")
 
 #ifdef __MPI
           !wait for ghost_on_fire
@@ -1029,8 +1015,8 @@
 
           NULLIFY(unique_new_regions)
 
-          CALL unique(tmp_region_stat_aggregate(1,:),unique_new_regions,info)
-          or_fail("unique")
+          CALL ppm_rc_unique(tmp_region_stat_aggregate(1,:),unique_new_regions,info)
+          or_fail("ppm_rc_unique")
 
           IF (ASSOCIATED(unique_new_regions)) THEN
              Nregions = SIZE(unique_new_regions)
@@ -1125,9 +1111,9 @@
           !---------------------------------------------------------------------
         9999 CONTINUE
           CALL substop(caller,t0,info)
-        END SUBROUTINE DTYPE(initforestfire)
+        END SUBROUTINE DTYPE(ppm_rc_initforestfire)
 
-        SUBROUTINE DTYPE(forestfire)(PartIn,MeshIn,lfire,info)
+        SUBROUTINE DTYPE(ppm_rc_forestfire)(PartIn,MeshIn,lfire,info)
           !-------------------------------------------------------------------------
           !  Modules
           !-------------------------------------------------------------------------
@@ -1184,7 +1170,7 @@
           INTEGER                            :: request
 #endif
 
-          CHARACTER(ppm_char) :: caller="forestfire"
+          CHARACTER(ppm_char) :: caller="ppm_rc_forestfire"
 
           LOGICAL                            :: MASK
           LOGICAL, DIMENSION(:), ALLOCATABLE :: MASKL
@@ -1629,8 +1615,8 @@
           DEALLOCATE(tmp_region_stat_compact,STAT=info)
           or_fail_dealloc("tmp_region_stat_compact")
 
-          CALL unique(tmp_region_stat_aggregate(1,:),unique_new_regions,info)
-          or_fail("unique")
+          CALL ppm_rc_unique(tmp_region_stat_aggregate(1,:),unique_new_regions,info)
+          or_fail("ppm_rc_unique")
 
           IF (ASSOCIATED(unique_new_regions)) THEN
              Nregions = SIZE(unique_new_regions)
@@ -1783,5 +1769,5 @@
           !---------------------------------------------------------------------
         9999 CONTINUE
           CALL substop(caller,t0,info)
-        END SUBROUTINE DTYPE(forestfire)
+        END SUBROUTINE DTYPE(ppm_rc_forestfire)
 

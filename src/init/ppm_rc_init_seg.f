@@ -166,7 +166,7 @@
         !-------------------------------------------------------------------------
         CALL substart(caller,t0,info)
 
-        !debug=2
+!         debug=2
 
         !-------------------------------------------------------------------------
         !  Find the right size of the ghost to create an IO topology for reading the image file
@@ -733,7 +733,7 @@
            !-------------------------------------------------------------------------
            !  Get field ghosts for image
            !-------------------------------------------------------------------------
-           CALL DTYPE(normalize)(image,imesh,info)
+           CALL DTYPE(ppm_rc_normalize)(image,imesh,info)
            or_fail("Normalizing the image faield!")
         END SELECT
 
@@ -834,8 +834,8 @@
            sbpitr => imesh%subpatch%next()
         ENDDO
 
-        CALL DTYPE(initforestfire)(imesh,nsize,info)
-        or_fail("forestfire")
+        CALL DTYPE(ppm_rc_initforestfire)(imesh,nsize,info)
+        or_fail("ppm_rc_forestfire")
 
         DEALLOCATE(nlabels,STAT=info)
         or_fail_dealloc("nlabels")

@@ -302,21 +302,21 @@
         !----------------------------------------------------------------------
         !  Define module interfaces
         !----------------------------------------------------------------------
-        INTERFACE normalize_2d
+        INTERFACE ppm_rc_normalize_2d
           MODULE PROCEDURE ppm_rc_normalize1_2d
           MODULE PROCEDURE ppm_rc_normalize2_2d
         END INTERFACE
 
-        INTERFACE normalize_3d
+        INTERFACE ppm_rc_normalize_3d
           MODULE PROCEDURE ppm_rc_normalize1_3d
           MODULE PROCEDURE ppm_rc_normalize2_3d
         END INTERFACE
 
-        INTERFACE CopyImageAndNormalize_2d
+        INTERFACE ppm_rc_CopyImageAndNormalize_2d
           MODULE PROCEDURE ppm_rc_CopyImageAndNormalize_2d
         END INTERFACE
 
-        INTERFACE CopyImageAndNormalize_3d
+        INTERFACE ppm_rc_CopyImageAndNormalize_3d
           MODULE PROCEDURE ppm_rc_CopyImageAndNormalize_3d
         END INTERFACE
 
@@ -344,14 +344,14 @@
           MODULE PROCEDURE ppm_rc_id_GlobalToLocal__li_3d
         END INTERFACE
 
-        INTERFACE unique
-          MODULE PROCEDURE uniquers
-          MODULE PROCEDURE uniquer
-          MODULE PROCEDURE uniquei
-          MODULE PROCEDURE uniqueli
+        INTERFACE ppm_rc_unique
+          MODULE PROCEDURE ppm_rc_uniquers
+          MODULE PROCEDURE ppm_rc_uniquer
+          MODULE PROCEDURE ppm_rc_uniquei
+          MODULE PROCEDURE ppm_rc_uniqueli
         END INTERFACE
 
-        INTERFACE label_exist
+        INTERFACE ppm_rc_label_exist
           MODULE PROCEDURE ppm_rc_label_exist_asc
           MODULE PROCEDURE ppm_rc_label_exist_asc2
           MODULE PROCEDURE ppm_rc_label_exist_asc3
@@ -395,6 +395,9 @@
           MODULE PROCEDURE HashIndexFunctor64__3d
         END INTERFACE
 
+        INTERFACE ppm_rc_label_index
+          MODULE PROCEDURE ppm_rc_label_index
+        END INTERFACE
         !----------------------------------------------------------------------
         ! Public
         !----------------------------------------------------------------------
@@ -411,10 +414,10 @@
         PUBLIC :: MCMCParticle_realloc
         PUBLIC :: MCMCHistoryParticle_realloc
 
-        PUBLIC :: normalize_2d
-        PUBLIC :: normalize_3d
-        PUBLIC :: CopyImageAndNormalize_2d
-        PUBLIC :: CopyImageAndNormalize_3d
+        PUBLIC :: ppm_rc_normalize_2d
+        PUBLIC :: ppm_rc_normalize_3d
+        PUBLIC :: ppm_rc_CopyImageAndNormalize_2d
+        PUBLIC :: ppm_rc_CopyImageAndNormalize_3d
         PUBLIC :: id_ltg_2d,id_ltg_3d
         PUBLIC :: id_gtl_2d,id_gtl_3d
         PUBLIC :: IndexHashFunctor_2d
@@ -423,14 +426,15 @@
         PUBLIC :: IndexHashFunctor64_3d
         PUBLIC :: HashIndexFunctor_2d
         PUBLIC :: HashIndexFunctor_3d
-        PUBLIC :: unique
+        PUBLIC :: ppm_rc_unique
         PUBLIC :: ppm_rc_uppercase
-        PUBLIC :: compute_num_common
+        PUBLIC :: ppm_rc_compute_num_common
 #ifdef __Linux
         PUBLIC :: ppm_rc_mem_usage
         PUBLIC :: valueRSS0
 #endif
-        PUBLIC :: label_exist
+        PUBLIC :: ppm_rc_label_exist
+        PUBLIC :: ppm_rc_label_index
 
       CONTAINS
 #define __2D  2
@@ -464,5 +468,6 @@
 
 #include "./util/ppm_rc_inl_hash.f"
 #include "./util/ppm_rc_label_exist.f"
+#include "./util/ppm_rc_label_index.f"
 
       END MODULE ppm_rc_module_util

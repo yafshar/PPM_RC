@@ -73,70 +73,70 @@
         !----------------------------------------------------------------------
         !  Define module interfaces
         !----------------------------------------------------------------------
-        INTERFACE convolve
+        INTERFACE ppm_rc_convolve
           MODULE PROCEDURE ppm_rc_convolve_i_2d
           MODULE PROCEDURE ppm_rc_convolve_i_3d
           MODULE PROCEDURE ppm_rc_convolve_r_2d
           MODULE PROCEDURE ppm_rc_convolve_r_3d
         END INTERFACE
 
-        INTERFACE GaussianCurvature_2d
+        INTERFACE ppm_rc_GaussianCurvature_2d
           MODULE PROCEDURE ppm_rc_gc_2d
         END INTERFACE
-        INTERFACE GaussianCurvature_3d
+        INTERFACE ppm_rc_GaussianCurvature_3d
           MODULE PROCEDURE ppm_rc_gc_3d
         END INTERFACE
 
-        INTERFACE median_2d
+        INTERFACE ppm_rc_median_2d
           MODULE PROCEDURE ppm_rc_median_2d
         END INTERFACE
-        INTERFACE median_3d
+        INTERFACE ppm_rc_median_3d
           MODULE PROCEDURE ppm_rc_median_3d
         END INTERFACE
 
-        INTERFACE GaussianImageFilter_2d
+        INTERFACE ppm_rc_GaussianImageFilter_2d
           MODULE PROCEDURE ppm_rc_GaussianImageFilter_2d
         END INTERFACE
-        INTERFACE GaussianImageFilter_3d
+        INTERFACE ppm_rc_GaussianImageFilter_3d
           MODULE PROCEDURE ppm_rc_GaussianImageFilter_3d
         END INTERFACE
 
-        INTERFACE SobelImageFilter_2d
+        INTERFACE ppm_rc_SobelImageFilter_2d
           MODULE PROCEDURE ppm_rc_SobelImageFilter_2d
         END INTERFACE
-        INTERFACE SobelImageFilter_3d
+        INTERFACE ppm_rc_SobelImageFilter_3d
           MODULE PROCEDURE ppm_rc_SobelImageFilter_3d
         END INTERFACE
 
-        INTERFACE EdgeDetection_2d
+        INTERFACE ppm_rc_EdgeDetection_2d
           MODULE PROCEDURE ppm_rc_EdgeDetection_2d
         END INTERFACE
-        INTERFACE EdgeDetection_3d
+        INTERFACE ppm_rc_EdgeDetection_3d
           MODULE PROCEDURE ppm_rc_EdgeDetection_3d
         END INTERFACE
         !----------------------------------------------------------------------
         ! Public
         !----------------------------------------------------------------------
         !!! Gaussian curvature
-        PUBLIC :: GaussianCurvature_2d
-        PUBLIC :: GaussianCurvature_3d
+        PUBLIC :: ppm_rc_GaussianCurvature_2d
+        PUBLIC :: ppm_rc_GaussianCurvature_3d
         !!! Convolution or correlation
-        PUBLIC :: convolve
+        PUBLIC :: ppm_rc_convolve
         !!! Median
-        PUBLIC :: median_2d
-        PUBLIC :: median_3d
+        PUBLIC :: ppm_rc_median_2d
+        PUBLIC :: ppm_rc_median_3d
         !!!
         PUBLIC :: ThresholdImageFilter
         PUBLIC :: OtsuThresholdImageFilter
 
-        PUBLIC :: GaussianImageFilter_2d
-        PUBLIC :: GaussianImageFilter_3d
+        PUBLIC :: ppm_rc_GaussianImageFilter_2d
+        PUBLIC :: ppm_rc_GaussianImageFilter_3d
 
-        PUBLIC :: SobelImageFilter_2d
-        PUBLIC :: SobelImageFilter_3d
+        PUBLIC :: ppm_rc_SobelImageFilter_2d
+        PUBLIC :: ppm_rc_SobelImageFilter_3d
 
-        PUBLIC :: EdgeDetection_2d
-        PUBLIC :: EdgeDetection_3d
+        PUBLIC :: ppm_rc_EdgeDetection_2d
+        PUBLIC :: ppm_rc_EdgeDetection_3d
 
       CONTAINS
 

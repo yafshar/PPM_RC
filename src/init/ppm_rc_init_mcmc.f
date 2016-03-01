@@ -538,7 +538,7 @@
            !-------------------------------------------------------------------------
            !  Get field ghosts for image
            !-------------------------------------------------------------------------
-           CALL DTYPE(normalize)(image,imesh,info)
+           CALL DTYPE(ppm_rc_normalize)(image,imesh,info)
            or_fail("Normalizing the image faield!")
         END SELECT
 
@@ -632,8 +632,8 @@
            sbpitr => imesh%subpatch%next()
         ENDDO
 
-        CALL DTYPE(initforestfire)(imesh,nsize,info)
-        or_fail("forestfire")
+        CALL DTYPE(ppm_rc_initforestfire)(imesh,nsize,info)
+        or_fail("ppm_rc_forestfire")
 
         DEALLOCATE(nlabels,STAT=info)
         or_fail_dealloc("nlabels")
@@ -1368,8 +1368,8 @@
         !!! Set up the edge image and the edge image discrete distribution
         !!! the output is MCMCEdgeImageDistr which contains integer random
         !!! distribution with probability of EdgeImage
-        CALL DTYPE(EdgeDetection)(image,mesh,info)
-        or_fail("EdgeDetection")
+        CALL DTYPE(ppm_rc_EdgeDetection)(image,mesh,info)
+        or_fail("ppm_rc_EdgeDetection")
 
         !!! Prepare a fast proposal computation
         CALL CreateMCMClengthProposalMask(info)
@@ -1387,8 +1387,8 @@
 !
 !         !!! We need a copy of the label image for the reconstruction of the
 !         !!! final results (marginals). It is a backup of the inital state.
-!         CALL DTYPE(CopyImageAndNormalize)(labels,Backuplabels,mesh,info,withGhost=.TRUE.)
-!         or_fail("CopyImageAndNormalize")
+!         CALL DTYPE(ppm_rc_CopyImageAndNormalize)(labels,Backuplabels,mesh,info,withGhost=.TRUE.)
+!         or_fail("ppm_rc_CopyImageAndNormalize")
 
         nsize=SIZE(e_data%gCount)-1
         ALLOCATE(MCMCparentsProposalNormalizer(0:nsize),  &

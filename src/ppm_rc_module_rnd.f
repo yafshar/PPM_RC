@@ -77,7 +77,7 @@
           END FUNCTION
         END INTERFACE
 
-        INTERFACE SaruGetIntegerVariate
+        INTERFACE ppm_rc_SaruGetIntegerVariate
           FUNCTION SaruGetIntegerVariate1(high) BIND(C,NAME='SaruGetIntegerVariate1')
             IMPORT         :: C_INT
             INTEGER(C_INT) :: high
@@ -89,7 +89,7 @@
           END FUNCTION
         END INTERFACE
 
-        INTERFACE SaruGetRealVariate
+        INTERFACE ppm_rc_SaruGetRealVariate
           FUNCTION SaruGetRealVariateS1() BIND(C,NAME='SaruGetRealVariateS1')
             IMPORT        :: C_FLOAT
             REAL(C_FLOAT) :: SaruGetRealVariateS1
@@ -102,7 +102,7 @@
           END FUNCTION
         END INTERFACE
 
-        INTERFACE SaruGetRealVariateD
+        INTERFACE ppm_rc_SaruGetRealVariateD
           FUNCTION SaruGetRealVariateD1() BIND(C,NAME='SaruGetRealVariateD1')
             IMPORT         :: C_DOUBLE
             REAL(C_DOUBLE) :: SaruGetRealVariateD1
@@ -117,7 +117,7 @@
 
         ! Constructs a discrete_distribution from a normalized image data
         ! the values of the image data represent weights for the possible values of the distribution
-        INTERFACE GenerateImageDiscrDistr
+        INTERFACE ppm_rc_GenerateImageDiscrDistr
           FUNCTION GenerateFloatImageDiscrDistr2D(sample,width,length) BIND(C,NAME='GenerateFloatImageDiscrDistr2D')
             IMPORT         :: C_INT,C_FLOAT
             INTEGER(C_INT) :: width
@@ -153,21 +153,21 @@
         ! Get the random index with probabilty of the values of the normalized image data
         ! Before calling this routine GenerateImageDiscrDistr should be called to create the
         ! ImageDiscrDistr
-        INTERFACE GetImageDistrIndex
+        INTERFACE ppm_rc_GetImageDistrIndex
           FUNCTION GetImageDistrIndex() BIND(C,NAME='GetImageDistrIndex')
             IMPORT          :: C_LONG
             INTEGER(C_LONG) :: GetImageDistrIndex
           END FUNCTION
         END INTERFACE
 
-        INTERFACE DestroyImageDiscrDistr
+        INTERFACE ppm_rc_DestroyImageDiscrDistr
           FUNCTION DestroyImageDiscrDistr() BIND(C,NAME='DestroyImageDiscrDistr')
             IMPORT         :: C_INT
             INTEGER(C_INT) :: DestroyImageDiscrDistr
           END FUNCTION
         END INTERFACE
 
-        INTERFACE GenerateParticlesFwdProposalsDiscrDistr
+        INTERFACE ppm_rc_GenerateParticlesFwdProposalsDiscrDistr
           FUNCTION GenerateFloatParticlesFwdProposalsDiscrDistr(sample,partsize) BIND(C,NAME='GenerateFloatParticlesFwdProposalsDiscrDistr')
             IMPORT         :: C_INT,C_FLOAT
             INTEGER(C_INT) :: partsize
@@ -182,14 +182,14 @@
           END FUNCTION
         END INTERFACE
 
-        INTERFACE GetPartDistrIndex
+        INTERFACE ppm_rc_GetPartDistrIndex
           FUNCTION GetPartDistrIndex() BIND(C,NAME='GetPartDistrIndex')
             IMPORT         :: C_INT
             INTEGER(C_INT) :: GetPartDistrIndex
           END FUNCTION
         END INTERFACE
 
-        INTERFACE DestroyParticlesDiscrDistr
+        INTERFACE ppm_rc_DestroyParticlesDiscrDistr
           FUNCTION DestroyParticlesDiscrDistr() BIND(C,NAME='DestroyParticlesDiscrDistr')
             IMPORT         :: C_INT
             INTEGER(C_INT) :: DestroyParticlesDiscrDistr
@@ -207,26 +207,26 @@
         !----------------------------------------------------------------------
         ! Public
         !----------------------------------------------------------------------
-        PUBLIC :: saru_random_init
-        PUBLIC :: SaruGetIntegerVariate
-        PUBLIC :: SaruGetRealVariate
-        PUBLIC :: SaruGetRealVariateD
+        PUBLIC :: ppm_rc_saru_random_init
+        PUBLIC :: ppm_rc_SaruGetIntegerVariate
+        PUBLIC :: ppm_rc_SaruGetRealVariate
+        PUBLIC :: ppm_rc_SaruGetRealVariateD
 
-        PUBLIC :: mt_random_init
-        PUBLIC :: GenerateImageDiscrDistr
-        PUBLIC :: GetImageDistrIndex
-        PUBLIC :: DestroyImageDiscrDistr
+        PUBLIC :: ppm_rc_mt_random_init
+        PUBLIC :: ppm_rc_GenerateImageDiscrDistr
+        PUBLIC :: ppm_rc_GetImageDistrIndex
+        PUBLIC :: ppm_rc_DestroyImageDiscrDistr
 
-        PUBLIC :: GenerateParticlesFwdProposalsDiscrDistr
-        PUBLIC :: GetPartDistrIndex
-        PUBLIC :: DestroyParticlesDiscrDistr
+        PUBLIC :: ppm_rc_GenerateParticlesFwdProposalsDiscrDistr
+        PUBLIC :: ppm_rc_GetPartDistrIndex
+        PUBLIC :: ppm_rc_DestroyParticlesDiscrDistr
 
       CONTAINS
         !----------------------------------------------------------------------
         ! routine for setting the seed for the random no. generator in
         ! Saru pseudo random number generation
         !----------------------------------------------------------------------
-        SUBROUTINE saru_random_init(info)
+        SUBROUTINE ppm_rc_saru_random_init(info)
           !----------------------------------------------------------------------
           !  Modules
           !----------------------------------------------------------------------
@@ -238,7 +238,7 @@
 
           INTEGER :: ih,ic,im
 
-          CHARACTER(LEN=ppm_char) :: caller='saru_random_init'
+          CHARACTER(LEN=ppm_char) :: caller='ppm_rc_saru_random_init'
 
           !-------------------------------------------------------------------------
           !  Initialize
@@ -272,13 +272,13 @@
         9999 CONTINUE
           CALL substop(caller,t0,info)
           RETURN
-        END SUBROUTINE saru_random_init
+        END SUBROUTINE ppm_rc_saru_random_init
 
         !----------------------------------------------------------------------
         ! routine for setting the seed for the random no. generator in
         ! mersenne_twister pseudo random number generation
         !----------------------------------------------------------------------
-        SUBROUTINE mt_random_init(info)
+        SUBROUTINE ppm_rc_mt_random_init(info)
           !----------------------------------------------------------------------
           !  Modules
           !----------------------------------------------------------------------
@@ -291,7 +291,7 @@
 
           INTEGER :: ih,ic,im
 
-          CHARACTER(LEN=ppm_char) :: caller='mt_random_init'
+          CHARACTER(LEN=ppm_char) :: caller='ppm_rc_mt_random_init'
 
           !-------------------------------------------------------------------------
           !  Initialize
@@ -315,5 +315,5 @@
         9999 CONTINUE
           CALL substop(caller,t0,info)
           RETURN
-        END SUBROUTINE mt_random_init
+        END SUBROUTINE ppm_rc_mt_random_init
       END MODULE ppm_rc_module_rnd

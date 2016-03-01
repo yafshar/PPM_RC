@@ -63,41 +63,46 @@
         !  Define module interfaces
         !----------------------------------------------------------------------
         INTERFACE
-          FUNCTION open_tiff(filename) bind(C,NAME='open_tiff')
+          FUNCTION ppm_rc_open_tiff(filename) bind(C,NAME='ppm_rc_open_tiff')
             IMPORT            :: C_INT,C_CHAR
             CHARACTER(C_CHAR) :: filename(*)
             !!! Name of the TIFF file to open
-            INTEGER(C_INT)    :: open_tiff
+            INTEGER(C_INT)    :: ppm_rc_open_tiff
           END FUNCTION
         END INTERFACE
+
         INTERFACE
-          FUNCTION open_bigtiff(filename) bind(C,NAME='open_bigtiff')
+          FUNCTION ppm_rc_open_bigtiff(filename) bind(C,NAME='ppm_rc_open_bigtiff')
             IMPORT            :: C_INT,C_CHAR
             CHARACTER(C_CHAR) :: filename(*)
             !!! Name of the TIFF file to open
-            INTEGER(C_INT)    :: open_bigtiff
+            INTEGER(C_INT)    :: ppm_rc_open_bigtiff
           END FUNCTION
         END INTERFACE
+
         INTERFACE
-          FUNCTION open_write_tiff(filename) bind(C,NAME='open_write_tiff')
+          FUNCTION ppm_rc_open_write_tiff(filename) bind(C,NAME='ppm_rc_open_write_tiff')
             IMPORT            :: C_INT,C_CHAR
             CHARACTER(C_CHAR) :: filename(*)
-            INTEGER(C_INT)    :: open_write_tiff
+            INTEGER(C_INT)    :: ppm_rc_open_write_tiff
           END FUNCTION
         END INTERFACE
+
         INTERFACE
-          FUNCTION open_write_bigtiff(filename) bind(C,NAME='open_write_bigtiff')
+          FUNCTION ppm_rc_open_write_bigtiff(filename) bind(C,NAME='ppm_rc_open_write_bigtiff')
             IMPORT            :: C_INT,C_CHAR
             CHARACTER(C_CHAR) :: filename(*)
-            INTEGER(C_INT)    :: open_write_bigtiff
+            INTEGER(C_INT)    :: ppm_rc_open_write_bigtiff
           END FUNCTION
         END INTERFACE
+
         INTERFACE
-          FUNCTION close_tiff() bind(C,NAME='close_tiff')
+          FUNCTION ppm_rc_close_tiff() bind(C,NAME='ppm_rc_close_tiff')
             IMPORT         :: C_INT
-            INTEGER(C_INT) :: close_tiff
+            INTEGER(C_INT) :: ppm_rc_close_tiff
           END FUNCTION
         END INTERFACE
+
         INTERFACE
           FUNCTION read_tiff_infoC(filename,ngrid,bitsPerSample_,samplesPerPixel_,rank,comm) bind(C,NAME='read_tiff_infoC')
             IMPORT            :: C_INT,C_CHAR
@@ -110,7 +115,7 @@
             INTEGER(C_INT)    :: read_tiff_infoC
           END FUNCTION
         END INTERFACE
-        INTERFACE write_tiff_header
+        INTERFACE ppm_rc_write_tiff_header
           FUNCTION write_tiff_header1(bitsPerSample_,samplesPerPixel_,width,length) bind(C,NAME='write_tiff_header1')
             IMPORT         :: C_INT
             INTEGER(C_INT) :: bitsPerSample_
@@ -127,7 +132,7 @@
           END FUNCTION
         END INTERFACE
 
-        INTERFACE read_tiff_scanline
+        INTERFACE ppm_rc_read_tiff_scanline
           FUNCTION read_tiff_scanline_int1(scanline,rownm,bitsPerSample_,Sample,width) bind(C,NAME='read_tiff_scanline_int1')
             IMPORT         :: C_INT
             INTEGER(C_INT) :: width
@@ -215,7 +220,7 @@
           END FUNCTION
        END INTERFACE
 
-       INTERFACE read_tiff_strip
+       INTERFACE ppm_rc_read_tiff_strip
           !The strip function is only working for 3D data
           FUNCTION read_tiff_strip_int1(strip,bitsPerSample_,Sample,width,length,page,npages) bind(C,NAME='read_tiff_strip_int1')
             IMPORT         :: C_INT
@@ -263,7 +268,7 @@
           END FUNCTION
         END INTERFACE
 
-        INTERFACE write_tiff_scanline
+        INTERFACE ppm_rc_write_tiff_scanline
           FUNCTION write_tiff_scanline_int1(scanline,rownm,bitsPerSample_,Sample,width) bind(C,NAME='write_tiff_scanline_int1')
             IMPORT         :: C_INT
             INTEGER(C_INT) :: width
@@ -350,7 +355,7 @@
           END FUNCTION
        END INTERFACE
 
-       INTERFACE write_tiff_strip
+       INTERFACE ppm_rc_write_tiff_strip
           FUNCTION write_tiff_strip_int1(strip,bitsPerSample_,width,length,page,npages) bind(C,NAME='write_tiff_strip_int1')
             IMPORT         :: C_INT
             INTEGER(C_INT) :: width
@@ -397,23 +402,23 @@
         PUBLIC :: bitsPerSampleW
         PUBLIC :: samplesPerPixel
 
-        PUBLIC :: open_tiff
-        PUBLIC :: open_bigtiff
-        PUBLIC :: open_write_tiff
-        PUBLIC :: open_write_bigtiff
-        PUBLIC :: close_tiff
-        PUBLIC :: write_tiff_header
-        PUBLIC :: read_tiff_scanline
-        PUBLIC :: read_tiff_strip
-        PUBLIC :: write_tiff_scanline
-        PUBLIC :: write_tiff_strip
+        PUBLIC :: ppm_rc_open_tiff
+        PUBLIC :: ppm_rc_open_bigtiff
+        PUBLIC :: ppm_rc_open_write_tiff
+        PUBLIC :: ppm_rc_open_write_bigtiff
+        PUBLIC :: ppm_rc_close_tiff
+        PUBLIC :: ppm_rc_write_tiff_header
+        PUBLIC :: ppm_rc_read_tiff_scanline
+        PUBLIC :: ppm_rc_read_tiff_strip
+        PUBLIC :: ppm_rc_write_tiff_scanline
+        PUBLIC :: ppm_rc_write_tiff_strip
 
-        INTERFACE read_tiff_info
+        INTERFACE ppm_rc_read_tiff_info
           MODULE PROCEDURE read_tiff_info_f1
           MODULE PROCEDURE read_tiff_info_f2
         END INTERFACE
 
-        PUBLIC :: read_tiff_info
+        PUBLIC :: ppm_rc_read_tiff_info
 
       CONTAINS
         INTEGER FUNCTION read_tiff_info_f1(filename,ngrid)

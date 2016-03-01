@@ -54,8 +54,8 @@
         USE ppm_module_field_typedef, ONLY : ppm_t_field_
         USE ppm_module_mesh_typedef, ONLY : ppm_t_subpatch_
 
-        USE ppm_rc_module_tiff, ONLY : open_tiff,open_bigtiff, &
-        &   read_tiff_scanline,close_tiff,bitsPerSample,       &
+        USE ppm_rc_module_tiff, ONLY : ppm_rc_open_tiff,ppm_rc_open_bigtiff, &
+        &   ppm_rc_read_tiff_scanline,ppm_rc_close_tiff,bitsPerSample,       &
         &   samplesPerPixel
         IMPLICIT NONE
 
@@ -126,11 +126,9 @@
 
            SELECT CASE (IsBigTIFF)
            CASE (.TRUE.)
-              info=open_bigtiff(filename)
-
+              info=ppm_rc_open_bigtiff(filename)
            CASE DEFAULT
-              info=open_tiff(filename)
-
+              info=ppm_rc_open_tiff(filename)
            END SELECT !(IsBigTIFF)
            or_fail('Error opening tiff file.')
 
@@ -187,16 +185,16 @@
 
                  SELECT CASE (FieldIn%data_type)
                  CASE (ppm_type_real_single)
-                    info=read_tiff_scanline(DTYPE(wp_rs)(1:Nm(1),z),rownm,bitsPerSample,0,Nm(1))
+                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_rs)(1:Nm(1),z),rownm,bitsPerSample,0,Nm(1))
 
                  CASE (ppm_type_real)
-                    info=read_tiff_scanline(DTYPE(wp_r)(1:Nm(1),z),rownm,bitsPerSample,0,Nm(1))
+                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_r)(1:Nm(1),z),rownm,bitsPerSample,0,Nm(1))
 
                  CASE (ppm_type_int)
-                    info=read_tiff_scanline(DTYPE(wp_i)(1:Nm(1),z),rownm,bitsPerSample,0,Nm(1))
+                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_i)(1:Nm(1),z),rownm,bitsPerSample,0,Nm(1))
 
                  END SELECT !(FieldIn%data_type)
-                 or_fail('Error in read_tiff_scanline !!!')
+                 or_fail('Error in ppm_rc_read_tiff_scanline !!!')
 #elif __DIME == __3D
                  SELECT CASE (ninputimage)
                  CASE (1)
@@ -204,48 +202,48 @@
 
                  CASE (2:9)
                     WRITE(filename,'(A,A1,I1.1,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
-                    info=open_tiff(filename)
+                    info=ppm_rc_open_tiff(filename)
                     or_fail('Error opening tiff file.')
 
                  CASE (10:99)
                     WRITE(filename,'(A,A1,I2.2,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
-                    info=open_tiff(filename)
+                    info=ppm_rc_open_tiff(filename)
                     or_fail('Error opening tiff file.')
 
                  CASE (100:999)
                     WRITE(filename,'(A,A1,I3.3,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
-                    info=open_tiff(filename)
+                    info=ppm_rc_open_tiff(filename)
                     or_fail('Error opening tiff file.')
 
                  CASE (1000:9999)
                     WRITE(filename,'(A,A1,I4.4,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
-                    info=open_tiff(filename)
+                    info=ppm_rc_open_tiff(filename)
                     or_fail('Error opening tiff file.')
 
                  CASE (10000:99999)
                     WRITE(filename,'(A,A1,I5.5,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
-                    info=open_tiff(filename)
+                    info=ppm_rc_open_tiff(filename)
                     or_fail('Error opening tiff file.')
 
                  END SELECT
 
                  SELECT CASE (FieldIn%data_type)
                  CASE (ppm_type_real_single)
-                    info=read_tiff_scanline(DTYPE(wp_rs)(1:Nm(1),1:Nm(2),z),0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
+                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_rs)(1:Nm(1),1:Nm(2),z),0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
 
                  CASE (ppm_type_real)
-                    info=read_tiff_scanline(DTYPE(wp_r)(1:Nm(1),1:Nm(2),z),0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
+                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_r)(1:Nm(1),1:Nm(2),z),0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
 
                  CASE (ppm_type_int)
-                    info=read_tiff_scanline(DTYPE(wp_i)(1:Nm(1),1:Nm(2),z),0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
+                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_i)(1:Nm(1),1:Nm(2),z),0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
 
                  END SELECT !(FieldIn%data_type)
-                 or_fail('Error in read_tiff_scanline !!!')
+                 or_fail('Error in ppm_rc_read_tiff_scanline !!!')
 
                  SELECT CASE (ninputimage)
                  CASE (1)
                  CASE DEFAULT
-                    info=close_tiff()
+                    info=ppm_rc_close_tiff()
                     or_fail('Error closing tiff file.')
 
                  END SELECT !(ninputimage)
@@ -259,7 +257,7 @@
 
         SELECT CASE (ninputimage)
         CASE (1)
-           info=close_tiff()
+           info=ppm_rc_close_tiff()
            or_fail('Error closing tiff file.')
 
         END SELECT !(ninputimage)

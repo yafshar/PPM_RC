@@ -88,12 +88,12 @@
         !----------------------------------------------------------------------
         ! Public
         !----------------------------------------------------------------------
-        PUBLIC :: create_graph
-        PUBLIC :: destroy_graph
+        PUBLIC :: ppm_rc_create_graph
+        PUBLIC :: ppm_rc_destroy_graph
 
       CONTAINS
 
-        SUBROUTINE create_graph(Npart_,neigh,nneigh,subgraph,info)
+        SUBROUTINE ppm_rc_create_graph(Npart_,neigh,nneigh,subgraph,info)
           !----------------------------------------------------------------------
           !  Modules
           !----------------------------------------------------------------------
@@ -110,7 +110,7 @@
 
           INTEGER(C_INT) :: gsize
 
-          CHARACTER(LEN=ppm_char) :: caller='create_graph'
+          CHARACTER(LEN=ppm_char) :: caller='ppm_rc_create_graph'
 
           !-------------------------------------------------------------------------
           !  Initialize
@@ -137,9 +137,9 @@
         9999 CONTINUE
           CALL substop(caller,t0,info)
           RETURN
-        END SUBROUTINE create_graph
+        END SUBROUTINE ppm_rc_create_graph
 
-        SUBROUTINE destroy_graph(subgraph,info)
+        SUBROUTINE ppm_rc_destroy_graph(subgraph,info)
           !----------------------------------------------------------------------
           !  Modules
           !----------------------------------------------------------------------
@@ -151,7 +151,7 @@
 
           REAL(ppm_kind_double) :: t0
 
-          CHARACTER(LEN=ppm_char) :: caller='destroy_graph'
+          CHARACTER(LEN=ppm_char) :: caller='ppm_rc_destroy_graph'
 
           !-------------------------------------------------------------------------
           !  Initialize
@@ -169,6 +169,6 @@
         9999 CONTINUE
           CALL substop(caller,t0,info)
           RETURN
-        END SUBROUTINE destroy_graph
+        END SUBROUTINE ppm_rc_destroy_graph
 
       END MODULE ppm_rc_module_bgl

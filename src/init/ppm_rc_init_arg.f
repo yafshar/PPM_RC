@@ -20,7 +20,7 @@
         USE ppm_rc_module_energy, ONLY : E_Gamma,E_ContourLengthApprox,E_PC, &
         &   E_PCGaussian,E_PCPoisson,E_PS,E_PSGaussian,E_PSPoisson,e_data,e_length
         USE ppm_rc_module_read, ONLY : ppm_rc_read_image_info
-        USE ppm_rc_module_rnd, ONLY : saru_random_init,mt_random_init
+        USE ppm_rc_module_rnd, ONLY : ppm_rc_saru_random_init,ppm_rc_mt_random_init
         USE ppm_rc_module_mcmc, ONLY : MCMCCheckParameters
         IMPLICIT NONE
 
@@ -395,11 +395,11 @@
            CALL MCMCCheckParameters(info)
            or_fail("MCMCCheckParameters")
 
-           CALL saru_random_init(info)
-           or_fail("saru_random_init")
+           CALL ppm_rc_saru_random_init(info)
+           or_fail("ppm_rc_saru_random_init")
 
-           CALL mt_random_init(info)
-           or_fail("mt_random_init")
+           CALL ppm_rc_mt_random_init(info)
+           or_fail("ppm_rc_mt_random_init")
 
            SELECT CASE (lNormalize)
            CASE (.TRUE.)

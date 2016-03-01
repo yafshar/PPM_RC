@@ -6,7 +6,7 @@
         !-------------------------------------------------------------------------
         USE ppm_module_util_qsort, ONLY : ppm_util_qsort
 
-        USE ppm_rc_module_util, ONLY : label_exist
+        USE ppm_rc_module_util, ONLY : ppm_rc_label_exist,ppm_rc_label_index
         IMPLICIT NONE
         !-------------------------------------------------------------------------
         !  Arguments
@@ -42,11 +42,12 @@
         INTEGER, DIMENSION(:,:),   ALLOCATABLE :: labelled
         INTEGER, DIMENSION(:),     POINTER :: seedn
         INTEGER, DIMENSION(:),     POINTER :: Nm
-        INTEGER, DIMENSION(:),     POINTER :: nlabelsranking
         INTEGER, DIMENSION(__DIME)              :: ld,ld_
         INTEGER                            :: i,j,kk,nn
         INTEGER                            :: idgs,idge,lngn,ghost_nlabels_
         INTEGER                            :: nsize,ipatch,iseed
+        INTEGER                            :: labelexist
+        INTEGER                            :: labelindex
 
         CHARACTER(LEN=ppm_char) :: caller="initghostfire"
 
@@ -63,7 +64,7 @@
          CALL substart(caller,t0,info)
 
          NULLIFY(DTYPE(wpi),DTYPE(wpl))
-         NULLIFY(seedlst,seedlsti,nlabelsranking)
+         NULLIFY(seedlst,seedlsti)
 
          nsize=SIZE(nlabels,DIM=1)
 
@@ -131,19 +132,19 @@
                                  IF (ABS(DTYPE(wpl)(ld(1),ld(2))).LE.ghost_nlabels(idge)) CYCLE neigh_loop
                               ENDIF
 
-                              main_if2: IF (label_exist(ABS(DTYPE(wpl)(ld(1),ld(2))),nlabels,nsize,i)) THEN
+                              main_if2: IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(ld(1),ld(2))),nlabels,nsize,labelexist)) THEN
                                  CALL DTYPE(ppm_rc_floodFill)(labelled,DTYPE(wpl),Nm,ld(1:__DIME), &
-                                 &    nlabels(i),ghost_nlabels(idge),0,info)
+                                 &    nlabels(labelexist),ghost_nlabels(idge),0,info)
 
                                  nn=0
-                                 DO j=1,COUNT(labelled(1,:).GE.0)
-                                    ld_=labelled(:,j)
+                                 DO i=1,COUNT(labelled(1,:).GE.0)
+                                    ld_=labelled(:,i)
                                     IF (ANY(ld_.LT.1.OR.ld_.GT.Nm)) CYCLE
                                     nn=nn+1
                                  ENDDO
 
-                                 DO j=1,COUNT(labelled(1,:).GE.0)
-                                    ld_=labelled(:,j)
+                                 DO i=1,COUNT(labelled(1,:).GE.0)
+                                    ld_=labelled(:,i)
                                     IF (ALL(ld_.GE.1.AND.ld_.LE.Nm)) EXIT
                                  ENDDO
 
@@ -158,21 +159,27 @@
                                  trstat => tmp_region_stat%begin()
                                  stat_loop: DO WHILE (ASSOCIATED(trstat))
                                     value => trstat%getValue()
-                                    IF (INT(value(1)).EQ.nlabels(i).AND.INT(value(2)).EQ.nn) THEN
+                                    IF (INT(value(1)).EQ.nlabels(labelexist).AND.INT(value(2)).EQ.nn) THEN
                                        value(1)=REAL(ghost_nlabels(idge),ppm_kind_double)
-                                       nlabels(i)=ghost_nlabels(idge)
 
-                                       CALL ppm_util_qsort(nlabels,nlabelsranking,info,nsize)
-                                       or_fail("ppm_util_qsort")
+                                       !!! Find out the label index in the nlabels array for the new label
+                                       !!! nlabels is sorted in an ascending order
+                                       labelindex=ppm_rc_label_index(ghost_nlabels(idge),nlabels,nsize)
 
-                                       ALLOCATE(tmp1_i(nsize),STAT=info)
-                                       or_fail_alloc("tmp1_i")
-
-                                       DO j=1,nsize
-                                          tmp1_i(j)=nlabels(nlabelsranking(j))
-                                       ENDDO
-
-                                       CALL MOVE_ALLOC(tmp1_i,nlabels)
+                                       !!! Put the new label in the ascending sorted nlabels in the correct place
+                                       IF      (labelindex.GT.labelexist) THEN
+                                          DO i=labelexist,labelindex-2
+                                             nlabels(i)=nlabels(i+1)
+                                          ENDDO
+                                          nlabels(labelindex-1)=ghost_nlabels(idge)
+                                       ELSE IF (labelindex.LT.labelexist) THEN
+                                          DO i=labelexist,labelindex+1,-1
+                                             nlabels(i)=nlabels(i-1)
+                                          ENDDO
+                                          nlabels(labelindex)=ghost_nlabels(idge)
+                                       ELSE
+                                          nlabels(labelexist)=ghost_nlabels(idge)
+                                       ENDIF
 
                                        EXIT stat_loop
                                     ENDIF
@@ -186,19 +193,19 @@
                                  IF (ABS(DTYPE(wpl)(ld(1),ld(2),ld(3))).LE.ghost_nlabels(idge)) CYCLE neigh_loop
                               ENDIF
 
-                              main_if2: IF (label_exist(ABS(DTYPE(wpl)(ld(1),ld(2),ld(3))),nlabels,nsize,i)) THEN
+                              main_if2: IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(ld(1),ld(2),ld(3))),nlabels,nsize,labelexist)) THEN
                                  CALL DTYPE(ppm_rc_floodFill)(labelled,DTYPE(wpl),Nm,ld(1:__DIME), &
-                                 &    nlabels(i),ghost_nlabels(idge),0,info)
+                                 &    nlabels(labelexist),ghost_nlabels(idge),0,info)
 
                                  nn=0
-                                 DO j=1,COUNT(labelled(1,:).GE.0)
-                                    ld_=labelled(:,j)
+                                 DO i=1,COUNT(labelled(1,:).GE.0)
+                                    ld_=labelled(:,i)
                                     IF (ANY(ld_.LT.1.OR.ld_.GT.Nm)) CYCLE
                                     nn=nn+1
                                  ENDDO
 
-                                 DO j=1,COUNT(labelled(1,:).GE.0)
-                                    ld_=labelled(:,j)
+                                 DO i=1,COUNT(labelled(1,:).GE.0)
+                                    ld_=labelled(:,i)
                                     IF (ALL(ld_.GE.1.AND.ld_.LE.Nm)) EXIT
                                  ENDDO
 
@@ -213,21 +220,27 @@
                                  trstat => tmp_region_stat%begin()
                                  stat_loop: DO WHILE (ASSOCIATED(trstat))
                                     value => trstat%getValue()
-                                    IF (INT(value(1)).EQ.nlabels(i).AND.INT(value(2)).EQ.nn) THEN
+                                    IF (INT(value(1)).EQ.nlabels(labelexist).AND.INT(value(2)).EQ.nn) THEN
                                        value(1)=REAL(ghost_nlabels(idge),ppm_kind_double)
-                                       nlabels(i)=ghost_nlabels(idge)
 
-                                       CALL ppm_util_qsort(nlabels,nlabelsranking,info,nsize)
-                                       or_fail("ppm_util_qsort")
+                                       !!! Find out the label index in the nlabels array for the new label
+                                       !!! nlabels is sorted in an ascending order
+                                       labelindex=ppm_rc_label_index(ghost_nlabels(idge),nlabels,nsize)
 
-                                       ALLOCATE(tmp1_i(nsize),STAT=info)
-                                       or_fail_alloc("tmp1_i")
-
-                                       DO j=1,nsize
-                                          tmp1_i(j)=nlabels(nlabelsranking(j))
-                                       ENDDO
-
-                                       CALL MOVE_ALLOC(tmp1_i,nlabels)
+                                       !!! Put the new label in the ascending sorted nlabels in the correct place
+                                       IF      (labelindex.GT.labelexist) THEN
+                                          DO i=labelexist,labelindex-2
+                                             nlabels(i)=nlabels(i+1)
+                                          ENDDO
+                                          nlabels(labelindex-1)=ghost_nlabels(idge)
+                                       ELSE IF (labelindex.LT.labelexist) THEN
+                                          DO i=labelexist,labelindex+1,-1
+                                             nlabels(i)=nlabels(i-1)
+                                          ENDDO
+                                          nlabels(labelindex)=ghost_nlabels(idge)
+                                       ELSE
+                                          nlabels(labelexist)=ghost_nlabels(idge)
+                                       ENDIF
 
                                        EXIT stat_loop
                                     ENDIF
@@ -407,17 +420,9 @@
                   ENDIF
                ENDIF
 
-               CALL ppm_util_qsort(nlabels,nlabelsranking,info,i)
+               !!! In-place sorting
+               CALL ppm_util_qsort(nlabels,info,i)
                or_fail("ppm_util_qsort")
-
-               ALLOCATE(tmp1_i(i),STAT=info)
-               or_fail_alloc("tmp1_i")
-
-               DO j=1,i
-                  tmp1_i(j)=nlabels(nlabelsranking(j))
-               ENDDO
-
-               CALL MOVE_ALLOC(tmp1_i,nlabels)
             ELSE
                DO WHILE (ASSOCIATED(seed))
                   CALL ppm_rc_seeds(ipatch)%remove(info)
@@ -433,9 +438,6 @@
             sbpitr => MeshIn%subpatch%next()
             ipatch=ipatch+1
          ENDDO patch_loop
-
-         CALL ppm_alloc(nlabelsranking,ld,ppm_param_dealloc,info)
-         or_fail_dealloc("nlabelsranking")
         !-------------------------------------------------------------------------
         !  Return
         !-------------------------------------------------------------------------
