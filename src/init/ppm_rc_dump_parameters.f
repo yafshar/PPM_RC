@@ -127,6 +127,11 @@
         stdout_f('(A,3I8)',"   Number of pixels:          ",'Ngrid(1:ppm_rc_dim)')
         CALL ppm_log(caller,cbuf,info)
 
+        IF (nsteql.GT.0) THEN
+           stdout_f('(A,I8)',"   Number of pre iterations:  ",nsteql)
+           CALL ppm_log(caller,cbuf,info)
+        ENDIF
+
         stdout_f('(A,I8)',"   Max number of iterations:  ",maxiter)
         CALL ppm_log(caller,cbuf,info)
 
@@ -229,32 +234,89 @@
         stdout_f('(A)',"")
         CALL ppm_log(caller,cbuf,info)
 
-        stdout_f('(A,f18.8)',"   Data term coefficient:                ",energy_coeff_data)
-        CALL ppm_log(caller,cbuf,info)
-
-        stdout_f('(A)',"")
-        CALL ppm_log(caller,cbuf,info)
-
-        stdout_f('(A,f18.8)',"   Threshold prior for region merging:   ",energy_region_merge_ths)
-        CALL ppm_log(caller,cbuf,info)
-
-        SELECT CASE (TRIM(energy_ext_name))
-        CASE ("PS","PSGAUSSIAN","PSPOISSON")
-           stdout_f('(A)',"")
-           CALL ppm_log(caller,cbuf,info)
-
-           stdout_f('(A,f18.8)',"   Radius of the spherical patches:      ",energy_local_window_radius)
-           CALL ppm_log(caller,cbuf,info)
-
-           stdout_f('(A)',"   (Radius of mask for local energy support in pixel)")
+        IF (nsteql.GT.0) THEN
+           IF (energy_coeff_data_equil.GT.smallest) THEN
+              stdout_f('(A,2f18.8)',"   Data term coefficient:                ", &
+              & energy_coeff_data_equil,energy_coeff_data)
+           ELSE
+              stdout_f('(A,f18.8)',"   Data term coefficient:                ", &
+              & energy_coeff_data)
+           ENDIF
            CALL ppm_log(caller,cbuf,info)
 
            stdout_f('(A)',"")
            CALL ppm_log(caller,cbuf,info)
 
-           stdout_f('(A,f18.8)',"   Outward balloon flow coefficient:     ",energy_coeff_balloon)
+           IF (energy_region_merge_ths_equil.GT.smallest) THEN
+              stdout_f('(A,2f18.8)',"   Threshold prior for region merging:   ", &
+              & energy_region_merge_ths_equil,energy_region_merge_ths)
+           ELSE
+              stdout_f('(A,f18.8)',"   Threshold prior for region merging:   ", &
+              & energy_region_merge_ths)
+           ENDIF
            CALL ppm_log(caller,cbuf,info)
-        END SELECT
+
+           SELECT CASE (TRIM(energy_ext_name))
+           CASE ("PS","PSGAUSSIAN","PSPOISSON")
+              stdout_f('(A)',"")
+              CALL ppm_log(caller,cbuf,info)
+
+              IF (energy_local_window_radius_equil.GT.smallest) THEN
+                 stdout_f('(A,2f18.8)',"   Radius of the spherical patches:      ", &
+                & energy_local_window_radius_equil,energy_local_window_radius)
+              ELSE
+                 stdout_f('(A,f18.8)',"   Radius of the spherical patches:      ", &
+                 & energy_local_window_radius)
+              ENDIF
+              CALL ppm_log(caller,cbuf,info)
+
+              stdout_f('(A)',"   (Radius of mask for local energy support in pixel)")
+              CALL ppm_log(caller,cbuf,info)
+
+              stdout_f('(A)',"")
+              CALL ppm_log(caller,cbuf,info)
+
+              IF (energy_coeff_balloon_equil.GT.smallest.OR.energy_coeff_balloon_equil.LT.-smallest) THEN
+                 stdout_f('(A,2f18.8)',"   Outward balloon flow coefficient:     ", &
+                 & energy_coeff_balloon_equil,energy_coeff_balloon)
+              ELSE
+                 stdout_f('(A,f18.8)',"   Outward balloon flow coefficient:     ", &
+                 & energy_coeff_balloon)
+              ENDIF
+              CALL ppm_log(caller,cbuf,info)
+           END SELECT
+        ELSE
+           stdout_f('(A,f18.8)',"   Data term coefficient:                ", &
+           & energy_coeff_data)
+           CALL ppm_log(caller,cbuf,info)
+
+           stdout_f('(A)',"")
+           CALL ppm_log(caller,cbuf,info)
+
+           stdout_f('(A,f18.8)',"   Threshold prior for region merging:   ", &
+           & energy_region_merge_ths)
+           CALL ppm_log(caller,cbuf,info)
+
+           SELECT CASE (TRIM(energy_ext_name))
+           CASE ("PS","PSGAUSSIAN","PSPOISSON")
+              stdout_f('(A)',"")
+              CALL ppm_log(caller,cbuf,info)
+
+              stdout_f('(A,f18.8)',"   Radius of the spherical patches:      ", &
+              & energy_local_window_radius)
+              CALL ppm_log(caller,cbuf,info)
+
+              stdout_f('(A)',"   (Radius of mask for local energy support in pixel)")
+              CALL ppm_log(caller,cbuf,info)
+
+              stdout_f('(A)',"")
+              CALL ppm_log(caller,cbuf,info)
+
+              stdout_f('(A,f18.8)',"   Outward balloon flow coefficient:     ", &
+              & energy_coeff_balloon)
+              CALL ppm_log(caller,cbuf,info)
+           END SELECT
+        ENDIF
 
         stdout_f('(A)',"")
         CALL ppm_log(caller,cbuf,info)
@@ -262,28 +324,76 @@
         stdout_f('(A,A)',"   Internal energy term is:   ",'TRIM(energy_int_name)')
         CALL ppm_log(caller,cbuf,info)
 
-        stdout_f('(A,f18.8)',"   Length term coefficient:              ",energy_coeff_length)
-        CALL ppm_log(caller,cbuf,info)
-
-        SELECT CASE (TRIM(energy_int_name))
-        CASE ("CURV")
-           stdout_f('(A)',"")
+        IF (nsteql.GT.0) THEN
+           IF (energy_coeff_length_equil.GT.smallest) THEN
+              stdout_f('(A,2f18.8)',"   Length term coefficient:              ", &
+              & energy_coeff_length_equil,energy_coeff_length)
+           ELSE
+              stdout_f('(A,f18.8)',"   Length term coefficient:              ", &
+              & energy_coeff_length)
+           ENDIF
            CALL ppm_log(caller,cbuf,info)
 
-           stdout_f('(A)',"   Curvature mask radius for regularizing")
+           SELECT CASE (TRIM(energy_int_name))
+           CASE ("CURV")
+              stdout_f('(A)',"")
+              CALL ppm_log(caller,cbuf,info)
+
+              stdout_f('(A)',"   Curvature mask radius for regularizing")
+              CALL ppm_log(caller,cbuf,info)
+
+              IF (energy_curvature_mask_radius_equil.GT.smallest) THEN
+                 stdout_f('(A,2f18.8)',"   flows. (See Kybic and Kratky) :       ", &
+                 & energy_curvature_mask_radius_equil,energy_curvature_mask_radius)
+              ELSE
+                 stdout_f('(A,f18.8)',"   flows. (See Kybic and Kratky) :       ", &
+                 & energy_curvature_mask_radius)
+              ENDIF
+              CALL ppm_log(caller,cbuf,info)
+           END SELECT
+
+           IF (energy_coeff_outward_flow.GT.smallest.OR. &
+           &   energy_coeff_outward_flow.LT.-smallest) THEN
+              stdout_f('(A)',"")
+              CALL ppm_log(caller,cbuf,info)
+
+              IF (energy_coeff_outward_flow_equil.GT.smallest.OR. &
+              &  energy_coeff_outward_flow_equil.LT.-smallest) THEN
+                 stdout_f('(A,2f18.8)',"   Coefficient of constant outward flow: ", &
+                 & energy_coeff_outward_flow_equil,energy_coeff_outward_flow)
+              ELSE
+                 stdout_f('(A,f18.8)',"   Coefficient of constant outward flow: ", &
+                 & energy_coeff_outward_flow)
+              ENDIF
+              CALL ppm_log(caller,cbuf,info)
+           ENDIF
+        ELSE
+           stdout_f('(A,f18.8)',"   Length term coefficient:              ", &
+           & energy_coeff_length)
            CALL ppm_log(caller,cbuf,info)
 
-           stdout_f('(A,f18.8)',"   flows. (See Kybic and Kratky) :       ",energy_curvature_mask_radius)
-           CALL ppm_log(caller,cbuf,info)
-        END SELECT
+           SELECT CASE (TRIM(energy_int_name))
+           CASE ("CURV")
+              stdout_f('(A)',"")
+              CALL ppm_log(caller,cbuf,info)
 
-        IF (energy_coeff_outward_flow.GT.smallest.OR. &
-        &   energy_coeff_outward_flow.LT.-smallest) THEN
-           stdout_f('(A)',"")
-           CALL ppm_log(caller,cbuf,info)
+              stdout_f('(A)',"   Curvature mask radius for regularizing")
+              CALL ppm_log(caller,cbuf,info)
 
-           stdout_f('(A,f18.8)',"   Coefficient of constant outward flow: ",energy_coeff_outward_flow)
-           CALL ppm_log(caller,cbuf,info)
+              stdout_f('(A,f18.8)',"   flows. (See Kybic and Kratky) :       ", &
+              & energy_curvature_mask_radius)
+              CALL ppm_log(caller,cbuf,info)
+           END SELECT
+
+           IF (energy_coeff_outward_flow.GT.smallest.OR. &
+           &   energy_coeff_outward_flow.LT.-smallest) THEN
+              stdout_f('(A)',"")
+              CALL ppm_log(caller,cbuf,info)
+
+              stdout_f('(A,f18.8)',"   Coefficient of constant outward flow: ", &
+              & energy_coeff_outward_flow)
+              CALL ppm_log(caller,cbuf,info)
+           ENDIF
         ENDIF
 
         !----------------------------------------------------------------------

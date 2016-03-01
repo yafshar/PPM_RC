@@ -83,12 +83,15 @@
 #elif __DIME == __3D
         INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wpp)
 #endif
-        INTEGER, DIMENSION(:),     POINTER :: seedn
-        INTEGER                            :: ipatch,ppart
-        INTEGER                            :: nsize,nsize_,i
-        INTEGER                            :: iter_id
+        INTEGER,             DIMENSION(:),     POINTER :: seedn
+        INTEGER,             DIMENSION(:),     POINTER :: vSortedListranking
+        INTEGER,             DIMENSION(1)              :: ld
+        INTEGER                                        :: ipatch,ppart
+        INTEGER                                        :: nsize,nsize_
+        INTEGER                                        :: i
+        INTEGER                                        :: iter_id
 #ifdef __MPI
-        INTEGER                            :: request
+        INTEGER                                        :: request
 #endif
 
         CHARACTER(LEN=ppm_char) :: caller="ppm_rc_FilterCandidatesContainerUsingRanks"
@@ -165,8 +168,8 @@
 
         nsize=MERGE(i-1,0,i.GT.2)
 
-        ALLOCATE(vSortedList(nsize),bufi(nsize),STAT=info)
-        or_fail_alloc("vSortedList & bufi")
+        ALLOCATE(vSortedList(nsize),STAT=info)
+        or_fail_alloc("vSortedList")
 
         !Arrange the sorted candidates from high to lowest energy
         !This has been done to help removing candidate from Candidates list
@@ -174,9 +177,9 @@
         !order by swaping the last element and the deleted one
         FORALL (i=1:nsize) vSortedList(i)=Candidates_list(energyrank(nsize-i+1))
 
-        bufi=vSortedList
+        NULLIFY(vSortedListranking)
         !Sort the candidates according to their labels
-        CALL ppm_util_qsort(bufi,info,nsize)
+        CALL ppm_util_qsort(vSortedList,vSortedListranking,info,nsize)
         or_fail("ppm_util_qsort")
 
         NULLIFY(DTYPE(wpp))
@@ -193,7 +196,7 @@
               i=i+1
               ppart=Candidates_list(i)
 
-              IF (label_exist(ppart,bufi,nsize)) THEN
+              IF (label_exist(ppart,vSortedList,vSortedListranking,nsize)) THEN
                  seed => Candidates(ipatch)%prev()
                  CYCLE
               ELSE IF (ppart.GT.Mpart) THEN
@@ -253,14 +256,14 @@
         ENDDO !ASSOCIATED(sbpitr)
         !Candidates also has been sorted in descending order of energy
 
-        DEALLOCATE(bufi,STAT=info)
-        or_fail_dealloc("bufi")
+        CALL ppm_alloc(vSortedListranking,ld,ppm_param_dealloc,info)
+        or_fail_dealloc("vSortedListranking")
 
         CALL MOVE_ALLOC(vSortedList,Candidates_list)
         !Destroy the vSortedList array and allocate it to Candidates_list
         !Now Candidates_list has been sorted in descending order of energy
 
-        CALL ppm_alloc(energyrank,(/0/),ppm_param_dealloc,info)
+        CALL ppm_alloc(energyrank,ld,ppm_param_dealloc,info)
         or_fail_dealloc("energyrank")
 
         NULLIFY(tmp_Candidates)

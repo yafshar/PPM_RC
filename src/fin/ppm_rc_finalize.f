@@ -257,6 +257,22 @@
          DEALLOCATE(ghostsize,STAT=info)
          or_fail_dealloc("ghostsize")
       ENDIF
+      IF (ALLOCATED(ioghostsize)) THEN
+         DEALLOCATE(ioghostsize,STAT=info)
+         or_fail_dealloc("ioghostsize")
+      ENDIF
+      IF (ALLOCATED(inighostsize)) THEN
+         DEALLOCATE(inighostsize,STAT=info)
+         or_fail_dealloc("inighostsize")
+      ENDIF
+      IF (ALLOCATED(ghostsize_equil)) THEN
+         DEALLOCATE(ghostsize_equil,STAT=info)
+         or_fail_dealloc("ghostsize_equil")
+      ENDIF
+      IF (ALLOCATED(ghostsize_run)) THEN
+         DEALLOCATE(ghostsize_run,STAT=info)
+         or_fail_dealloc("ghostsize_run")
+      ENDIF
       IF (ALLOCATED(bcdef)) THEN
          DEALLOCATE(bcdef,STAT=info)
          or_fail_dealloc("bcdef")

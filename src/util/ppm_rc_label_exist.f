@@ -196,6 +196,159 @@
         RETURN
       END FUNCTION ppm_rc_label_exist_asc2
 
+      LOGICAL FUNCTION ppm_rc_label_exist_asc3(label,arrayoflabels,arrayofranks,arraysize)
+
+        !-------------------------------------------------------------------------
+        !  Modules
+        !-------------------------------------------------------------------------
+        IMPLICIT NONE
+
+        !-------------------------------------------------------------------------
+        !  Includes
+        !-------------------------------------------------------------------------
+        !-------------------------------------------------------------------------
+        !  Arguments
+        !-------------------------------------------------------------------------
+        INTEGER,               INTENT(IN   ) :: label
+        !!!
+        INTEGER, DIMENSION(:), INTENT(IN   ) :: arrayoflabels
+        !!! array of labels
+        INTEGER, DIMENSION(:), POINTER       :: arrayofranks
+        !!! array of indices of the Sorted array
+        INTEGER,               INTENT(IN   ) :: arraysize
+        !!!
+        !-------------------------------------------------------------------------
+        !  Local variables
+        !-------------------------------------------------------------------------
+        INTEGER :: lower_part
+        INTEGER :: mid_part
+        INTEGER :: upper_part
+        INTEGER :: arrayindex
+        !-------------------------------------------------------------------------
+        !
+        !-------------------------------------------------------------------------
+        IF  (arraysize.LT.1) THEN
+           ppm_rc_label_exist_asc3=.FALSE.
+           RETURN
+        ELSE IF (label.LE.0) THEN
+           ppm_rc_label_exist_asc3=.FALSE.
+           RETURN
+        ELSE IF (label.LT.arrayoflabels(arrayofranks(1))) THEN
+           ppm_rc_label_exist_asc3=.FALSE.
+           RETURN
+        ELSE IF (label.EQ.arrayoflabels(arrayofranks(1))) THEN
+           ppm_rc_label_exist_asc3=.TRUE.
+           RETURN
+        ELSE IF (label.EQ.arrayoflabels(arrayofranks(arraysize))) THEN
+           ppm_rc_label_exist_asc3=.TRUE.
+           RETURN
+        ELSE IF (label.GT.arrayoflabels(arrayofranks(arraysize))) THEN
+           ppm_rc_label_exist_asc3=.FALSE.
+           RETURN
+        ENDIF
+
+        ! Limits for the search
+        lower_part=1
+        upper_part=arraysize
+
+        DO WHILE (upper_part-lower_part.GT.1)
+           mid_part=(lower_part+upper_part)/2
+           arrayindex=arrayofranks(mid_part)
+           IF      (label.LT.arrayoflabels(arrayindex)) THEN
+              upper_part=mid_part
+           ELSE IF (label.GT.arrayoflabels(arrayindex)) THEN
+              lower_part=mid_part
+           ELSE
+              ppm_rc_label_exist_asc3=.TRUE.
+              RETURN
+           ENDIF
+        ENDDO
+
+        ppm_rc_label_exist_asc3=.FALSE.
+        !-------------------------------------------------------------------------
+        !  Return
+        !-------------------------------------------------------------------------
+        RETURN
+      END FUNCTION ppm_rc_label_exist_asc3
+
+      LOGICAL FUNCTION ppm_rc_label_exist_asc4(label,arrayoflabels,arrayofranks,arraysize,arrayindex)
+
+        !-------------------------------------------------------------------------
+        !  Modules
+        !-------------------------------------------------------------------------
+        IMPLICIT NONE
+
+        !-------------------------------------------------------------------------
+        !  Includes
+        !-------------------------------------------------------------------------
+        !-------------------------------------------------------------------------
+        !  Arguments
+        !-------------------------------------------------------------------------
+        INTEGER,               INTENT(IN   ) :: label
+        !!!
+        INTEGER, DIMENSION(:), INTENT(IN   ) :: arrayoflabels
+        !!! array of labels
+        INTEGER, DIMENSION(:), POINTER       :: arrayofranks
+        !!! array of indices of the sorted arrayoflabels
+        INTEGER,               INTENT(IN   ) :: arraysize
+        !!!
+        INTEGER,               INTENT(  OUT) :: arrayindex
+        !!!
+        !-------------------------------------------------------------------------
+        !  Local variables
+        !-------------------------------------------------------------------------
+        INTEGER :: lower_part
+        INTEGER :: mid_part
+        INTEGER :: upper_part
+        !-------------------------------------------------------------------------
+        !
+        !-------------------------------------------------------------------------
+        IF  (arraysize.LT.1) THEN
+           ppm_rc_label_exist_asc4=.FALSE.
+           RETURN
+        ELSE IF (label.LE.0) THEN
+           ppm_rc_label_exist_asc4=.FALSE.
+           RETURN
+        ELSE IF (label.LT.arrayoflabels(arrayofranks(1))) THEN
+           ppm_rc_label_exist_asc4=.FALSE.
+           RETURN
+        ELSE IF (label.EQ.arrayoflabels(arrayofranks(1))) THEN
+           ppm_rc_label_exist_asc4=.TRUE.
+           arrayindex=arrayofranks(1)
+           RETURN
+        ELSE IF (label.EQ.arrayoflabels(arrayofranks(arraysize))) THEN
+           ppm_rc_label_exist_asc4=.TRUE.
+           arrayindex=arrayofranks(arraysize)
+           RETURN
+        ELSE IF (label.GT.arrayoflabels(arrayofranks(arraysize))) THEN
+           ppm_rc_label_exist_asc4=.FALSE.
+           RETURN
+        ENDIF
+
+        ! Limits for the search
+        lower_part=1
+        upper_part=arraysize
+
+        DO WHILE (upper_part-lower_part.GT.1)
+           mid_part=(lower_part+upper_part)/2
+           arrayindex=arrayofranks(mid_part)
+           IF      (label.LT.arrayoflabels(arrayindex)) THEN
+              upper_part=mid_part
+           ELSE IF (label.GT.arrayoflabels(arrayindex)) THEN
+              lower_part=mid_part
+           ELSE
+              ppm_rc_label_exist_asc4=.TRUE.
+              RETURN
+           ENDIF
+        ENDDO
+
+        ppm_rc_label_exist_asc4=.FALSE.
+        !-------------------------------------------------------------------------
+        !  Return
+        !-------------------------------------------------------------------------
+        RETURN
+      END FUNCTION ppm_rc_label_exist_asc4
+
       LOGICAL FUNCTION ppm_rc_label_exist_dsc(label,arrayoflabels,arraysize,descend)
 
         !-------------------------------------------------------------------------
@@ -353,4 +506,165 @@
         RETURN
       END FUNCTION ppm_rc_label_exist_dsc2
 
+      LOGICAL FUNCTION ppm_rc_label_exist_dsc3(label,arrayoflabels,arrayofranks,arraysize,descend)
 
+        !-------------------------------------------------------------------------
+        !  Modules
+        !-------------------------------------------------------------------------
+        IMPLICIT NONE
+
+        !-------------------------------------------------------------------------
+        !  Includes
+        !-------------------------------------------------------------------------
+        !-------------------------------------------------------------------------
+        !  Arguments
+        !-------------------------------------------------------------------------
+        INTEGER,               INTENT(IN   ) :: label
+        !!!
+        INTEGER, DIMENSION(:), INTENT(IN   ) :: arrayoflabels
+        !!! Sorted array of indices
+        INTEGER, DIMENSION(:), POINTER       :: arrayofranks
+        !!!
+        INTEGER,               INTENT(IN   ) :: arraysize
+        !!!
+        LOGICAL,               INTENT(IN   ) :: descend
+        !!! array of indices is sorted in a descending order
+        !-------------------------------------------------------------------------
+        !  Local variables
+        !-------------------------------------------------------------------------
+        INTEGER :: lower_part
+        INTEGER :: mid_part
+        INTEGER :: upper_part
+        INTEGER :: arrayindex
+        !-------------------------------------------------------------------------
+        !
+        !-------------------------------------------------------------------------
+        IF  (arraysize.LT.1) THEN
+           ppm_rc_label_exist_dsc3=.FALSE.
+           RETURN
+        ELSE IF (label.LE.0) THEN
+           ppm_rc_label_exist_dsc3=.FALSE.
+           RETURN
+        ELSE IF (label.EQ.arrayoflabels(arrayofranks(1))) THEN
+           ppm_rc_label_exist_dsc3=.TRUE.
+           RETURN
+        ELSE IF (label.EQ.arrayoflabels(arrayofranks(arraysize))) THEN
+           ppm_rc_label_exist_dsc3=.TRUE.
+           RETURN
+        ELSE IF (.NOT.descend) THEN
+           ppm_rc_label_exist_dsc3=label_exist(label,arrayoflabels,arrayofranks,arraysize)
+           RETURN
+        ELSE IF (label.GT.arrayoflabels(arrayofranks(1))) THEN
+           ppm_rc_label_exist_dsc3=.FALSE.
+           RETURN
+        ELSE IF (label.LT.arrayoflabels(arrayofranks(arraysize))) THEN
+           ppm_rc_label_exist_dsc3=.FALSE.
+           RETURN
+        ENDIF
+
+        ! Limits for the search
+        lower_part=1
+        upper_part=arraysize
+
+        DO WHILE (upper_part-lower_part.GT.1)
+           mid_part=(lower_part+upper_part)/2
+           arrayindex=arrayofranks(mid_part)
+           IF      (label.GT.arrayoflabels(arrayindex)) THEN
+              upper_part=mid_part
+           ELSE IF (label.LT.arrayoflabels(arrayindex)) THEN
+              lower_part=mid_part
+           ELSE
+              ppm_rc_label_exist_dsc3=.TRUE.
+              RETURN
+           ENDIF
+        ENDDO
+
+        ppm_rc_label_exist_dsc3=.FALSE.
+        !-------------------------------------------------------------------------
+        !  Return
+        !-------------------------------------------------------------------------
+        RETURN
+      END FUNCTION ppm_rc_label_exist_dsc3
+
+      LOGICAL FUNCTION ppm_rc_label_exist_dsc4(label,arrayoflabels,arrayofranks,arraysize,descend,arrayindex)
+
+        !-------------------------------------------------------------------------
+        !  Modules
+        !-------------------------------------------------------------------------
+        IMPLICIT NONE
+
+        !-------------------------------------------------------------------------
+        !  Includes
+        !-------------------------------------------------------------------------
+        !-------------------------------------------------------------------------
+        !  Arguments
+        !-------------------------------------------------------------------------
+        INTEGER,               INTENT(IN   ) :: label
+        !!!
+        INTEGER, DIMENSION(:), INTENT(IN   ) :: arrayoflabels
+        !!! Sorted array of indices
+        INTEGER, DIMENSION(:), POINTER       :: arrayofranks
+        !!!
+        INTEGER,               INTENT(IN   ) :: arraysize
+        !!!
+        LOGICAL,               INTENT(IN   ) :: descend
+        !!! array of indices is sorted in a descending order
+        INTEGER,               INTENT(  OUT) :: arrayindex
+        !!!
+        !-------------------------------------------------------------------------
+        !  Local variables
+        !-------------------------------------------------------------------------
+        INTEGER :: lower_part
+        INTEGER :: mid_part
+        INTEGER :: upper_part
+        !-------------------------------------------------------------------------
+        !
+        !-------------------------------------------------------------------------
+        IF  (arraysize.LT.1) THEN
+           ppm_rc_label_exist_dsc4=.FALSE.
+           RETURN
+        ELSE IF (label.LE.0) THEN
+           ppm_rc_label_exist_dsc4=.FALSE.
+           RETURN
+        ELSE IF (label.EQ.arrayoflabels(arrayofranks(1))) THEN
+           ppm_rc_label_exist_dsc4=.TRUE.
+           arrayindex=arrayofranks(1)
+           RETURN
+        ELSE IF (label.EQ.arrayoflabels(arrayofranks(arraysize))) THEN
+           ppm_rc_label_exist_dsc4=.TRUE.
+           arrayindex=arrayofranks(arraysize)
+           RETURN
+        ELSE IF (.NOT.descend) THEN
+           ppm_rc_label_exist_dsc4=label_exist(label,arrayoflabels,arrayofranks,arraysize,arrayindex)
+           RETURN
+        ELSE IF (label.GT.arrayoflabels(arrayofranks(1))) THEN
+           ppm_rc_label_exist_dsc4=.FALSE.
+           RETURN
+        ELSE IF (label.LT.arrayoflabels(arrayofranks(arraysize))) THEN
+           ppm_rc_label_exist_dsc4=.FALSE.
+           RETURN
+        ENDIF
+
+        ! Limits for the search
+        lower_part=1
+        upper_part=arraysize
+
+        DO WHILE (upper_part-lower_part.GT.1)
+           mid_part=(lower_part+upper_part)/2
+           arrayindex=arrayofranks(mid_part)
+           IF      (label.GT.arrayoflabels(arrayindex)) THEN
+              upper_part=mid_part
+           ELSE IF (label.LT.arrayoflabels(arrayindex)) THEN
+              lower_part=mid_part
+           ELSE
+              ppm_rc_label_exist_dsc4=.TRUE.
+              RETURN
+           ENDIF
+        ENDDO
+
+        ppm_rc_label_exist_dsc4=.FALSE.
+        !-------------------------------------------------------------------------
+        !  Return
+        !-------------------------------------------------------------------------
+        RETURN
+      END FUNCTION ppm_rc_label_exist_dsc4

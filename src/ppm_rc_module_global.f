@@ -198,10 +198,6 @@
         PUBLIC :: OscillationHistoryLength,OscillationThreshold
         PUBLIC :: initopoid,initmeshid
 
-        INTEGER, DIMENSION(:),   ALLOCATABLE :: inighostsize
-        !!! size of the ghostlayers in pixels used during init process
-        !!! This is used in create_particles and depends on the convolution
-        !!! kernel
         CLASS(ppm_t_equi_mesh_), POINTER    :: imesh => NULL()
         !!! mesh structure that is used during init process
 
@@ -213,7 +209,7 @@
         INTEGER                             :: meshid
         !!! main Mesh id for segmentation
 
-        PUBLIC :: inighostsize,imesh,topoid,mesh,meshid
+        PUBLIC :: imesh,topoid,mesh,meshid
         !----------------------------------------------------------------------
         !  MCMC
         !----------------------------------------------------------------------
@@ -242,8 +238,19 @@
         REAL(MK), DIMENSION(:), POINTER     :: min_phys
         REAL(MK), DIMENSION(:), POINTER     :: max_phys
 
-        ! size of the ghost layers in pixels
+
+        INTEGER,  DIMENSION(:), ALLOCATABLE :: ioghostsize
+        INTEGER,  DIMENSION(:), ALLOCATABLE :: inighostsize
+        !!! size of the ghostlayers in pixels used during init process
+        !!! This is used in create_particles and depends on the convolution
+        !!! kernel
+        INTEGER,  DIMENSION(:), ALLOCATABLE :: ghostsize_equil
+        !!! size of the ghost layers in pixels
+        INTEGER,  DIMENSION(:), ALLOCATABLE :: ghostsize_run
+        !!! size of the ghost layers in pixels
         INTEGER,  DIMENSION(:), ALLOCATABLE :: ghostsize
+        !!! size of the ghost layers in pixels
+
         INTEGER,  DIMENSION(:), ALLOCATABLE :: bcdef
 
         INTEGER                             :: decomp
@@ -258,7 +265,12 @@
 
         PUBLIC :: proc_speed,cost
         PUBLIC :: min_phys,max_phys
-        PUBLIC :: ghostsize,bcdef,decomp,assig
+        PUBLIC :: ioghostsize
+        PUBLIC :: inighostsize
+        PUBLIC :: ghostsize_equil
+        PUBLIC :: ghostsize_run
+        PUBLIC :: ghostsize
+        PUBLIC :: bcdef,decomp,assig
         PUBLIC :: ineighproc,nneighproc
         PUBLIC :: procflag,ConvergenceMASK
         !----------------------------------------------------------------------
@@ -314,17 +326,27 @@
         !  Weights of the energy terms
         !-----------------------------------------------------------------------
         REAL(MK)                            :: energy_coeff_data
+        REAL(MK)                            :: energy_coeff_data_equil
         REAL(MK)                            :: energy_coeff_length
+        REAL(MK)                            :: energy_coeff_length_equil
         REAL(MK)                            :: energy_coeff_balloon
+        REAL(MK)                            :: energy_coeff_balloon_equil
         REAL(MK)                            :: energy_coeff_outward_flow
+        REAL(MK)                            :: energy_coeff_outward_flow_equil
         REAL(MK)                            :: energy_region_merge_ths
+        REAL(MK)                            :: energy_region_merge_ths_equil
         REAL(MK)                            :: energy_local_window_radius
+        REAL(MK)                            :: energy_local_window_radius_equil
         REAL(MK)                            :: energy_curvature_mask_radius
+        REAL(MK)                            :: energy_curvature_mask_radius_equil
         !!! hypersphere radius which is used in curvature regularization
 
         PUBLIC :: energy_coeff_data,energy_coeff_length,energy_coeff_balloon
+        PUBLIC :: energy_coeff_data_equil,energy_coeff_length_equil,energy_coeff_balloon_equil
         PUBLIC :: energy_coeff_outward_flow,energy_region_merge_ths
+        PUBLIC :: energy_coeff_outward_flow_equil,energy_region_merge_ths_equil
         PUBLIC :: energy_local_window_radius,energy_curvature_mask_radius
+        PUBLIC :: energy_local_window_radius_equil,energy_curvature_mask_radius_equil
         !-----------------------------------------------------------------------
         !  External and Internal energy names
         !-----------------------------------------------------------------------
@@ -442,9 +464,11 @@
         !  Global iteration number
         !----------------------------------------------------------------------
         INTEGER                             :: istep
+        INTEGER                             :: nsteql
+        !!! number of equilibration iterations
         INTEGER                             :: maxiter
         !!! maximum number of iterations to perform
-        PUBLIC :: istep,maxiter
+        PUBLIC :: istep,maxiter,nsteql
         !----------------------------------------------------------------------
         !  I/O and control
         !----------------------------------------------------------------------
@@ -646,6 +670,7 @@
            !-------------------------------------------------------------------------
            !  Do 300 iterations per default
            !-------------------------------------------------------------------------
+           CALL arg(nsteql,'equilibration',default=0,ctrl_name='nsteql',help="number of equilibration iterations")
            CALL arg(maxiter,'maxiter',default=300,ctrl_name='maxiter',help="max number of iterations")
            !-------------------------------------------------------------------------
            !  Debug value
@@ -682,30 +707,44 @@
            !-------------------------------------------------------------------
            CALL arg(energy_coeff_data,'energy_coeff_data',default=1.0_MK, &
            &    ctrl_name='energy_coeff_data',help="coefficient for the energy")
+           CALL arg(energy_coeff_data_equil,'energy_coeff_data_equil',default=0.0_MK, &
+           &    ctrl_name='energy_coeff_data_equil',help="coefficient for the energy")
            !-------------------------------------------------------------------
            !  weight for the energy
            !-------------------------------------------------------------------
            CALL arg(energy_coeff_length,'energy_coeff_length',default=0.04_MK, &
            & ctrl_name='energy_coeff_length',help="coefficient for the energy")
+           CALL arg(energy_coeff_length_equil,'energy_coeff_length_equil',default=0.0_MK, &
+           & ctrl_name='energy_coeff_length_equil',help="coefficient for the energy")
            !-------------------------------------------------------------------
            !  weight for the energy
            !-------------------------------------------------------------------
            CALL arg(energy_coeff_balloon,'energy_coeff_balloon',default=0.0_MK, &
            & ctrl_name='energy_coeff_balloon',help="coefficient for the energy")
+           CALL arg(energy_coeff_balloon_equil,'energy_coeff_balloon_equil',default=0.0_MK, &
+           & ctrl_name='energy_coeff_balloon_equil',help="coefficient for the energy")
            !-------------------------------------------------------------------
            !  weight for the energy
            !-------------------------------------------------------------------
            CALL arg(energy_coeff_outward_flow,'energy_coeff_outward_flow',default=0.0_MK, &
            & ctrl_name='energy_coeff_outward_flow',help="coefficient for the energy")
+           CALL arg(energy_coeff_outward_flow_equil,'energy_coeff_outward_flow_equil',default=0.0_MK, &
+           & ctrl_name='energy_coeff_outward_flow_equil',help="coefficient for the energy")
            !-------------------------------------------------------------------
            !  energy merging threshold coefficient
            !-------------------------------------------------------------------
            CALL arg(energy_region_merge_ths,'energy_region_merge_ths',default=0.2_MK, &
            &    ctrl_name='energy_region_merge_ths',help="merging threshold coefficient")
+           CALL arg(energy_region_merge_ths_equil,'energy_region_merge_ths_equil',default=0.0_MK, &
+           &    ctrl_name='energy_region_merge_ths_equil',help="merging threshold coefficient")
            CALL arg(energy_local_window_radius,'energy_local_window_radius',default=3.0_MK, &
            &    ctrl_name='energy_local_window_radius',help="local window radius")
+           CALL arg(energy_local_window_radius_equil,'energy_local_window_radius_equil',default=0.0_MK, &
+           &    ctrl_name='energy_local_window_radius_equil',help="local window radius")
            CALL arg(energy_curvature_mask_radius,'energy_curvature_mask_radius',default=4.0_MK, &
            &    ctrl_name='energy_curvature_mask_radius',help="hypersphere radius")
+           CALL arg(energy_curvature_mask_radius_equil,'energy_curvature_mask_radius_equil',default=0.0_MK, &
+           &    ctrl_name='energy_curvature_mask_radius_equil',help="hypersphere radius")
 
 
            CALL arg(OscillationThreshold,'Oscillation_ths',default=0.02_ppm_kind_double, &

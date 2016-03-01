@@ -42,6 +42,7 @@
         INTEGER, DIMENSION(:,:),   ALLOCATABLE :: labelled
         INTEGER, DIMENSION(:),     POINTER :: seedn
         INTEGER, DIMENSION(:),     POINTER :: Nm
+        INTEGER, DIMENSION(:),     POINTER :: nlabelsranking
         INTEGER, DIMENSION(__DIME)              :: ld,ld_
         INTEGER                            :: i,j,kk,nn
         INTEGER                            :: idgs,idge,lngn,ghost_nlabels_
@@ -62,7 +63,7 @@
          CALL substart(caller,t0,info)
 
          NULLIFY(DTYPE(wpi),DTYPE(wpl))
-         NULLIFY(seedlst,seedlsti)
+         NULLIFY(seedlst,seedlsti,nlabelsranking)
 
          nsize=SIZE(nlabels,DIM=1)
 
@@ -161,8 +162,17 @@
                                        value(1)=REAL(ghost_nlabels(idge),ppm_kind_double)
                                        nlabels(i)=ghost_nlabels(idge)
 
-                                       CALL ppm_util_qsort(nlabels,info,nsize)
+                                       CALL ppm_util_qsort(nlabels,nlabelsranking,info,nsize)
                                        or_fail("ppm_util_qsort")
+
+                                       ALLOCATE(tmp1_i(nsize),STAT=info)
+                                       or_fail_alloc("tmp1_i")
+
+                                       DO j=1,nsize
+                                          tmp1_i(j)=nlabels(nlabelsranking(j))
+                                       ENDDO
+
+                                       CALL MOVE_ALLOC(tmp1_i,nlabels)
 
                                        EXIT stat_loop
                                     ENDIF
@@ -207,8 +217,17 @@
                                        value(1)=REAL(ghost_nlabels(idge),ppm_kind_double)
                                        nlabels(i)=ghost_nlabels(idge)
 
-                                       CALL ppm_util_qsort(nlabels,info,nsize)
+                                       CALL ppm_util_qsort(nlabels,nlabelsranking,info,nsize)
                                        or_fail("ppm_util_qsort")
+
+                                       ALLOCATE(tmp1_i(nsize),STAT=info)
+                                       or_fail_alloc("tmp1_i")
+
+                                       DO j=1,nsize
+                                          tmp1_i(j)=nlabels(nlabelsranking(j))
+                                       ENDDO
+
+                                       CALL MOVE_ALLOC(tmp1_i,nlabels)
 
                                        EXIT stat_loop
                                     ENDIF
@@ -388,8 +407,17 @@
                   ENDIF
                ENDIF
 
-               CALL ppm_util_qsort(nlabels,info,i)
+               CALL ppm_util_qsort(nlabels,nlabelsranking,info,i)
                or_fail("ppm_util_qsort")
+
+               ALLOCATE(tmp1_i(i),STAT=info)
+               or_fail_alloc("tmp1_i")
+
+               DO j=1,i
+                  tmp1_i(j)=nlabels(nlabelsranking(j))
+               ENDDO
+
+               CALL MOVE_ALLOC(tmp1_i,nlabels)
             ELSE
                DO WHILE (ASSOCIATED(seed))
                   CALL ppm_rc_seeds(ipatch)%remove(info)
@@ -406,6 +434,8 @@
             ipatch=ipatch+1
          ENDDO patch_loop
 
+         CALL ppm_alloc(nlabelsranking,ld,ppm_param_dealloc,info)
+         or_fail_dealloc("nlabelsranking")
         !-------------------------------------------------------------------------
         !  Return
         !-------------------------------------------------------------------------

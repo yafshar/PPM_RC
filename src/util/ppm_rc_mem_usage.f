@@ -29,8 +29,11 @@
       !-------------------------------------------------------------------------
 
       SUBROUTINE ppm_rc_mem_usage(valueRSS,info)
+#ifdef __VNDINTEL
+         USE ifport
+         !if on intel compiler
+#endif
 
-!         USE ifport !if on intel compiler
         IMPLICIT NONE
 
         INTEGER, INTENT(INOUT) :: valueRSS

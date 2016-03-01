@@ -102,36 +102,12 @@
         !-------------------------------------------------------------------------
         SELECT CASE (ppm_rc_dim)
         CASE (2)
-           ALLOCATE(init_rd(2),STAT=info)
-           or_fail_alloc("init_rd")
-
-           ALLOCATE(init_sp(2),STAT=info)
-           or_fail_alloc("init_rd")
-
-           ALLOCATE(ghostsize(2),STAT=info)
-           or_fail_alloc("ghostsize")
-
-           ALLOCATE(min_phys(2),max_phys(2),STAT=info)
-           or_fail_alloc("min_phys & max_phys")
-
            ALLOCATE(bcdef(4),STAT=info)
            or_fail_alloc("bcdef")
 
            IF (AllowFusionZ) AllowFusionZ=.FALSE.
 
         CASE (3)
-           ALLOCATE(init_rd(3), STAT=info)
-           or_fail_alloc("blob_radius")
-
-           ALLOCATE(init_sp(3),STAT=info)
-           or_fail_alloc("init_rd")
-
-           ALLOCATE(ghostsize(3),STAT=info)
-           or_fail_alloc("ghostsize")
-
-           ALLOCATE(min_phys(3),max_phys(3),STAT=info)
-           or_fail_alloc("min_phys & max_phys")
-
            ALLOCATE(bcdef(6),STAT=info)
            or_fail_alloc("bcdef")
 
@@ -141,6 +117,32 @@
            fail("NOTICE: Wrong Case dimension.",ppm_error=ppm_error_fatal)
 
         END SELECT
+
+        ALLOCATE(init_rd(ppm_rc_dim),STAT=info)
+        or_fail_alloc("init_rd")
+
+        ALLOCATE(init_sp(ppm_rc_dim),STAT=info)
+        or_fail_alloc("init_rd")
+
+        ALLOCATE(ioghostsize(ppm_rc_dim),STAT=info)
+        or_fail_alloc("ioghostsize")
+
+        ALLOCATE(inighostsize(ppm_rc_dim),STAT=info)
+        or_fail_alloc("inighostsize")
+
+        ALLOCATE(ghostsize_run(ppm_rc_dim),STAT=info)
+        or_fail_alloc("ghostsize_run")
+
+        IF (nsteql.GT.0) THEN
+           ALLOCATE(ghostsize_equil(ppm_rc_dim),STAT=info)
+           or_fail_alloc("ghostsize_equil")
+        ENDIF
+
+        ALLOCATE(ghostsize(ppm_rc_dim),STAT=info)
+        or_fail_alloc("ghostsize")
+
+        ALLOCATE(min_phys(ppm_rc_dim),max_phys(ppm_rc_dim),STAT=info)
+        or_fail_alloc("min_phys & max_phys")
 
         !-------------------------------------------------------------------------
         !  Default blob_radius
@@ -175,7 +177,13 @@
         !-------------------------------------------------------------------------
         !  Default ghostsize
         !-------------------------------------------------------------------------
-        ghostsize = 0
+        ioghostsize =0
+        inighostsize=0
+        ghostsize   =0
+        IF (nsteql.GT.0) THEN
+           ghostsize_equil=0
+           ghostsize_run  =0
+        ENDIF
 
         !-------------------------------------------------------------------------
         !  Default domain size

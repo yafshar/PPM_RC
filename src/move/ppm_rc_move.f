@@ -117,6 +117,8 @@
         INTEGER                                        :: ppart,qpart
         INTEGER                                        :: ipart
         INTEGER,             DIMENSION(:), ALLOCATABLE :: vCheckedLabels
+        INTEGER,             DIMENSION(:), POINTER     :: vCheckedLabelsranking
+        INTEGER,             DIMENSION(:), POINTER     :: list_del_parts_ranking
         INTEGER                                        :: vCurrentLabel,vCandidateLabel
         INTEGER                                        :: vLabel,vLabel1,vLabel2,val
         INTEGER                                        :: vNSplits
@@ -332,6 +334,8 @@
            !-------------------------------------------------------------------------
            ! Ghost get
            !-------------------------------------------------------------------------
+           ghostsize=1
+
            CALL mesh%map_ghost_get(info,ghostsize=ghostsize)
            or_fail("mesh%map_ghost_get")
         ENDIF
@@ -997,6 +1001,8 @@
            ALLOCATE(vCheckedLabels(nsize),STAT=info)
            or_fail_alloc("vCheckedLabels")
 
+           NULLIFY(vCheckedLabelsranking)
+
            nb=vNSplits
 
            sbpitr => mesh%subpatch%begin()
@@ -1065,7 +1071,7 @@
 
                     il1=il1+1
                     IF (il1.GT.nsize) THEN
-                       ALLOCATE(bufi(nsize*2),STAT=info)
+                       ALLOCATE(bufi(nsize+1),STAT=info)
                        or_fail_alloc("Tmp array allocation failed!")
 
                        FORALL (i=1:nsize) bufi(i)=vCheckedLabels(i)
@@ -1078,8 +1084,17 @@
                     !-------------------------------------------------------------------------
                     vCheckedLabels(il1)=vLabel1
 
-                    CALL ppm_util_qsort(vCheckedLabels,info,il1)
+                    CALL ppm_util_qsort(vCheckedLabels,vCheckedLabelsranking,info,il1)
                     or_fail("ppm_util_qsort")
+
+                    ALLOCATE(bufi(nsize),STAT=info)
+                    or_fail_alloc("bufi")
+
+                    DO i=1,il1
+                       bufi(i)=vCheckedLabels(vCheckedLabelsranking(i))
+                    ENDDO
+
+                    CALL MOVE_ALLOC(bufi,vCheckedLabels)
 
                     ALLOCATE(tseed,STAT=info)
                     or_fail_alloc("tseed")
@@ -1150,7 +1165,7 @@
 
                                 il1=il1+1
                                 IF (il1.GT.nsize) THEN
-                                   ALLOCATE(bufi(nsize*2),STAT=info)
+                                   ALLOCATE(bufi(nsize+1),STAT=info)
                                    or_fail_alloc("Tmp array allocation failed!")
 
                                    FORALL (i=1:nsize) bufi(i)=vCheckedLabels(i)
@@ -1163,8 +1178,17 @@
                                 !-------------------------------------------------------------------------
                                 vCheckedLabels(il1)=vLabel2
 
-                                CALL ppm_util_qsort(vCheckedLabels,info,il1)
+                                CALL ppm_util_qsort(vCheckedLabels,vCheckedLabelsranking,info,il1)
                                 or_fail("ppm_util_qsort")
+
+                                ALLOCATE(bufi(nsize),STAT=info)
+                                or_fail_alloc("bufi")
+
+                                DO i=1,il1
+                                   bufi(i)=vCheckedLabels(vCheckedLabelsranking(i))
+                                ENDDO
+
+                                CALL MOVE_ALLOC(bufi,vCheckedLabels)
 
                                 CALL vLabelsToCheck%add(vLabel2)
                              ELSE IF (ANY(vseedn(__DIME+2:2*__DIME+1).LT.1.OR.vseedn(__DIME+2:2*__DIME+1).GT.Nm)) THEN
@@ -1221,7 +1245,7 @@
 
                                 il1=il1+1
                                 IF (il1.GT.nsize) THEN
-                                   ALLOCATE(bufi(nsize*2),STAT=info)
+                                   ALLOCATE(bufi(nsize+1),STAT=info)
                                    or_fail_alloc("Tmp array allocation failed!")
 
                                    FORALL (i=1:nsize) bufi(i)=vCheckedLabels(i)
@@ -1234,8 +1258,17 @@
                                 !-------------------------------------------------------------------------
                                 vCheckedLabels(il1)=vLabel1
 
-                                CALL ppm_util_qsort(vCheckedLabels,info,il1)
+                                CALL ppm_util_qsort(vCheckedLabels,vCheckedLabelsranking,info,il1)
                                 or_fail("ppm_util_qsort")
+
+                                ALLOCATE(bufi(nsize),STAT=info)
+                                or_fail_alloc("bufi")
+
+                                DO i=1,il1
+                                   bufi(i)=vCheckedLabels(vCheckedLabelsranking(i))
+                                ENDDO
+
+                                CALL MOVE_ALLOC(bufi,vCheckedLabels)
 
                                 CALL vLabelsToCheck%add(vLabel1)
                              ELSE IF (ANY(vseedn(1:__DIME).LT.1.OR.vseedn(1:__DIME).GT.Nm)) THEN
@@ -1283,6 +1316,9 @@
 
            DEALLOCATE(vCheckedLabels,STAT=info)
            or_fail_dealloc("vCheckedLabels")
+
+           CALL ppm_alloc(vCheckedLabelsranking,ld,ppm_param_dealloc,info)
+           or_fail_dealloc("vCheckedLabelsranking")
 
            CALL vLabelsToCheck%destroy()
 
@@ -1475,7 +1511,8 @@
         !-------------------------------------------------------------------------
         ! Sort the candidates according to their number
         !-------------------------------------------------------------------------
-        CALL ppm_util_qsort(list_del_parts,info,del_parts)
+        NULLIFY(list_del_parts_ranking)
+        CALL ppm_util_qsort(list_del_parts,list_del_parts_ranking,info,del_parts)
         or_fail("ppm_util_qsort")
 
         !TOCHECK for ipatch
@@ -1484,7 +1521,7 @@
         ipatch=1
         DO WHILE (ASSOCIATED(sbpitr))
            DO ipart=del_parts,1,-1
-              iter_id=list_del_parts(ipart)
+              iter_id=list_del_parts(list_del_parts_ranking(ipart))
 
               InnerContourContainer(ipatch)%iter_id=iter_id
 
@@ -1507,6 +1544,8 @@
         DEALLOCATE(list_del_parts,STAT=info)
         or_fail_dealloc("list_del_parts")
 
+        CALL ppm_alloc(list_del_parts_ranking,ld,ppm_param_dealloc,info)
+        or_fail_dealloc("list_del_parts_ranking")
 
         IF (debug.GT.0) THEN
            CALL ppm_util_time(tm0)

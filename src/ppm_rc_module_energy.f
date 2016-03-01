@@ -105,6 +105,8 @@
         PUBLIC :: ppm_rc_energy_compute_2d
         PUBLIC :: ppm_rc_energy_compute_3d
 
+        PUBLIC :: ppm_rc_energy_parameter_redefine
+
       CONTAINS
 
 #define __2D  2

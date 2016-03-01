@@ -820,7 +820,7 @@
                           DO y=1,Nm(2)
                              DO x=1,Nm(1)
                                 IF (DTYPE(wp_i)(x,y,istrip).LT.0) THEN
-!                                    white=MOD(ABS(DTYPE(wp_i)(x,y,istrip)),150)+106
+                                   !white=MOD(ABS(DTYPE(wp_i)(x,y,istrip)),150)+106
                                    buf(x,y)=white
                                 ELSE
                                    buf(x,y)=0

@@ -45,6 +45,7 @@
           INTEGER, DIMENSION(:), ALLOCATABLE :: old_ghost
           INTEGER, DIMENSION(:),     POINTER :: Nm
           INTEGER, DIMENSION(:),     POINTER :: unique_new_regions
+          INTEGER, DIMENSION(:),     POINTER :: nlabels_tmp
           INTEGER, DIMENSION(__DIME)              :: ld,ldu
           INTEGER                            :: iopt,isize,nsize
           INTEGER                            :: i,j,l,ipatch
@@ -469,8 +470,22 @@
              ENDIF
           ENDIF
 
-          CALL ppm_util_qsort(nlabels,info,i)
+          NULLIFY(nlabels_tmp)
+          CALL ppm_util_qsort(nlabels,nlabels_tmp,info,i)
           or_fail("ppm_util_qsort")
+
+          ALLOCATE(tmp1_i(i),STAT=info)
+          or_fail_alloc("tmp1_i")
+
+          DO j=1,i
+             tmp1_i(j)=nlabels(nlabels_tmp(j))
+          ENDDO
+
+          CALL MOVE_ALLOC(tmp1_i,nlabels)
+
+          iopt=ppm_param_dealloc
+          CALL ppm_alloc(nlabels_tmp,ld,iopt,info)
+          or_fail_dealloc("nlabels_tmp")
 
 #ifdef __MPI
           !wait for ghost_on_fire
@@ -1097,7 +1112,7 @@
 
           iopt=ppm_param_dealloc
           CALL ppm_alloc(unique_new_regions,ld,iopt,info)
-          or_fail_alloc("unique_new_regions")
+          or_fail_dealloc("unique_new_regions")
 
           DEALLOCATE(tmp_region_stat_aggregate,MASKL,STAT=info)
           or_fail_dealloc("tmp_region_stat_aggregate & MASKL")
@@ -1593,7 +1608,7 @@
              !          by starting the nonblocking send and recv and waiting
              !          for completion at the end
              !-------------------------------------------------------------------------
-             CALL MeshIn%map_ghost_get(info)
+             CALL MeshIn%map_ghost_get(info,ghostsize=ghostsize_run)
              or_fail("MeshIn%map_ghost_get")
 
              CALL labels%map_ghost_push(MeshIn,info)

@@ -216,7 +216,7 @@
                     ENDDO !ii=i-msize_:i+msize_
                  ENDDO !jj=j-msize_:j+msize_
 
-                 CALL ppm_util_qsort(tmp1_i,Mask_,info)
+                 CALL ppm_util_qsort(tmp1_i,Mask_,info,m)
 
                  tmp2_i(i,j)=tmp1_i(Mask_(l))
               ENDDO !i=1,nnodes_(1)
@@ -271,7 +271,7 @@
                     ENDDO !ii=i-msize_,i+msize_
                  ENDDO !jj=j-msize_,j+msize_
 
-                 CALL ppm_util_qsort(tmp1_r,Mask_,info)
+                 CALL ppm_util_qsort(tmp1_r,Mask_,info,m)
 
                  tmp2_r(i,j)=tmp1_r(Mask_(l))
               ENDDO !i=1,nnodes_(1)
@@ -329,7 +329,7 @@
                        ENDDO !jj=j-msize_,j+msize_
                     ENDDO !kk=k-msize_,k+msize_
 
-                    CALL ppm_util_qsort(tmp1_i,Mask_,info)
+                    CALL ppm_util_qsort(tmp1_i,Mask_,info,m)
 
                     tmp3_i(i,j,k)=tmp1_i(Mask_(l))
                  ENDDO
@@ -388,7 +388,7 @@
                        ENDDO !jj=j-msize_,j+msize_
                     ENDDO !kk=k-msize_,k+msize_
 
-                    CALL ppm_util_qsort(tmp1_r,Mask_,info)
+                    CALL ppm_util_qsort(tmp1_r,Mask_,info,m)
 
                     tmp3_r(i,j,k)=tmp1_r(Mask_(l))
                  ENDDO

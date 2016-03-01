@@ -42,6 +42,11 @@
 
           start_subroutine("PrepareEnergyCalculation")
 
+          IF (ALLOCATED(this%NeighborsPoints)) THEN
+             DEALLOCATE(this%NeighborsPoints,STAT=info)
+             or_fail_dealloc("this%NeighborsPoints")
+          ENDIF
+
           !!! the radius is expected to be given in px size of the first
           !!! axis. We scale for the all the following dimensions according
           !!! to the image spacing.

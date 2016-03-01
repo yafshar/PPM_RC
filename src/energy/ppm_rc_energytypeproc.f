@@ -1277,6 +1277,11 @@
 
           start_subroutine("PrepareEnergyCalculation")
 
+          IF (ALLOCATED(this%NeighborsPoints)) THEN
+             DEALLOCATE(this%NeighborsPoints,STAT=info)
+             or_fail_dealloc("this%NeighborsPoints")
+          ENDIF
+
           !!! the radius is expected to be given in px size of the first
           !!! axis. We scale for the all the following dimensions according
           !!! to the image spacing.
@@ -1500,3 +1505,145 @@
 
         END FUNCTION DTYPE(E_ContourLengthApprox_EvaluateEnergyDifference)
 
+#if   __DIME == __3D
+        ! Constructor
+        SUBROUTINE ppm_rc_energy_parameter_redefine(info)
+        !!! This subroutine will change all the nergy variables
+        !!! which are used in equilibrium phase
+
+        IMPLICIT NONE
+        INTEGER, INTENT(  OUT) :: info
+        !-------------------------------------------------------------------------
+        !  Local variables
+        !-------------------------------------------------------------------------
+        REAL(ppm_kind_double) :: t0
+
+        CHARACTER(LEN=ppm_char) :: caller = 'ppm_rc_energy_parameter_redefine'
+        !-------------------------------------------------------------------------
+        !  Initialize
+        !-------------------------------------------------------------------------
+        CALL substart(caller,t0,info)
+
+        ghostsize_run=ghostsize_equil
+
+        DEALLOCATE(ghostsize_equil,STAT=info)
+        or_fail_dealloc("ghostsize_equil")
+
+        !-------------------------------------------------------------------------
+        !  Initialize external energy related terms
+        !-------------------------------------------------------------------------
+        SELECT CASE (TRIM(energy_ext_name))
+        CASE ("PC")
+           CALL e_data%create(1,energy_coeff_data,info,energy_region_merge_ths)
+           or_fail("e_data%create")
+        CASE ("PCGAUSSIAN")
+           CALL e_data%create(2,energy_coeff_data,info,energy_region_merge_ths)
+           or_fail("e_data%create")
+        CASE ("PCPOISSON")
+           CALL e_data%create(3,energy_coeff_data,info,energy_region_merge_ths)
+           or_fail("e_data%create")
+        CASE ("PS")
+           CALL e_data%create(11,energy_coeff_data,info,energy_region_merge_ths)
+           or_fail("e_data%create")
+
+           IF (energy_local_window_radius_equil.GT.smallest) THEN
+              SELECT TYPE (e_data)
+              TYPE IS (E_PS)
+                 e_data%m_Radius=energy_local_window_radius
+
+                 SELECT CASE (ppm_rc_dim)
+                 CASE (2)
+                    CALL e_data%PrepareEnergyCalculation_2d(info)
+                 CASE (3)
+                    CALL e_data%PrepareEnergyCalculation_3d(info)
+                 END SELECT
+                 or_fail("e_data%PrepareEnergyCalculation")
+              END SELECT
+           ENDIF
+        CASE ("PSGAUSSIAN")
+           CALL e_data%create(12,energy_coeff_data,info,energy_region_merge_ths)
+           or_fail("e_data%create")
+
+           IF (energy_local_window_radius_equil.GT.smallest) THEN
+              SELECT TYPE (e_data)
+              TYPE IS (E_PSGaussian)
+                 e_data%m_Radius=energy_local_window_radius
+
+                 SELECT CASE (ppm_rc_dim)
+                 CASE (2)
+                    CALL e_data%PrepareEnergyCalculation_2d(info)
+                 CASE (3)
+                    CALL e_data%PrepareEnergyCalculation_3d(info)
+                 END SELECT
+                 or_fail("e_data%PrepareEnergyCalculation")
+              END SELECT
+           ENDIF
+        CASE ("PSPOISSON")
+           CALL e_data%create(13,energy_coeff_data,info,energy_region_merge_ths)
+           or_fail("e_data%create")
+
+           IF (energy_local_window_radius_equil.GT.smallest) THEN
+              SELECT TYPE (e_data)
+              TYPE IS (E_PSPoisson)
+                 e_data%m_Radius=energy_local_window_radius
+
+                 SELECT CASE (ppm_rc_dim)
+                 CASE (2)
+                    CALL e_data%PrepareEnergyCalculation_2d(info)
+                 CASE (3)
+                    CALL e_data%PrepareEnergyCalculation_3d(info)
+                 END SELECT
+                 or_fail("e_data%PrepareEnergyCalculation")
+              END SELECT
+           ENDIF
+        END SELECT
+
+        energy_coeff_balloon=energy_coeff_balloon_equil
+
+        IF (energy_coeff_balloon.GT.smallest.OR. &
+        &   energy_coeff_balloon.LT.-smallest) THEN
+           e_data%m_EnergyFunctional=e_data%m_EnergyFunctional+1000
+        ENDIF
+
+        !-------------------------------------------------------------------------
+        !  Initialize internal energy related terms
+        !-------------------------------------------------------------------------
+        SELECT CASE (TRIM(energy_int_name))
+        CASE ("GAMMA")
+           CALL e_length%create(31,energy_coeff_length,info)
+           or_fail("e_length%create")
+        CASE ("CURV")
+           CALL e_length%create(32,energy_coeff_length,info)
+           or_fail("e_length%create")
+
+           IF (energy_curvature_mask_radius_equil.GT.smallest) THEN
+              SELECT TYPE (e_length)
+              TYPE IS (E_ContourLengthApprox)
+                 e_length%m_Radius=energy_curvature_mask_radius
+
+                 SELECT CASE (ppm_rc_dim)
+                 CASE (2)
+                    CALL e_length%PrepareEnergyCalculation_2d(info)
+                 CASE (3)
+                    CALL e_length%PrepareEnergyCalculation_3d(info)
+                 END SELECT
+                 or_fail("e_length%PrepareEnergyCalculation")
+              END SELECT
+           ENDIF
+        END SELECT
+
+        energy_coeff_outward_flow=energy_coeff_outward_flow_equil
+
+        IF (energy_coeff_outward_flow.GT.smallest.OR. &
+        &   energy_coeff_outward_flow.LT.-smallest) THEN
+           e_length%m_EnergyFunctional=e_length%m_EnergyFunctional+1000
+        ENDIF
+
+        !-------------------------------------------------------------------------
+        !  Return
+        !-------------------------------------------------------------------------
+        9999 CONTINUE
+        CALL substop(caller,t0,info)
+        RETURN
+        END SUBROUTINE ppm_rc_energy_parameter_redefine
+#endif

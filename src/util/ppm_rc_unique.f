@@ -11,9 +11,10 @@
 
         REAL(ppm_kind_double) :: t0
 
-        INTEGER, DIMENSION(SIZE(a)) :: c
-        INTEGER, DIMENSION(1)       :: n
-        INTEGER                     :: i,j,iopt
+        INTEGER, DIMENSION(SIZE(a))    :: c
+        INTEGER, DIMENSION(:), POINTER :: d
+        INTEGER, DIMENSION(1)          :: n
+        INTEGER                        :: i,j,k,iopt
 
         CHARACTER(LEN=ppm_char) :: caller ='unique'
 
@@ -22,33 +23,42 @@
         CALL substart(caller,t0,info)
 
         c=INT(a)
+        k=SIZE(c,DIM=1)
+        IF (k.EQ.0) GOTO 9999
 
-        n = SIZE(c)
-        IF (n(1).EQ.0) GOTO 9999
-
-        CALL ppm_util_qsort(c,info,n(1))
+        NULLIFY(d)
+        CALL ppm_util_qsort(c,d,info,k)
         or_fail("ppm_util_qsort")
 
-!         MASK=.NOT.[(ANY(c(i).EQ.c(1:i-1)),i=1,n(1))]
-
-        MASK(1)=.TRUE.
+        MASK(d(1))=.TRUE.
         j=1
-        DO i=2,n(1)
-           IF (c(i).EQ.c(i-1)) THEN
-              MASK(i)=.FALSE.
+        DO i=2,k
+           IF (c(d(i)).EQ.c(d(i-1))) THEN
+              MASK(d(i))=.FALSE.
            ELSE
-              MASK(i)=.TRUE.
+              MASK(d(i))=.TRUE.
               j=j+1
            ENDIF
         ENDDO
 
-        n = j !COUNT(MASK)
+        iopt=ppm_param_dealloc
+        CALL ppm_alloc(d,n,iopt,info)
+        or_fail_dealloc("unique d")
+
+        n=j
+        !COUNT(MASK)
 
         iopt=ppm_param_alloc_grow
         CALL ppm_alloc(b,n,iopt,info)
         or_fail_alloc("unique b")
 
-        b=PACK(c,MASK)
+        j=1
+        DO i=1,k
+           IF (MASK(i)) THEN
+              b(j)=c(i)
+              j=j+1
+           ENDIF
+        ENDDO
         !-------------------------------------------------------------------------
         !  Return
         !-------------------------------------------------------------------------
@@ -69,9 +79,10 @@
 
         REAL(ppm_kind_double) :: t0
 
-        INTEGER, DIMENSION(SIZE(a)) :: c
-        INTEGER, DIMENSION(1)       :: n
-        INTEGER                     :: i,j,iopt
+        INTEGER, DIMENSION(SIZE(a))    :: c
+        INTEGER, DIMENSION(:), POINTER :: d
+        INTEGER, DIMENSION(1)          :: n
+        INTEGER                        :: i,j,k,iopt
 
         CHARACTER(LEN=ppm_char) :: caller ='unique'
 
@@ -80,33 +91,42 @@
         CALL substart(caller,t0,info)
 
         c=INT(a)
+        k=SIZE(c,DIM=1)
+        IF (k.EQ.0) GOTO 9999
 
-        n = SIZE(c)
-        IF (n(1).EQ.0) GOTO 9999
-
-        CALL ppm_util_qsort(c,info,n(1))
+        NULLIFY(d)
+        CALL ppm_util_qsort(c,d,info,k)
         or_fail("ppm_util_qsort")
 
-!         MASK=.NOT.[(ANY(c(i).EQ.c(1:i-1)),i=1,n(1))]
-
-        MASK(1)=.TRUE.
+        MASK(d(1))=.TRUE.
         j=1
-        DO i=2,n(1)
-           IF (c(i).EQ.c(i-1)) THEN
-              MASK(i)=.FALSE.
+        DO i=2,k
+           IF (c(d(i)).EQ.c(d(i-1))) THEN
+              MASK(d(i))=.FALSE.
            ELSE
-              MASK(i)=.TRUE.
+              MASK(d(i))=.TRUE.
               j=j+1
            ENDIF
         ENDDO
 
-        n = j!COUNT(MASK)
+        iopt=ppm_param_dealloc
+        CALL ppm_alloc(d,n,iopt,info)
+        or_fail_dealloc("unique d")
+
+        n = j
+        !COUNT(MASK)
 
         iopt=ppm_param_alloc_grow
         CALL ppm_alloc(b,n,iopt,info)
         or_fail_alloc("unique b")
 
-        b=PACK(c,MASK)
+        j=1
+        DO i=1,k
+           IF (MASK(i)) THEN
+              b(j)=c(i)
+              j=j+1
+           ENDIF
+        ENDDO
         !-------------------------------------------------------------------------
         !  Return
         !-------------------------------------------------------------------------
@@ -127,9 +147,9 @@
 
         REAL(ppm_kind_double) :: t0
 
-        INTEGER, DIMENSION(SIZE(a)) :: c
-        INTEGER, DIMENSION(1)       :: n
-        INTEGER                     :: i,j,iopt
+        INTEGER, DIMENSION(:), POINTER :: d
+        INTEGER, DIMENSION(1)          :: n
+        INTEGER                        :: i,j,k,iopt
 
         CHARACTER(LEN=ppm_char) :: caller ='unique'
 
@@ -137,34 +157,42 @@
 
         CALL substart(caller,t0,info)
 
-        c=a
+        k=SIZE(a,DIM=1)
+        IF (k.EQ.0) GOTO 9999
 
-        n = SIZE(c)
-        IF (n(1).EQ.0) GOTO 9999
-
-        CALL ppm_util_qsort(c,info,n(1))
+        NULLIFY(d)
+        CALL ppm_util_qsort(a,d,info,k)
         or_fail("ppm_util_qsort")
 
-!         MASK=.NOT.[(ANY(a(i).EQ.a(1:i-1)),i=1,n(1))]
-
-        MASK(1)=.TRUE.
+        MASK(d(1))=.TRUE.
         j=1
-        DO i=2,n(1)
-           IF (c(i).EQ.c(i-1)) THEN
-              MASK(i)=.FALSE.
+        DO i=2,k
+           IF (a(d(i)).EQ.a(d(i-1))) THEN
+              MASK(d(i))=.FALSE.
            ELSE
-              MASK(i)=.TRUE.
+              MASK(d(i))=.TRUE.
               j=j+1
            ENDIF
         ENDDO
 
-        n = j!COUNT(MASK)
+        iopt=ppm_param_dealloc
+        CALL ppm_alloc(d,n,iopt,info)
+        or_fail_dealloc("unique d")
+
+        n=j
+        !COUNT(MASK)
 
         iopt=ppm_param_alloc_grow
         CALL ppm_alloc(b,n,iopt,info)
         or_fail_alloc("unique b")
 
-        b=PACK(c,MASK)
+        j=1
+        DO i=1,k
+           IF (MASK(i)) THEN
+              b(j)=a(i)
+              j=j+1
+           ENDIF
+        ENDDO
         !-------------------------------------------------------------------------
         !  Return
         !-------------------------------------------------------------------------
@@ -185,9 +213,10 @@
 
         REAL(ppm_kind_double) :: t0
 
-        INTEGER(ppm_kind_int64), DIMENSION(SIZE(a)) :: c
-        INTEGER,                 DIMENSION(1)       :: n
-        INTEGER                                     :: i,j,iopt
+        INTEGER(ppm_kind_int64), DIMENSION(SIZE(a))    :: c
+        INTEGER,                 DIMENSION(:), POINTER :: d
+        INTEGER,                 DIMENSION(1)          :: n
+        INTEGER                                        :: i,j,k,iopt
 
         CHARACTER(LEN=ppm_char) :: caller ='unique'
 
@@ -196,32 +225,42 @@
         CALL substart(caller,t0,info)
 
         c=a
+        k=SIZE(c,DIM=1)
+        IF (k.EQ.0) GOTO 9999
 
-        n = SIZE(c)
-        IF (n(1).EQ.0) GOTO 9999
-
-        CALL ppm_util_qsort(c,info,n(1))
+        NULLIFY(d)
+        CALL ppm_util_qsort(c,d,info,k)
         or_fail("ppm_util_qsort")
 
-!         MASK=.NOT.[(ANY(a(i).EQ.a(1:i-1)),i=1,n(1))]
-        MASK(1)=.TRUE.
+        MASK(d(1))=.TRUE.
         j=1
-        DO i=2,n(1)
-           IF (c(i).EQ.c(i-1)) THEN
-              MASK(i)=.FALSE.
+        DO i=2,k
+           IF (c(d(i)).EQ.c(d(i-1))) THEN
+              MASK(d(i))=.FALSE.
            ELSE
-              MASK(i)=.TRUE.
+              MASK(d(i))=.TRUE.
               j=j+1
            ENDIF
         ENDDO
 
-        n = j!COUNT(MASK)
+        iopt=ppm_param_dealloc
+        CALL ppm_alloc(d,n,iopt,info)
+        or_fail_dealloc("unique d")
+
+        n=j
+        !COUNT(MASK)
 
         iopt=ppm_param_alloc_grow
         CALL ppm_alloc(b,n,iopt,info)
         or_fail_alloc("unique b")
 
-        b=PACK(a,MASK)
+        j=1
+        DO i=1,k
+           IF (MASK(i)) THEN
+              b(j)=c(i)
+              j=j+1
+           ENDIF
+        ENDDO
         !-------------------------------------------------------------------------
         !  Return
         !-------------------------------------------------------------------------

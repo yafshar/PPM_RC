@@ -197,42 +197,19 @@
 
         SELECT CASE (ppm_nproc)
         CASE (1)
-           !---------------------------------------------------------------------
-           ! Create new topology suitable for the initialization.
-           ! Use bisection decomposition strategy and map the image.
-           !---------------------------------------------------------------------
-           SELECT CASE (vInitKind)
-           !Local maxima initialization
-           CASE (6)
-              ghostsize = CEILING(2.01_MK*init_rd)
-              ! this size of ghost is needed for paddding the image
-              ! which will be used for convolution
-           CASE DEFAULT
-              !TODO FIXME
-              !TOCHECK the correct value for ghostsize
-              ghostsize = 2
-              ! 2 layers of ghost would be enough for initialization
-           END SELECT
-
-           SELECT TYPE (e_data)
-           CLASS IS (E_PS)
-              ghostsize = MAX(ghostsize,INT(e_data%m_Radius)+1)
-              ! if the energy functional is Piecewise Smooth, we need a
-              ! bigger ghost layer
-              ! This part should be removed when we correct the particle
-              ! topo routines, as for now the topology during initialization
-              ! and main part are the same
-           END SELECT
-
-           SELECT TYPE (e_length)
-           TYPE IS (E_ContourLengthApprox)
-              ghostsize = MAX(ghostsize,INT(e_length%m_Radius)+1)
-           END SELECT
+           !!! TODO
+           !!! In the new update I should get rid of this
+           !!! Currently I disbaled initopo map to topo
+           IF (nsteql.GT.0) THEN
+              ghostsize=MAX(ioghostsize,inighostsize,ghostsize_run,ghostsize_equil)
+           ELSE
+              ghostsize=MAX(ioghostsize,inighostsize,ghostsize_run)
+           ENDIF
         CASE DEFAULT
            !-------------------------------------------------------------------------
            !  Create an IO topology for reading the image file
            !-------------------------------------------------------------------------
-           ghostsize = 0
+           ghostsize=ioghostsize
 
            IF (n_io_procs_read.GT.1.AND.n_io_procs_read.LT.ppm_nproc) THEN
               ppm_nproc=n_io_procs_read
@@ -371,7 +348,9 @@
 
         SELECT CASE (ppm_nproc)
         CASE (1)
-           inighostsize=ghostsize
+           DEALLOCATE(ioghostsize,STAT=info)
+           or_fail_alloc("ioghostsize")
+
            !!! ghost size for initialization
            initopoid=iotopoid
            !!! initialization topology id
@@ -397,44 +376,20 @@
            ENDIF
 
            NULLIFY(imgdinfo,lbldinfo)
-
         CASE DEFAULT
-           SELECT CASE (vInitKind)
-           !Local maxima initialization
-           CASE (6)
-              inighostsize = CEILING(2.01_MK*init_rd)
-              ! this size of ghost is needed for paddding the image
-              ! which will be used for convolution
-
-           CASE DEFAULT
-              !TODO
-              !TOCHECK the correct value for ghostsize
-              inighostsize = 2
-              ! 2 layers of ghost would be enough for initialization
-
-           END SELECT
-
-           SELECT TYPE (e_data)
-           CLASS IS (E_PS)
-             inighostsize = MAX(inighostsize,INT(e_data%m_Radius)+1)
-             ! if the energy functional is Piecewise Smooth, we need a
-             ! bigger ghost layer
-             ! This part should be removed when we correct the particle
-             ! topo routines, as for now the topology during initialization
-             ! and main part are the same
-
-           END SELECT
-
-           SELECT TYPE (e_length)
-           TYPE IS (E_ContourLengthApprox)
-              inighostsize = MAX(inighostsize,INT(e_length%m_Radius)+1)
-
-           END SELECT
-
            IF (IAND(ppm_nproc,ppm_nproc-1).NE.0) THEN
               WRITE(cbuf,'(A,A)') "The current version of RC client is only ", &
-              & "working with number of processors equlas to the power of 2"
+              & "working with the number of processors equlas to the power of 2"
               fail(cbuf,ppm_error=ppm_error_fatal)
+           ENDIF
+
+           !!! TODO
+           !!! In the new update I should get rid of this
+           !!! Currently I disbaled initopo map to topo
+           IF (nsteql.GT.0) THEN
+              ghostsize=MAX(inighostsize,ghostsize_run,ghostsize_equil)
+           ELSE
+              ghostsize=MAX(inighostsize,ghostsize_run)
            ENDIF
 
            assig  = ppm_param_assign_internal
@@ -451,7 +406,7 @@
            !!! dummy particle position
 
            CALL ppm_mktopo(initopoid,initmeshid,xp,0,decomp,assig, &
-           &    min_phys,max_phys,bcdef,inighostsize,cost,Ngrid,info)
+           &    min_phys,max_phys,bcdef,ghostsize,cost,Ngrid,info)
            or_fail('Failed to create new topology for initialization!')
 
            iopt=ppm_param_dealloc
@@ -490,8 +445,9 @@
            CALL image%discr_info%remove(info,imgdinfo)
            or_fail("image%discr_info%remove")
 
-           DEALLOCATE(imgdinfo,STAT=info)
-           or_fail_dealloc("Failed to deallocate discr_info")
+           DEALLOCATE(imgdinfo,ioghostsize,STAT=info)
+           or_fail_dealloc("Failed to deallocate discr_info & ioghostsize")
+
 
            !We need to free memory which will not be used later
            !image data on IO mesh will not be needed anymore
@@ -687,23 +643,19 @@
         !-------------------------------------------------------------------------
         !this ghost size could be useful for ppm_rc_energy_compute routine
         !in which we need to compute the ghost particles e_length energy
-        SELECT TYPE (e_data)
-        CLASS IS (E_PS)
-           ghostsize=MAX(2,INT(e_data%m_Radius)+1)
-        CLASS DEFAULT
-           ghostsize=2
-        END SELECT
-
-        SELECT TYPE (e_length)
-        TYPE IS (E_ContourLengthApprox)
-           ghostsize=MAX(ghostsize,INT(e_length%m_Radius)+1)
-        END SELECT
-
-        check_true(<# MAXVAL(ghostsize).LE.MAXVAL(inighostsize) #>, &
-        & "Fail!!!, The ghostsize should be less than or equal to the size of the topology ghost.")
+        IF (nsteql.GT.0) THEN
+           ghostsize=MAX(ghostsize_equil,ghostsize_run)
+        ELSE
+           ghostsize=ghostsize_run
+        ENDIF
+!         check_true(<# MAXVAL(ghostsize).LE.MAXVAL(inighostsize) #>, &
+!         & "Fail!!!, The ghostsize should be less than or equal to the size of the topology ghost.")
 
         SELECT CASE (ppm_nproc)
         CASE (1)
+           DEALLOCATE(inighostsize,STAT=info)
+           or_fail_alloc("inighostsize")
+
            topoid = initopoid
 
            mesh => iomesh
@@ -711,8 +663,6 @@
            meshid = iomeshid
 
            NULLIFY(imesh)
-
-           inighostsize=ghostsize
 
            NULLIFY(DTYPE(wpl),DTYPE(wpi))
 
@@ -1176,7 +1126,7 @@
            !-------------------------------------------------------------------------
            ! ghost update on the new mesh at new topo
            !-------------------------------------------------------------------------
-           CALL mesh%map_ghost_get(info)
+           CALL mesh%map_ghost_get(info,ghostsize=ghostsize_run)
            or_fail("mesh%map_ghost_get")
            !-------------------------------------------------------------------------
 !---Start--! starting labels ghost update by pushing data and

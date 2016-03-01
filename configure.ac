@@ -218,6 +218,10 @@ fi
 rm -f conftest.txt
 # End of checking for Fortran compiler vendor
 
+if test "$vendor" = "intel" ; then
+	AC_SUBST(CPPFLAGS,["$CPPFLAGS -D__VNDINTEL"])
+fi
+
 AX_F90_MODULE_EXTENSION
 if test x$ax_cv_f90_modext = xunknown ; then
 	AC_MSG_ERROR([unable to find f90 modules extension])
@@ -255,8 +259,6 @@ if test x"$debuger" = x"yes"; then
 	AC_SUBST(CXXFLAGS,["$CXXFLAGS -O0"])
 	AC_SUBST(CFLAGS,["$CFLAGS -O0"])
 	AC_SUBST(FCFLAGS,["$FCFLAGS -O0"])
-
-	AC_SUBST(CPPFLAGS,["$CPPFLAGS -D__DEBUG"])
 else
     	if test "x${vendor}" = xintel; then
     		AC_SUBST(FCFLAGS,["$FCFLAGS -O3 -diag-disable 5462"])

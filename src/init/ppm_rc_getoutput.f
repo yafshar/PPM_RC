@@ -1103,7 +1103,7 @@
              !-------------------------------------------------------------------------
              !  Put the seed balls on fire.
              !-------------------------------------------------------------------------
-             CALL MeshIn%map_ghost_get(info)
+             CALL MeshIn%map_ghost_get(info,ghostsize=inighostsize)
              or_fail("MeshIn%map_ghost_get")
 
              CALL FieldOut%map_ghost_push(MeshIn,info)

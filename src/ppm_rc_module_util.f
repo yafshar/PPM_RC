@@ -354,8 +354,12 @@
         INTERFACE label_exist
           MODULE PROCEDURE ppm_rc_label_exist_asc
           MODULE PROCEDURE ppm_rc_label_exist_asc2
+          MODULE PROCEDURE ppm_rc_label_exist_asc3
+          MODULE PROCEDURE ppm_rc_label_exist_asc4
           MODULE PROCEDURE ppm_rc_label_exist_dsc
           MODULE PROCEDURE ppm_rc_label_exist_dsc2
+          MODULE PROCEDURE ppm_rc_label_exist_dsc3
+          MODULE PROCEDURE ppm_rc_label_exist_dsc4
         END INTERFACE
 
         INTERFACE IndexHashFunctor_2d

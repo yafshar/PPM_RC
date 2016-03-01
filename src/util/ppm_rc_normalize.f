@@ -487,6 +487,10 @@
         Tolerance_=Tolerance*coef
         !correct the tolerance, when we are normalizing the image
 
+        IF (intensity_ths.GT.one) THEN
+           intensity_ths=intensity_ths*coef
+        ENDIF
+
         sbpitr => MeshIn%subpatch%begin()
         DO WHILE (ASSOCIATED(sbpitr))
            Nm => sbpitr%nnodes
