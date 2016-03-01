@@ -166,7 +166,7 @@
         !-------------------------------------------------------------------------
         CALL substart(caller,t0,info)
 
-        debug=2
+        !debug=2
 
         !-------------------------------------------------------------------------
         !  Find the right size of the ghost to create an IO topology for reading the image file
