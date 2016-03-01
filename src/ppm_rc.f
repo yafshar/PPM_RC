@@ -422,8 +422,6 @@
               timgs=timgs+timg-t0
            ENDIF
 
-           debug=3
-
            IF (debug.GT.2) THEN
               IF (ppm_nproc.GT.1) THEN
                  CALL ppm_util_time(t0)
