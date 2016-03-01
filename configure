@@ -15614,6 +15614,11 @@ fi
 rm -f conftest.txt
 # End of checking for Fortran compiler vendor
 
+if test "$vendor" = "intel" ; then
+	CPPFLAGS="$CPPFLAGS -D__VNDINTEL"
+
+fi
+
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking fortran 90 modules extension" >&5
 $as_echo_n "checking fortran 90 modules extension... " >&6; }
