@@ -93,6 +93,8 @@ Requirements for building PPM\_RC
 - TIFF Library:  
   For handling huge images, or very large collections of images, breaking the 
   4 gigabytes boundary, you need a TIFF Library which supports BigTIFF.
+  You can download the Latest Stable Release of TIFF v4.0.6 from:
+  http://www.remotesensing.org/libtiff.
 
 - BOOST C++ Library: 
   For more information Please refer to:
