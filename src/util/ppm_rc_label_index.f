@@ -32,15 +32,15 @@
       !  Subroutine   :                    ppm_rc_label_index
       !-------------------------------------------------------------------------
       !
-      !  Purpose      : Finding the index in the sorted array given the array
-      !                 and label
+      !  Purpose      : Finding the newlabel index in the sorted array given the
+      !                 array and the newlabel
       !
       !
       !  Input        :
       !
       !  Input/output :
       !
-      !  Output       : index where the new label can sit in the sorted array
+      !  Output       : index where the newlabel can sit in the sorted array
       !
       !  Routines     :
       !
@@ -50,7 +50,7 @@
       !
       !  Revisions    :
       !-------------------------------------------------------------------------
-      INTEGER FUNCTION ppm_rc_label_index(label,arrayoflabels,arraysize)
+      INTEGER FUNCTION ppm_rc_label_index(newlabel,arrayoflabels,arraysize)
 
         !-------------------------------------------------------------------------
         !  Modules
@@ -63,8 +63,8 @@
         !-------------------------------------------------------------------------
         !  Arguments
         !-------------------------------------------------------------------------
-        INTEGER,               INTENT(IN   ) :: label
-        !!! label we want to find the index for this in a sorted array
+        INTEGER,               INTENT(IN   ) :: newlabel
+        !!! newlabel we want to find the index for this in a sorted array
         INTEGER, DIMENSION(:), INTENT(IN   ) :: arrayoflabels
         !!! Sorted array of indices
         INTEGER,               INTENT(IN   ) :: arraysize
@@ -81,13 +81,13 @@
         IF  (arraysize.LT.1) THEN
            ppm_rc_label_index=0
            RETURN
-        ELSE IF (label.LE.0) THEN
+        ELSE IF (newlabel.LE.0) THEN
            ppm_rc_label_index=0
            RETURN
-        ELSE IF (label.LE.arrayoflabels(1)) THEN
+        ELSE IF (newlabel.LE.arrayoflabels(1)) THEN
            ppm_rc_label_index=1
            RETURN
-        ELSE IF (label.GE.arrayoflabels(arraysize)) THEN
+        ELSE IF (newlabel.GE.arrayoflabels(arraysize)) THEN
            ppm_rc_label_index=arraysize+1
            RETURN
         ENDIF
@@ -98,9 +98,9 @@
 
         DO WHILE (upper_part-lower_part.GT.1)
            mid_part=(lower_part+upper_part)/2
-           IF      (label.LT.arrayoflabels(mid_part)) THEN
+           IF      (newlabel.LT.arrayoflabels(mid_part)) THEN
               upper_part=mid_part
-           ELSE IF (label.GT.arrayoflabels(mid_part)) THEN
+           ELSE IF (newlabel.GT.arrayoflabels(mid_part)) THEN
               lower_part=mid_part
            ELSE
               ppm_rc_label_index=mid_part

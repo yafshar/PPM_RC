@@ -32,16 +32,17 @@
       !  Subroutine   :                    ppm_rc_label_exist
       !-------------------------------------------------------------------------
       !
-      !  Purpose      : Finding whether the particle exists given the array of particle
-      !
+      !  Purpose      : Finding whether the label exists given the sorted array
+      !                 of labels
       !
       !  Input        :
       !
       !  Input/output :
       !
       !  Output       : TRUE or FALSE
+      !                 Index of the label in the arrayoflabels
       !
-      !  Routines     :
+      !  Routines     : Ascending or descending sorted array of labels
       !
       !  Remarks      :
       !
@@ -140,7 +141,7 @@
         INTEGER,               INTENT(IN   ) :: arraysize
         !!!
         INTEGER,               INTENT(  OUT) :: arrayindex
-        !!!
+        !!! Index of the label in the arrayoflabels
         !-------------------------------------------------------------------------
         !  Local variables
         !-------------------------------------------------------------------------
@@ -293,7 +294,7 @@
         INTEGER,               INTENT(IN   ) :: arraysize
         !!!
         INTEGER,               INTENT(  OUT) :: arrayindex
-        !!!
+        !!! Index of the label in the arrayoflabels
         !-------------------------------------------------------------------------
         !  Local variables
         !-------------------------------------------------------------------------
@@ -368,6 +369,7 @@
         !!! Sorted array of indices
         INTEGER,               INTENT(IN   ) :: arraysize
         !!!
+
         LOGICAL,               INTENT(IN   ) :: descend
         !!! array of indices is sorted in a descending order
         !-------------------------------------------------------------------------
@@ -444,10 +446,12 @@
         !!! Sorted array of indices
         INTEGER,               INTENT(IN   ) :: arraysize
         !!!
+
         LOGICAL,               INTENT(IN   ) :: descend
         !!! array of indices is sorted in a descending order
+
         INTEGER,               INTENT(  OUT) :: arrayindex
-        !!!
+        !!! Index of the label in the arrayoflabels
         !-------------------------------------------------------------------------
         !  Local variables
         !-------------------------------------------------------------------------
@@ -527,6 +531,7 @@
         !!!
         INTEGER,               INTENT(IN   ) :: arraysize
         !!!
+
         LOGICAL,               INTENT(IN   ) :: descend
         !!! array of indices is sorted in a descending order
         !-------------------------------------------------------------------------
@@ -607,10 +612,12 @@
         !!!
         INTEGER,               INTENT(IN   ) :: arraysize
         !!!
+
         LOGICAL,               INTENT(IN   ) :: descend
         !!! array of indices is sorted in a descending order
+
         INTEGER,               INTENT(  OUT) :: arrayindex
-        !!!
+        !!! Index of the label in the arrayoflabels
         !-------------------------------------------------------------------------
         !  Local variables
         !-------------------------------------------------------------------------

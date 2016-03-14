@@ -246,10 +246,10 @@ if test x"$debuger" = x"yes"; then
         AC_DEFINE([DEBUG],[],[Debug])
 
     	if test "x${vendor}" = xintel; then
-		AC_SUBST(DEBUG,["-g3 -O0 -debug all -traceback -check all -check bounds -check uninit -check pointers -debug all -traceback -check all -check bounds -check uninit -diag-disable 10120"])
+		AC_SUBST(DEBUG,["-g3 -O0 -debug all -traceback -check all -check bounds -check uninit -ftrapuv -check pointers -gen-interfaces -warn interfaces -diag-disable 10120"])
                 AC_SUBST(CDEBUG,["-g3 -O0 -debug all -traceback"])
 	elif test "x${vendor}" = xgnu; then
-		AC_SUBST(DEBUG,["-g3 -O0 -Wall -Wextra -fimplicit-none -fbounds-check -fbacktrace -Wsurprising -Waliasing -Wimplicit-interface -pedantic -ffree-form -ffree-line-length-none -ffree-line-length-none -ftrapv -ffpe-trap=invalid,zero,overflow,underflow -Warray-temporaries -fcheck-array-temporaries  "])
+		AC_SUBST(DEBUG,["-g3 -O0 -Wall -Wextra -fimplicit-none -fbounds-check -fbacktrace -Wsurprising -Waliasing -Wimplicit-interface -pedantic -ffree-form -ffree-line-length-none -ftrapv -ffpe-trap=invalid,zero,overflow,underflow -Warray-temporaries -fcheck-array-temporaries  "])
                 AC_SUBST(CDEBUG,["-g3 -O0 -Wall -Wextra"])
 	else
 		AC_SUBST(DEBUG,["-g -O0"])

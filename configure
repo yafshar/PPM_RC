@@ -15699,12 +15699,12 @@ $as_echo "#define DEBUG /**/" >>confdefs.h
 
 
     	if test "x${vendor}" = xintel; then
-		DEBUG="-g3 -O0 -debug all -traceback -check all -check bounds -check uninit -check pointers -debug all -traceback -check all -check bounds -check uninit -diag-disable 10120"
+		DEBUG="-g3 -O0 -debug all -traceback -check all -check bounds -check uninit -ftrapuv -check pointers -gen-interfaces -warn interfaces -diag-disable 10120"
 
                 CDEBUG="-g3 -O0 -debug all -traceback"
 
 	elif test "x${vendor}" = xgnu; then
-		DEBUG="-g3 -O0 -Wall -Wextra -fimplicit-none -fbounds-check -fbacktrace -Wsurprising -Waliasing -Wimplicit-interface -pedantic -ffree-form -ffree-line-length-none -ffree-line-length-none -ftrapv -ffpe-trap=invalid,zero,overflow,underflow -Warray-temporaries -fcheck-array-temporaries  "
+		DEBUG="-g3 -O0 -Wall -Wextra -fimplicit-none -fbounds-check -fbacktrace -Wsurprising -Waliasing -Wimplicit-interface -pedantic -ffree-form -ffree-line-length-none -ftrapv -ffpe-trap=invalid,zero,overflow,underflow -Warray-temporaries -fcheck-array-temporaries  "
 
                 CDEBUG="-g3 -O0 -Wall -Wextra"
 
