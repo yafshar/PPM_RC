@@ -363,7 +363,7 @@
         !  Get image information and store the pixel size
         !-------------------------------------------------------------------------
         CALL ppm_rc_read_image_info(inputimage,ninputimage,info)
-        or_fail('Failed to read image information.')
+        or_fail('Failed to read image information.',ppm_error=ppm_error_fatal)
 
         max_phys(1:ppm_rc_dim) = REAL(Ngrid(1:ppm_rc_dim)-1,MK)  !+smallest
 
@@ -418,9 +418,12 @@
            SELECT CASE (vInitKind)
            !Local maxima initialization
            CASE (6)
-              ioghostsize = CEILING(2.05_MK*init_rd)
+              ioghostsize(1)=CEILING(2.05_MK*init_rd(1))
+              ioghostsize(2)=CEILING(2.05_MK*init_rd(2)*pixel(1)/pixel(2))
+              ioghostsize(ppm_rc_dim)=CEILING(2.05_MK*init_rd(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
               ! this size of ghost is needed for paddding the image
               ! which will be used for convolution
+              ioghostsize=MAX(ioghostsize,2)
            CASE DEFAULT
               !TODO FIXME
               !TOCHECK the correct value for ghostsize
@@ -434,7 +437,7 @@
               ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
               ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
 
-              ioghostsize = MAX(ioghostsize,ghostsize+1)
+              ioghostsize=MAX(ioghostsize,ghostsize+1)
               ! ghostsize(1) = MAX(ghostsize(1),CEILING(e_data%m_Radius)+1)
               ! ghostsize(2:__DIME) = MAX(ghostsize(2:__DIME),CEILING(e_data%m_Radius*pixel(1)/pixel(2:__DIME))+1)
               ! if the energy functional is Piecewise Smooth, we need a
@@ -470,9 +473,12 @@
            SELECT CASE (vInitKind)
            !Local maxima initialization
            CASE (6)
-              inighostsize = CEILING(2.05_MK*init_rd)
+              inighostsize(1)=CEILING(2.05_MK*init_rd(1))
+              inighostsize(2)=CEILING(2.05_MK*init_rd(2)*pixel(1)/pixel(2))
+              inighostsize(ppm_rc_dim)=CEILING(2.05_MK*init_rd(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
               ! this size of ghost is needed for paddding the image
               ! which will be used for convolution
+              inighostsize=MAX(inighostsize,2)
            CASE DEFAULT
               !TODO
               !TOCHECK the correct value for ghostsize
@@ -486,7 +492,7 @@
               ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
               ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
 
-              inighostsize = MAX(inighostsize,ghostsize+1)
+              inighostsize=MAX(inighostsize,ghostsize+1)
            END SELECT
 
            SELECT TYPE (e_length)
@@ -495,7 +501,7 @@
               ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
               ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
 
-              inighostsize = MAX(inighostsize,ghostsize+1)
+              inighostsize=MAX(inighostsize,ghostsize+1)
            END SELECT
         END SELECT
 
