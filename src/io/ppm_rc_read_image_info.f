@@ -107,7 +107,13 @@
            END SELECT
 
            info=ppm_rc_read_tiff_info(filename,Ngrid_)
-           or_fail('Error in reading a tiff header file!')
+           IF (info.EQ.-1) THEN
+              IF (rank.EQ.0) THEN
+                 stdout("Could not open the TIFF file")
+                 stdout("(Probably the file name is wrong or the file is not compatible with this version of TIFF)")
+              ENDIF
+              or_fail('Error in reading a tiff header file!',ppm_error=ppm_error_fatal)
+           ENDIF
 
            z=z+MERGE(Ngrid_(3),1,ppm_rc_dim.EQ.3)
         ENDDO !i=1,NmInputFile
