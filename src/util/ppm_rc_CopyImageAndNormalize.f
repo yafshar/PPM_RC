@@ -43,17 +43,24 @@
       !  Output       : info  (I) return status. 0 on success.
       !
       !  Note         : This routine per default only copy the input image to the
-      !                 output one and do not use ghosts, do not normalize!
+      !                 output one and do not use ghosts, do not normalize.
+      !
       !                 This is the user responsibility to know whether the ghosts
       !                 are updated before calling this routine or they will get
       !                 updated after!
+      !
+      !                 One can normalize the image and scale it to one image type
+      !                 For example you can normalize an edge image and scale it
+      !                 to be in the range of 8 bit or 16 bit image by multiplying
+      !                 it by 255. or by 65535. respectively.
+      !                 The algorithm per default is multiplying by one.
       !
       !  References   :
       !
       !  Revisions    :
       !-------------------------------------------------------------------------
       SUBROUTINE DTYPE(ppm_rc_CopyImageAndNormalize)(FieldIn1,FieldIn2,MeshIn,info, &
-      &          withGhost,Normalize,FieldMinVal,FieldMaxVal)
+      &          withGhost,Normalize,FieldMinVal,FieldMaxVal,Scalefac)
 
         !-------------------------------------------------------------------------
         !  Modules
@@ -86,6 +93,9 @@
         REAL(MK), OPTIONAL,      INTENT(  OUT) :: FieldMinVal
         REAL(MK), OPTIONAL,      INTENT(  OUT) :: FieldMaxVal
         !!! Return the global min and max value
+
+        REAL(MK), OPTIONAL,      INTENT(IN   ) :: Scalefac
+        !!! Scale factor to scale the nomalized image
         !-------------------------------------------------------------------------
         !  Local variables
         !-------------------------------------------------------------------------
@@ -103,6 +113,7 @@
         REAL(ppm_kind_double)                                        :: t0
         REAL(MK)                                                     :: coef
         REAL(MK)                                                     :: FieldMinVal_,FieldMaxVal_
+        REAL(MK)                                                     :: Scalefac_
 #ifdef __MPI
         REAL(MK), DIMENSION(2)                                       :: FieldMinMax
 #endif
@@ -136,6 +147,7 @@
 
         withGhost_=MERGE(withGhost,.FALSE.,PRESENT(withGhost))
         Normalize_=MERGE(Normalize,.FALSE.,PRESENT(Normalize))
+        Scalefac_=MERGE(Scalefac,one,PRESENT(Scalefac))
 
         NULLIFY(DTYPE(wp1),DTYPE(wp2))
 
@@ -192,7 +204,7 @@
            !-------------------------------------------------------------------------
            !  Scale and shift the FieldIn2
            !-------------------------------------------------------------------------
-           coef=one/(FieldMaxVal_-FieldMinVal_)
+           coef=Scalefac_/(FieldMaxVal_-FieldMinVal_)
 
            sbpitr => MeshIn%subpatch%begin()
            DO WHILE (ASSOCIATED(sbpitr))
@@ -479,18 +491,14 @@
          IF (FieldIn2%data_type.EQ.ppm_type_int) THEN
             fail("FieldIn2 data type is not correct for the normalized data!",exit_point=8888)
          ENDIF
-         IF (FieldIn1%data_type.NE.ppm_type_real) THEN
-            fail("FieldIn1 data type is not correct!",exit_point=8888)
-         ENDIF
-         IF (FieldIn2%data_type.NE.ppm_type_real) THEN
-            fail("FieldIn2 data type is not correct!",exit_point=8888)
-         ENDIF
       CASE DEFAULT
          IF (FieldIn1%data_type.NE.FieldIn2%data_type) THEN
             fail("FieldIn1 data type is not the same as FieldIn2 data type!",exit_point=8888)
          ENDIF
          IF (PRESENT(FieldMinVal).OR.PRESENT(FieldMaxVal)) THEN
-            stdout("Warning !!! The Min and Max values for FieldIn1 are not computed !!! The returned values are wrong!!!")
+            IF (rank.EQ.0) THEN
+               stdout("Warning !!! The Min and Max values are not computed !!! The returned values are wrong!!!")
+            ENDIF
          ENDIF
       END SELECT
       8888 CONTINUE
