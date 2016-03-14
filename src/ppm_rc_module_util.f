@@ -49,7 +49,7 @@
 
         PRIVATE
 
-        INTEGER(ppm_kind_int64), PARAMETER :: htable_null_li = -1_ppm_kind_int64
+        INTEGER(ppm_kind_int64), PARAMETER :: htable_null_li = -HUGE(1_ppm_kind_int64)
         !!! NULL value for hash table
         INTEGER(ppm_kind_int64), PARAMETER :: seed1 = 738235926_ppm_kind_int64
         !!! Hardcoded seed value taken from MurmurHash
@@ -106,6 +106,7 @@
           &            hash_remove_2d, &
           &            hash_remove_3d
           PROCEDURE :: grow => grow_htable
+          PROCEDURE :: shrink => shrink_htable
           PROCEDURE :: size => hash_size
         END TYPE ppm_rc_htable
         !!! This hashtable is for hashing REAL value using the same PPM implemenattion
@@ -172,9 +173,13 @@
           &            MCMCParticle_hash_remove_2d, &
           &            MCMCParticle_hash_remove_3d
           PROCEDURE :: grow => MCMCParticle_grow_htable
+          PROCEDURE :: shrink => MCMCParticle_shrink_htable
           PROCEDURE :: size => MCMCParticle_hash_size
-          !!! check the elements in the hash table and pack the proposal in an allocatable array
+          !!! check the elements in the hash table and pack the proposal
+          !!! in an allocatable array
           PROCEDURE :: packproposal => MCMCParticle_hash_packproposal
+          !!! This function returns the elementIndex element in the hash table
+          !!! If the elementKey is present it gets the coordinates from Hash key
           PROCEDURE :: elementAt => MCMCParticle_hash_elementAt
           PROCEDURE :: MCMCParticle_hash_contains
           PROCEDURE :: MCMCParticle_hash_contains_
@@ -237,10 +242,11 @@
           &            MCMCHistoryParticle_hash_remove_2d, &
           &            MCMCHistoryParticle_hash_remove_3d
           PROCEDURE :: grow => MCMCHistoryParticle_grow_htable
+          PROCEDURE :: shrink => MCMCHistoryParticle_shrink_htable
           PROCEDURE :: size => MCMCHistoryParticle_hash_size
         END TYPE ppm_rc_MCMCHistoryParticlehtable
 
-        TYPE ppm_rc_HashIndex
+        TYPE ppm_rc_HashIndextable
           !---------------------------------------------------------------------
           !  Declaration of arrays
           !---------------------------------------------------------------------
@@ -288,8 +294,9 @@
           &            HashIndex_hash_remove_2d, &
           &            HashIndex_hash_remove_3d
           PROCEDURE :: grow => HashIndex_grow_htable
+          PROCEDURE :: shrink => HashIndex_shrink_htable
           PROCEDURE :: size => HashIndex_hash_size
-        END TYPE ppm_rc_HashIndex
+        END TYPE ppm_rc_HashIndextable
 
         !!! Private temporary variables
         TYPE(ppm_rc_MCMCParticlehtable),        DIMENSION(:), ALLOCATABLE :: Particlehtabletmp
@@ -409,7 +416,7 @@
         PUBLIC :: MCMCHistoryParticle
         PUBLIC :: ppm_rc_MCMCHistoryParticlehtable
 
-        PUBLIC :: ppm_rc_HashIndex
+        PUBLIC :: ppm_rc_HashIndextable
 
         PUBLIC :: MCMCParticle_realloc
         PUBLIC :: MCMCHistoryParticle_realloc
