@@ -118,7 +118,7 @@
 
         TYPE(ppm_t_topo), POINTER :: topo
 
-        TYPE(ppm_rc_HashIndex) :: htablei
+        TYPE(ppm_rc_HashIndextable) :: htablei
 
         REAL(ppm_kind_double), DIMENSION(__DIME)               :: Offset
         REAL(ppm_kind_double)                             :: t0
