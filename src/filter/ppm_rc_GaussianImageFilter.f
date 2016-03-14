@@ -98,6 +98,10 @@
 #endif
           REAL(MK),             DIMENSION(:), ALLOCATABLE :: Mask
           REAL(MK)                                        :: coef,coef1,sum1
+          REAL(MK)                                        :: dy
+#if   __DIME == __3D
+          REAL(MK)                                        :: dz
+#endif
 
           INTEGER, DIMENSION(:), POINTER :: Nm
           INTEGER, DIMENSION(:), POINTER :: lo_a
@@ -120,6 +124,11 @@
           !Get the G_Sigma vector dimension. It should be 1 for
           !symmetric Gaussian and 2 or 3 for Anisotropic Gaussian
           s1=SIZE(G_Sigma,1)
+
+          dy=pixel(1)/pixel(2)
+#if   __DIME == __3D
+          dz=pixel(1)/pixel(3)
+#endif
 
           SELECT CASE (s1)
           CASE (1)
@@ -147,6 +156,24 @@
           !!! kernel size for convolution
           coef= MERGE(KernelFactor,two,PRESENT(KernelFactor))
 
+          s1=FLOOR(coef*G_Sigma(1))
+
+          IF (lsymmetric) THEN
+             s2=FLOOR(coef*G_Sigma(1)*dy)
+             s2=MAX(s2,1)
+#if   __DIME == __3D
+             s3=FLOOR(coef*G_Sigma(1)*dz)
+             s3=MAX(s3,1)
+#endif
+          ELSE
+             s2=FLOOR(coef*G_Sigma(2)*dy)
+             s2=MAX(s2,1)
+#if   __DIME == __3D
+             s3=FLOOR(coef*G_Sigma(3)*dz)
+             s3=MAX(s3,1)
+#endif
+          ENDIF
+
           CALL check()
 
           !!! TODO
@@ -155,10 +182,9 @@
           !!! be convolved with to produce the original sigma effect
           !!! nsigma=ghostsize/coef ..... X*nsigma1^2+nsigma2^2=G_Sigma^2 then convolve
           !!! the image X times with sigma1 and one time with sigma2
-
           IF (ppm_nproc.GT.1) THEN
              !!! calculate the required ghost size for X direction
-             ghostsize_(1)=FLOOR(coef*G_Sigma(1))
+             ghostsize_(1)=s1
              ghostsize_(2)=0
              ghostsize_(__DIME)=0
 
@@ -172,10 +198,6 @@
              or_fail("FieldIn%map_ghost_push")
              CALL MeshIn%map_isend(info,sendrecv=.TRUE.)
              or_fail("MeshIn%map_isend")
-
-             s1=ghostsize_(1)
-          ELSE
-             s1=FLOOR(coef*G_Sigma(1))
           ENDIF
 
           IF (.NOT.is_discretized_on) THEN
@@ -186,13 +208,6 @@
 
              CALL FieldOut%discretize_on(MeshIn,info)
              or_fail("Failed to discretize Field on Mesh!")
-          ENDIF
-
-          IF (.NOT.lsymmetric) THEN
-             s2=FLOOR(coef*G_Sigma(2))
-#if   __DIME == __3D
-             s3=FLOOR(coef*G_Sigma(3))
-#endif
           ENDIF
 
           !-------------------------------------------------------------------------
@@ -298,7 +313,7 @@
           IF (ppm_nproc.GT.1) THEN
              !!! calculate the required ghost size for Y direction
              ghostsize_(1)=0
-             ghostsize_(2)=MERGE(s1,s2,lsymmetric)
+             ghostsize_(2)=s2
 #if   __DIME == __3D
              ghostsize_(3)=0
 #endif
@@ -382,22 +397,23 @@
           ENDDO
           NULLIFY(DTYPE(wpin))
 
-          IF (lsymmetric) THEN
-             s2=s1
-          ELSE
+          IF (s2.NE.s1) THEN
              DEALLOCATE(Mask,STAT=info)
              or_fail_dealloc("Failed to deallocate Mask")
 
              ALLOCATE(Mask(-s2:s2),STAT=info)
              or_fail_alloc("Failed to allocate Mask")
+          ENDIF
 
+          IF (.NOT.lsymmetric) THEN
              !Gaussians = 1/(sqrt(2*pi)*sigma).*exp(-y.^2/(2*sigma.^2))
              coef =one/(SQRT(two*pi)*G_Sigma(2))
              coef1=one/(two*G_Sigma(2)*G_Sigma(2))
-             FORALL (i=-s2:s2) Mask(-i)= coef * EXP(-REAL(i*i,MK)*coef1)
-             sum1=SUM(Mask)
-             Mask=Mask/sum1
           ENDIF
+
+          FORALL (i=-s2:s2) Mask(-i)= coef * EXP(-REAL(i*i,MK)*coef1/dy/dy)
+          sum1=SUM(Mask)
+          Mask=Mask/sum1
 
           IF (ppm_nproc.GT.1) THEN
              CALL MeshIn%map_isend(info,sendrecv=.FALSE.)
@@ -438,7 +454,7 @@
              !!! calculate the required ghost size for Z direction
              ghostsize_(1)=0
              ghostsize_(2)=0
-             ghostsize_(3)=MERGE(s1,s3,lsymmetric)
+             ghostsize_(3)=s3
 
              !-------------------------------------------------------------------------
              !  Get field ghosts for image
@@ -500,22 +516,23 @@
           ENDDO
           NULLIFY(DTYPE(wpin))
 
-          IF (lsymmetric) THEN
-             s3=s1
-          ELSE
+          IF (s3.NE.s1) THEN
              DEALLOCATE(Mask,STAT=info)
              or_fail_dealloc("Failed to deallocate Mask")
 
              ALLOCATE(Mask(-s3:s3),STAT=info)
              or_fail_alloc("Failed to allocate Mask")
+          ENDIF
 
+          IF (.NOT.lsymmetric) THEN
              !Gaussians = 1/(sqrt(2*pi)*sigma).*exp(-z.^2/(2*sigma.^2))
              coef =one/(SQRT(two*pi)*G_Sigma(3))
              coef1=one/(two*G_Sigma(3)*G_Sigma(3))
-             FORALL (i=-s3:s3) Mask(-i)= coef * EXP(-REAL(i*i,MK)*coef1)
-             sum1=SUM(Mask)
-             Mask=Mask/sum1
           ENDIF
+
+          FORALL (i=-s3:s3) Mask(-i)= coef * EXP(-REAL(i*i,MK)*coef1/dz/dz)
+          sum1=SUM(Mask)
+          Mask=Mask/sum1
 
           IF (ppm_nproc.GT.1) THEN
              CALL MeshIn%map_isend(info,sendrecv=.FALSE.)
@@ -564,10 +581,13 @@
         CONTAINS
         SUBROUTINE check
         IMPLICIT NONE
-          ghostsize_=FLOOR(coef*G_Sigma)
-
-          check_true(<#ALL(MeshIn%ghostsize.GE.ghostsize_)#>, &
+#if   __DIME == __2D
+          check_true(<#MeshIn%ghostsize(1).GE.s1.AND.MeshIn%ghostsize(2).GE.s2#>, &
           & "The ghost size is smaller than the kernel size, so there would be problem at the borders!",exit_point=8888)
+#else
+          check_true(<#MeshIn%ghostsize(1).GE.s1.AND.MeshIn%ghostsize(2).GE.s2.AND.MeshIn%ghostsize(3).GE.s3#>, &
+          & "The ghost size is smaller than the kernel size, so there would be problem at the borders!",exit_point=8888)
+#endif
 
           IF (PRESENT(FieldOut)) THEN
              IF (FieldOut%is_discretized_on(MeshIn)) THEN
