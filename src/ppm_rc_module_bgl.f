@@ -27,6 +27,15 @@
       !
       !  Author           - y.afshar           June   2014
       !-------------------------------------------------------------------------
+      !-------------------------------------------------------------------------
+      !  Please do cite:
+      !
+      !  Y. Afshar, and I. F. Sbalzarini. A Parallel Distributed-Memory Particle
+      !  Method Enables Acquisition-Rate Segmentation of Large Fluorescence
+      !  Microscopy Images. PLoS ONE 11(4):e0152528, (2016).
+      !
+      !  when publishing research data obtained using PPM_RC
+      !-------------------------------------------------------------------------
 
       !-------------------------------------------------------------------------
       !  Module       :                    ppm_rc_module_bgl
@@ -45,7 +54,7 @@
         !  Modules
         !----------------------------------------------------------------------
         USE ppm_module_data, ONLY : ppm_kind_double
-
+#ifdef __F2003
         USE ISO_C_BINDING
         IMPLICIT NONE
 
@@ -170,5 +179,5 @@
           CALL substop(caller,t0,info)
           RETURN
         END SUBROUTINE ppm_rc_destroy_graph
-
+#endif
       END MODULE ppm_rc_module_bgl

@@ -27,6 +27,15 @@
       !
       !  Author           - y.afshar           June   2014
       !-------------------------------------------------------------------------
+      !-------------------------------------------------------------------------
+      !  Please do cite:
+      !
+      !  Y. Afshar, and I. F. Sbalzarini. A Parallel Distributed-Memory Particle
+      !  Method Enables Acquisition-Rate Segmentation of Large Fluorescence
+      !  Microscopy Images. PLoS ONE 11(4):e0152528, (2016).
+      !
+      !  when publishing research data obtained using PPM_RC
+      !-------------------------------------------------------------------------
 
       !-------------------------------------------------------------------------
       !  Module       :                    ppm_rc_module_util
@@ -45,15 +54,19 @@
         !  Modules
         !----------------------------------------------------------------------
         USE ppm_rc_module_global
+
+#ifdef __F2003
+        USE ISO_C_BINDING
+#endif
         IMPLICIT NONE
 
         PRIVATE
 
         INTEGER(ppm_kind_int64), PARAMETER :: htable_null_li = -HUGE(1_ppm_kind_int64)
         !!! NULL value for hash table
-        INTEGER(ppm_kind_int64), PARAMETER :: seed1 = 738235926_ppm_kind_int64
+        INTEGER,                 PARAMETER :: seed1 = 738235926
         !!! Hardcoded seed value taken from MurmurHash
-        INTEGER(ppm_kind_int64), PARAMETER :: seed2 = 1243832038_ppm_kind_int64
+        INTEGER,                 PARAMETER :: seed2 = 1243832038
         !!! Hardcoded seed value taken from MurmurHash
 
         TYPE ppm_rc_htable
@@ -72,8 +85,9 @@
          CONTAINS
           PROCEDURE :: create => create_htable
           PROCEDURE :: destroy => destroy_htable
-          PROCEDURE :: h_func
-          PROCEDURE :: h_key
+          PROCEDURE :: h_key1
+          PROCEDURE :: h_key2
+          GENERIC   :: h_key => h_key1,h_key2
           PROCEDURE :: hash_insert
           PROCEDURE :: hash_insert_
           PROCEDURE :: hash_insert__
@@ -139,8 +153,9 @@
          CONTAINS
           PROCEDURE :: create  => MCMCParticle_create_htable
           PROCEDURE :: destroy => MCMCParticle_destroy_htable
-          PROCEDURE :: h_func => MCMCParticle_h_func
-          PROCEDURE :: h_key  => MCMCParticle_h_key
+          PROCEDURE :: MCMCParticle_h_key1
+          PROCEDURE :: MCMCParticle_h_key2
+          GENERIC   :: h_key  => MCMCParticle_h_key1,MCMCParticle_h_key2
           PROCEDURE :: MCMCParticle_hash_insert
           PROCEDURE :: MCMCParticle_hash_insert_
           PROCEDURE :: MCMCParticle_hash_insert__
@@ -192,60 +207,6 @@
           &            MCMCParticle_hash_contains_3d
         END TYPE ppm_rc_MCMCParticlehtable
 
-        TYPE ppm_rc_MCMCHistoryParticlehtable
-          !---------------------------------------------------------------------
-          !  Declaration of arrays
-          !---------------------------------------------------------------------
-          INTEGER(ppm_kind_int64),   DIMENSION(:), ALLOCATABLE :: keys
-          !!! Array for keeping hash table keys.
-          TYPE(MCMCHistoryParticle), DIMENSION(:), ALLOCATABLE :: borders_pos
-          !!! Array for keeping positions of cells on "borders" array.
-          !---------------------------------------------------------------------
-          !  Declaration of variables
-          !--------------------------------------------------------------------
-          INTEGER                                              :: nrow = 0
-          !!! number of rows in hash table
-         CONTAINS
-          PROCEDURE :: create  => MCMCHistoryParticle_create_htable
-          PROCEDURE :: destroy => MCMCHistoryParticle_destroy_htable
-          PROCEDURE :: h_func => MCMCHistoryParticle_h_func
-          PROCEDURE :: h_key  => MCMCHistoryParticle_h_key
-          PROCEDURE :: MCMCHistoryParticle_hash_insert
-          PROCEDURE :: MCMCHistoryParticle_hash_insert_
-          PROCEDURE :: MCMCHistoryParticle_hash_insert__
-          PROCEDURE :: MCMCHistoryParticle_hash_insert_2d
-          PROCEDURE :: MCMCHistoryParticle_hash_insert_3d
-          GENERIC   :: insert =>                           &
-          &            MCMCHistoryParticle_hash_insert,    &
-          &            MCMCHistoryParticle_hash_insert_,   &
-          &            MCMCHistoryParticle_hash_insert__,  &
-          &            MCMCHistoryParticle_hash_insert_2d, &
-          &            MCMCHistoryParticle_hash_insert_3d
-          PROCEDURE :: MCMCHistoryParticle_hash_search
-          PROCEDURE :: MCMCHistoryParticle_hash_search_
-          PROCEDURE :: MCMCHistoryParticle_hash_search_2d
-          PROCEDURE :: MCMCHistoryParticle_hash_search_3d
-          GENERIC   :: search =>                           &
-          &            MCMCHistoryParticle_hash_search,    &
-          &            MCMCHistoryParticle_hash_search_,   &
-          &            MCMCHistoryParticle_hash_search_2d, &
-          &            MCMCHistoryParticle_hash_search_3d
-          PROCEDURE :: MCMCHistoryParticle_hash_remove
-          PROCEDURE :: MCMCHistoryParticle_hash_remove_
-          PROCEDURE :: MCMCHistoryParticle_hash_remove__
-          PROCEDURE :: MCMCHistoryParticle_hash_remove_2d
-          PROCEDURE :: MCMCHistoryParticle_hash_remove_3d
-          GENERIC   :: remove =>                           &
-          &            MCMCHistoryParticle_hash_remove,    &
-          &            MCMCHistoryParticle_hash_remove_,   &
-          &            MCMCHistoryParticle_hash_remove__,  &
-          &            MCMCHistoryParticle_hash_remove_2d, &
-          &            MCMCHistoryParticle_hash_remove_3d
-          PROCEDURE :: grow => MCMCHistoryParticle_grow_htable
-          PROCEDURE :: shrink => MCMCHistoryParticle_shrink_htable
-          PROCEDURE :: size => MCMCHistoryParticle_hash_size
-        END TYPE ppm_rc_MCMCHistoryParticlehtable
-
         TYPE ppm_rc_HashIndextable
           !---------------------------------------------------------------------
           !  Declaration of arrays
@@ -260,8 +221,9 @@
          CONTAINS
           PROCEDURE :: create  => HashIndex_create_htable
           PROCEDURE :: destroy => HashIndex_destroy_htable
-          PROCEDURE :: h_func => HashIndex_h_func
-          PROCEDURE :: h_key  => HashIndex_h_key
+          PROCEDURE :: HashIndex_h_key1
+          PROCEDURE :: HashIndex_h_key2
+          GENERIC   :: h_key => HashIndex_h_key1,HashIndex_h_key2
           PROCEDURE :: HashIndex_hash_insert
           PROCEDURE :: HashIndex_hash_insert_
           PROCEDURE :: HashIndex_hash_insert__
@@ -299,13 +261,84 @@
         END TYPE ppm_rc_HashIndextable
 
         !!! Private temporary variables
-        TYPE(ppm_rc_MCMCParticlehtable),        DIMENSION(:), ALLOCATABLE :: Particlehtabletmp
-        TYPE(ppm_rc_MCMCHistoryParticlehtable), DIMENSION(:), ALLOCATABLE :: HistoryParticlehtabletmp
+        TYPE(ppm_rc_MCMCParticlehtable), DIMENSION(:), ALLOCATABLE :: Particlehtabletmp
 
 #ifdef __Linux
         INTEGER :: valueRSS0
 #endif
 
+#ifdef __F2003
+        !----------------------------------------------------------------------
+        !  Define module interfaces
+        !----------------------------------------------------------------------
+        INTERFACE HashKey
+          FUNCTION HashKey(key,seed,tablenrow) BIND(C,NAME='HashKey')
+            IMPORT             :: C_INT32_T,C_INT64_T
+            INTEGER(C_INT64_T) :: key
+            INTEGER(C_INT32_T) :: seed
+            INTEGER(C_INT32_T) :: tablenrow
+            INTEGER(C_INT32_T) :: HashKey
+          END FUNCTION
+        END INTERFACE
+
+        INTERFACE HashKey_XY
+          FUNCTION HashKey_XY(X,Y,seed,tablenrow,XY) BIND(C,NAME='HashKey_XY')
+            IMPORT             :: C_INT32_T,C_INT64_T
+            INTEGER(C_INT32_T) :: X
+            !!! X coordinate (less than 32768 on one processor)
+            INTEGER(C_INT32_T) :: Y
+            !!! Y coordinate (less than 32768 on one processor)
+            INTEGER(C_INT32_T) :: seed
+            INTEGER(C_INT32_T) :: tablenrow
+            INTEGER(C_INT64_T) :: XY
+            !!! X & Y in one number
+            INTEGER(C_INT32_T) :: HashKey_XY
+          END FUNCTION
+        END INTERFACE
+
+        INTERFACE HashKey_XYLabel
+          FUNCTION HashKey_XYLabel(X,Y,Label,seed,tablenrow,XYLabel) BIND(C,NAME='HashKey_XYLabel')
+            IMPORT             :: C_INT32_T,C_INT64_T
+            INTEGER(C_INT32_T) :: X
+            INTEGER(C_INT32_T) :: Y
+            INTEGER(C_INT32_T) :: Label
+            INTEGER(C_INT32_T) :: seed
+            INTEGER(C_INT32_T) :: tablenrow
+            INTEGER(C_INT64_T) :: XYLabel
+            INTEGER(C_INT32_T) :: HashKey_XYLabel
+          END FUNCTION
+        END INTERFACE
+
+        INTERFACE HashKey_XYZ
+          FUNCTION HashKey_XYZ(X,Y,Z,seed,tablenrow,XYZ) BIND(C,NAME='HashKey_XYZ')
+            IMPORT             :: C_INT32_T,C_INT64_T
+            INTEGER(C_INT32_T) :: X
+            !!! X coordinate (less than 32768 on one processor)
+            INTEGER(C_INT32_T) :: Y
+            !!! Y coordinate (less than 32768 on one processor)
+            INTEGER(C_INT32_T) :: Z
+            !!! Z coordinate (less than 32768 on one processor)
+            INTEGER(C_INT32_T) :: seed
+            INTEGER(C_INT32_T) :: tablenrow
+            INTEGER(C_INT64_T) :: XYZ
+            INTEGER(C_INT32_T) :: HashKey_XYZ
+          END FUNCTION
+        END INTERFACE
+
+        INTERFACE HashKey_XYZLabel
+          FUNCTION HashKey_XYZLabel(X,Y,Z,Label,seed,tablenrow,XYZLabel) BIND(C,NAME='HashKey_XYZLabel')
+            IMPORT             :: C_INT32_T,C_INT64_T
+            INTEGER(C_INT32_T) :: X
+            INTEGER(C_INT32_T) :: Y
+            INTEGER(C_INT32_T) :: Z
+            INTEGER(C_INT32_T) :: Label
+            INTEGER(C_INT32_T) :: seed
+            INTEGER(C_INT32_T) :: tablenrow
+            INTEGER(C_INT64_T) :: XYZLabel
+            INTEGER(C_INT32_T) :: HashKey_XYZLabel
+          END FUNCTION
+        END INTERFACE
+#endif
         !----------------------------------------------------------------------
         !  Define module interfaces
         !----------------------------------------------------------------------
@@ -405,6 +438,12 @@
         INTERFACE ppm_rc_label_index
           MODULE PROCEDURE ppm_rc_label_index
         END INTERFACE
+
+        INTERFACE ppm_rc_shuffle
+          MODULE PROCEDURE ppm_rc_FisherYatesShuffle
+          MODULE PROCEDURE ppm_rc_FisherYatesShuffle_
+        END INTERFACE
+
         !----------------------------------------------------------------------
         ! Public
         !----------------------------------------------------------------------
@@ -412,14 +451,9 @@
 
         PUBLIC :: MCMCParticle
         PUBLIC :: ppm_rc_MCMCParticlehtable
-
         PUBLIC :: MCMCHistoryParticle
-        PUBLIC :: ppm_rc_MCMCHistoryParticlehtable
-
         PUBLIC :: ppm_rc_HashIndextable
-
         PUBLIC :: MCMCParticle_realloc
-        PUBLIC :: MCMCHistoryParticle_realloc
 
         PUBLIC :: ppm_rc_normalize_2d
         PUBLIC :: ppm_rc_normalize_3d
@@ -442,6 +476,8 @@
 #endif
         PUBLIC :: ppm_rc_label_exist
         PUBLIC :: ppm_rc_label_index
+
+        PUBLIC :: ppm_rc_shuffle
 
       CONTAINS
 #define __2D  2
@@ -476,5 +512,6 @@
 #include "./util/ppm_rc_inl_hash.f"
 #include "./util/ppm_rc_label_exist.f"
 #include "./util/ppm_rc_label_index.f"
+#include "./util/ppm_rc_FisherYatesShuffle.f"
 
       END MODULE ppm_rc_module_util

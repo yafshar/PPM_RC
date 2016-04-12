@@ -5,18 +5,22 @@ v1.0, Feb 2016
 Introduction
 ------------
 
-Purpose : 2D-3D distributed parallel region competitioni [1] segmentation algorithm 
+Purpose : 2D-3D distributed parallel region competition[1] segmentation algorithm
 
-Images can be so large that they do not fit the main memory of a single computer. 
-We address this issue by developing a distributed parallel algorithm for segmentation 
-of large fluorescence microscopy images. 
-The algorithm is based on the versatile Region Competition [1] method, which has 
-previously proven useful in microscopy image analysis. 
-The present distributed implementation decomposes the input image into smaller sub-images 
-that are distributed across multiple computers. Using network communication, the computers 
+Images can be so large that they do not fit the main memory of a single computer.
+We address this issue by developing a distributed parallel algorithm for segmentation
+of large fluorescence microscopy images.
+The algorithm is based on the versatile Region Competition[2] method, which has
+previously proven useful in microscopy image analysis.
+The present distributed implementation decomposes the input image into smaller sub-images
+that are distributed across multiple computers. Using network communication, the computers
 orchestrate to collectively solve the global segmentation problem.
 
-1. J. Cardinale, G. Paul, and I. F. Sbalzarini. Discrete region competition for unknown 
+1. Y. Afshar, and I. F. Sbalzarini. A Parallel Distributed-Memory Particle Method
+   Enables Acquisition-Rate Segmentation of Large Fluorescence Microscopy Images.
+   PLoS ONE 11(4):e0152528, 2016.
+
+2. J. Cardinale, G. Paul, and I. F. Sbalzarini. Discrete region competition for unknown
    numbers of connected regions. IEEE Trans. Image Process., 21(8):3531–3545, 2012
 
 
@@ -24,7 +28,7 @@ Initial release of PPM\_RC source program.
 
 Getting the code
 ------------
-You can download the latest version from [here](https://github.com/yafshar/PPM_RC). 
+You can download the latest version from [here](https://github.com/yafshar/PPM_RC).
 The very latest version is always available via 'github' by invoking one of the following:
 ````
 ## For the traditional ssh-based Git interaction:
@@ -47,7 +51,7 @@ following files and directories:
 -   4.2K Makefile.in   The Makefile template used by configure
 -   653B NOTICE
 -    14K README        This file
--    28K README.md   
+-    28K README.md
 -    46K autogen.sh
 -    42K config.guess
 -    35K config.sub
@@ -76,32 +80,30 @@ Requirements for building PPM\_RC
   compliant MPI library. If you are compiling PPM\_RC on a cluster, most likely your
   sysadmin will have already an MPI installed on the system.
 
-- PPML & PPM core: 
-  The PPM\_RC is based on PPML and PPM core 1.2.2 latest development version 
-  (object-oriented Fortran 2003) and can only be linked against this version. 
-  Please first check out the latest PPM development version (object-oriented 
-  Fortran 2003) by anonymous Git access: 
-  For the PPML language and compiler:  `git clone http://ppm.mpi-cbg.de/git/cg.git` 
+- PPML & PPM core:
+  The PPM\_RC is based on PPML and PPM core 1.2.2 latest development version
+  (object-oriented Fortran 2003) and can only be linked against this version.
+  Please first check out the latest PPM development version (object-oriented
+  Fortran 2003) by anonymous Git access:
+  For the PPML language and compiler:  `git clone http://ppm.mpi-cbg.de/git/cg.git`
   For the PPM library core:            `git clone http://ppm.mpi-cbg.de/git/ppm.git`.
-  For more information and Installation Manual Please refer to: 
+  For more information and Installation Manual Please refer to:
   http://mosaic.mpi-cbg.de/?q=downloads/ppm\_lib
-  Compile PPM core 1.2.2 latest development version before attempting to 
+  Compile PPM core 1.2.2 latest development version before attempting to
   compiling this package.
   Make sure that all requirements are compiled with the same compiler that you
   will be using to build PPM core.
 
-- TIFF Library:  
-  For handling huge images, or very large collections of images, breaking the 
+- TIFF Library:
+  For handling huge images, or very large collections of images, breaking the
   4 gigabytes boundary, you need a TIFF Library which supports BigTIFF.
-  You can download the Latest Stable Release of TIFF v4.0.6 from:
-  http://www.remotesensing.org/libtiff.
 
-- BOOST C++ Library: 
+- BOOST C++ Library:
   For more information Please refer to:
   http://www.boost.org/
 
 
-Building PPM\_RC 
+Building PPM\_RC
 -----------------
 
 PPM\_RC is built in 3 simple steps:
@@ -133,7 +135,7 @@ Configuration:
   -V, --version           display version information and exit
 ~~~~~~~~~~
 
-By default, `make` will create an executable file in `$ppm_rc_root/run`.  
+By default, `make` will create an executable file in `$ppm_rc_root/run`.
 
 For better control, use the options below.
 Optional Features:
@@ -181,7 +183,7 @@ Report bugs to the package provider.
 Following options are especially important:
 
 - `--enable-mpi`: If you will be running PPM_RC on a parallel environment
-  (a cluster) using MPI. 
+  (a cluster) using MPI.
   If your system is properly configured then this should be enough
   information for PPM_RC build system to find the MPI libraries and compiler
   wrappers needed. If this goes wrong, you may ommit this option and set
@@ -189,7 +191,7 @@ Following options are especially important:
 - `--enable-linux`: Set this if you're compiling/running on a Linux system
 - `--prefix`: If you like to install PPM_RC and the target directory is not the
   system's standard directory (`/usr/`) then you have to define this directory
-  here. You must provide the full path. 
+  here. You must provide the full path.
   It is not necessary to install PPM_RC.
   Building it and leaving it in the compilation directory is sufficient. If you
   provide a directory here it must already exist - it will not be created by the
@@ -205,19 +207,19 @@ Here two examples on how you could run the configure command
 
 `.configure` on Linux cluster using OpenMPI (and intel compilers, wrapped)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-./configure CPP=cpp --enable-mpi --enable-linux --with-ppm=/home/usr/ppmcore 
+./configure CPP=cpp --enable-mpi --enable-linux --with-ppm=/home/usr/ppmcore
 --with-metis=/home/usr/metis --with-boost=/home/usr/boost_1_58_2 --with-tiff=/home/usr/tiff4
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `./configure` on Mac OS X workstation with HomeBrew compilers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-./configure CPP=cpp-5 --enable-mpi --with-ppm=/home/usr/ppmcore 
+./configure CPP=cpp-5 --enable-mpi --with-ppm=/home/usr/ppmcore
 --with-metis=/home/usr/metis --with-boost=/home/usr/boost_1_58_2 --with-tiff=/home/usr/tiff4
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `./configure` on a computer with OpenMPI installed in a non-standard location
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-./configure --enable-mpi FC=/opt/openmpi/1.10.2/bin/mpif90 CC=/opt/openmpi/1.10.2/bin/mpicc CXX=/opt/openmpi/1.10.2/bin/mpic++ 
+./configure --enable-mpi FC=/opt/openmpi/1.10.2/bin/mpif90 CC=/opt/openmpi/1.10.2/bin/mpicc CXX=/opt/openmpi/1.10.2/bin/mpic++
 --with-ppm=/home/usr/ppmcore --with-metis=/home/usr/metis --with-boost=/home/usr/boost_1_58_2 --with-tiff=/home/usr/tiff4
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -247,7 +249,7 @@ so:
 `make install`
 
 If the target directory is part of the system, you will most probably get a
-message that you have insufficient rights. If you have a root account you can 
+message that you have insufficient rights. If you have a root account you can
 use in this case the sudo command to override this security setting.
 
 `sudo make install`

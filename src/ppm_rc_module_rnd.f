@@ -27,6 +27,15 @@
       !
       !  Author           - y.afshar           June   2014
       !-------------------------------------------------------------------------
+      !-------------------------------------------------------------------------
+      !  Please do cite:
+      !
+      !  Y. Afshar, and I. F. Sbalzarini. A Parallel Distributed-Memory Particle
+      !  Method Enables Acquisition-Rate Segmentation of Large Fluorescence
+      !  Microscopy Images. PLoS ONE 11(4):e0152528, (2016).
+      !
+      !  when publishing research data obtained using PPM_RC
+      !-------------------------------------------------------------------------
 
       !-------------------------------------------------------------------------
       !  Module       :                    ppm_rc_module_rnd
@@ -49,7 +58,7 @@
         USE ppm_rc_module_global, ONLY : ppm_kind_double,ppm_char,rank,comm, &
         &   ppm_err_mpi_fail,ppm_error_error,ppm_err_sub_failed,ppm_error,   &
         &   substart,substop
-
+#ifdef __F2003
         USE ISO_C_BINDING
         IMPLICIT NONE
 
@@ -251,11 +260,10 @@
 
              SELECT CASE (iseed)
              CASE (0)
-                ! First random number seed must be between 0 and 31328
-                ! Second seed must have a value between 0 and 30081
+                ! Random number seed must be between 0 and 31328
+                ! As a rule of thumb
                 CALL SYSTEM_CLOCK(ih,ic,im)
                 iseed=MOD(ih+rank*rank,31328)
-
              END SELECT
 
              info=SaruInitialize(iseed)
@@ -300,10 +308,10 @@
 
           SELECT CASE (iseed)
           CASE (0)
-             ! First random number seed must be between 0 and 31328
-             ! Second seed must have a value between 0 and 30081
+             ! First random number seed must be between 0 and 30081
+             ! As a rule of thumb
              CALL SYSTEM_CLOCK(ih,ic,im)
-             iseed=MOD(ih+rank*rank,31328)
+             iseed=MOD(ih+rank*rank,30081)
           END SELECT
 
           info=MTInitialize(iseed)
@@ -316,4 +324,5 @@
           CALL substop(caller,t0,info)
           RETURN
         END SUBROUTINE ppm_rc_mt_random_init
+#endif
       END MODULE ppm_rc_module_rnd
