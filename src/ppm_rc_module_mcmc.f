@@ -54,7 +54,7 @@
 
         USE ppm_rc_module_global, ONLY : MK,zero,zerod
         USE ppm_rc_module_util, ONLY : ppm_rc_htable,ppm_rc_MCMCParticlehtable, &
-        &   ppm_rc_MCMCHistoryParticlehtable,MCMCParticle,MCMCHistoryParticle
+        &   MCMCParticle,MCMCHistoryParticle
         USE ppm_rc_module_energy, ONLY : e_data,e_length
         !NOTE:
         !Intel compiler Error, when I use ppm_rc_module_energy in
