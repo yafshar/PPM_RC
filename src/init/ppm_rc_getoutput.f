@@ -83,6 +83,8 @@
 #ifdef __Linux
           INTEGER                                        :: memory
 #endif
+          INTEGER                                        :: BGValue
+          INTEGER                                        :: FGValue
 
           LOGICAL :: lbox
 
@@ -97,6 +99,8 @@
           ENDIF
 
           elem => this%elem
+          BGValue=elem%m_BackgroundValue
+          FGValue=elem%m_ForegroundValue
 
           SELECT CASE (vInitKind)
           CASE (2) ! rect
@@ -186,7 +190,7 @@
                 CALL sbpitr%get_field(FieldOut,DTYPE(wpl),info)
                 or_fail("Failed to get field wpl data.")
 
-                DTYPE(wpl)=elem%m_BackgroundValue
+                DTYPE(wpl)=BGValue
                 !initial FieldOut value to the Background Value
 
 #if   __DIME == __3D
@@ -237,7 +241,7 @@
                          IF (ASSOCIATED(seed)) THEN
                             seedn => seed%first%getValue()
                             CALL DTYPE(ppm_rc_floodFill)(DTYPE(wpl),Nmm,seedn(1:__DIME), &
-                            &    elem%m_BackgroundValue,elem%m_ForegroundValue,1,info)
+                            &    BGValue,FGValue,1,info)
                          ENDIF
 #if   __DIME == __2D
                          EXIT loop_j
@@ -330,9 +334,9 @@
                             ENDIF !lbox
 
 #if   __DIME == __2D
-                            DTYPE(wpl)(ll(1),ll(2))=elem%m_ForegroundValue
+                            DTYPE(wpl)(ll(1),ll(2))=FGValue
 #elif __DIME == __3D
-                            DTYPE(wpl)(ll(1),ll(2),ll(3))=elem%m_ForegroundValue
+                            DTYPE(wpl)(ll(1),ll(2),ll(3))=FGValue
 #endif
                          ENDIF !ALL(ll.GE.1.AND.ll.LE.Nmm)
 
@@ -345,7 +349,7 @@
                          IF (ASSOCIATED(seed)) THEN
                             seedn => seed%first%getValue()
                             CALL DTYPE(ppm_rc_floodFill)(DTYPE(wpl),Nmm,seedn(1:__DIME), &
-                            &    elem%m_BackgroundValue,elem%m_ForegroundValue,1,info)
+                            &    BGValue,FGValue,1,info)
                          ENDIF
                       ENDIF
                    ENDDO loop_i
@@ -430,7 +434,7 @@
                 CALL sbpitr%get_field(FieldOut,DTYPE(wpl),info)
                 or_fail("Failed to get field wpl data.")
 
-                DTYPE(wpl)=elem%m_BackgroundValue
+                DTYPE(wpl)=BGValue
 
 #if   __DIME == __3D
                 !distance from the border
@@ -481,7 +485,7 @@
                          IF (ASSOCIATED(seed)) THEN
                             seedn => seed%first%getValue()
                             CALL DTYPE(ppm_rc_floodFill)(DTYPE(wpl),Nmm,seedn(1:__DIME), &
-                            &    elem%m_BackgroundValue,elem%m_ForegroundValue,1,info)
+                            &    BGValue,FGValue,1,info)
                          ENDIF
 #if   __DIME == __2D
                          EXIT loop_y
@@ -542,9 +546,9 @@
                             ENDIF !lbox
 
 #if   __DIME == __2D
-                            DTYPE(wpl)(ll(1),ll(2))=elem%m_ForegroundValue
+                            DTYPE(wpl)(ll(1),ll(2))=FGValue
 #elif __DIME == __3D
-                            DTYPE(wpl)(ll(1),ll(2),ll(3))=elem%m_ForegroundValue
+                            DTYPE(wpl)(ll(1),ll(2),ll(3))=FGValue
 #endif
                          ENDIF !ALL(ll.GE.1.AND.ll.LE.Nmm)
 
@@ -555,7 +559,7 @@
                       IF (ASSOCIATED(seed)) THEN
                          seedn => seed%first%getValue()
                          CALL DTYPE(ppm_rc_floodFill)(DTYPE(wpl),Nmm,seedn(1:__DIME), &
-                         &    elem%m_BackgroundValue,elem%m_ForegroundValue,1,info)
+                         &    BGValue,FGValue,1,info)
                       ENDIF
 
                    ENDDO loop_x
@@ -574,7 +578,7 @@
              !which is FieldOut
              CALL vOtsuThsFilter%DTYPE(GenerateData)(FieldOut,       &
              &    MeshIn,histSize,info,lowerBound=INT(m_lowerBound), &
-             &    upperBound=INT(m_upperBound),MaskValue=elem%m_ForegroundValue)
+             &    upperBound=INT(m_upperBound),MaskValue=FGValue)
 
           CASE (6)
           !6 - localmax initializes a region at local intensity maxima
@@ -842,16 +846,16 @@
                 CALL sbpitr%get_field(FieldOut,DTYPE(wpl),info)
                 or_fail("Failed to get field wpl data.")
 
-                DTYPE(wpl)=elem%m_BackgroundValue
+                DTYPE(wpl)=BGValue
 
                 seed => ppm_rc_seeds(ipatch)%begin()
                 DO WHILE (ASSOCIATED(seed))
                    seedn => seed%first%getValue()
 
 ! #if   __DIME == __2D
-!                    IF (DTYPE(wpl)(seedn(1),seedn(2)).EQ.elem%m_BackgroundValue) THEN
+!                    IF (DTYPE(wpl)(seedn(1),seedn(2)).EQ.BGValue) THEN
 ! #elif __DIME == __3D
-!                    IF (DTYPE(wpl)(seedn(1),seedn(2),seedn(3)).EQ.elem%m_BackgroundValue) THEN
+!                    IF (DTYPE(wpl)(seedn(1),seedn(2),seedn(3)).EQ.BGValue) THEN
 ! #endif
                       seedlnk => rseed%first
                       DO WHILE (ASSOCIATED(seedlnk))
@@ -861,9 +865,9 @@
 
                          IF (ALL(ll.GE.lo_a.AND.ll.LE.hi_a)) THEN
 #if   __DIME == __2D
-                            DTYPE(wpl)(ll(1),ll(2))=elem%m_ForegroundValue
+                            DTYPE(wpl)(ll(1),ll(2))=FGValue
 #elif __DIME == __3D
-                            DTYPE(wpl)(ll(1),ll(2),ll(3))=elem%m_ForegroundValue
+                            DTYPE(wpl)(ll(1),ll(2),ll(3))=FGValue
 #endif
                          ENDIF !ALL(ll.GE.1.AND.ll.LE.Nmm)
 
@@ -871,9 +875,9 @@
                       ENDDO !ASSOCIATED(seedlnk)
 
 !                       CALL DTYPE(ppm_rc_floodFill)(DTYPE(wpl),Nm,seedn(1:__DIME), &
-!                       &    elem%m_BackgroundValue,elem%m_ForegroundValue,0,info)
+!                       &    BGValue,FGValue,0,info)
 !                       CALL DTYPE(ppm_rc_floodFill)(DTYPE(wpl),DTYPE(wpi),Nm,   &
-!                       &    seedn(1:__DIME),elem%m_BackgroundValue,elem%m_ForegroundValue, &
+!                       &    seedn(1:__DIME),BGValue,FGValue, &
 !                       &    Tolerance_,Tolerance_,0,info)
 !                       or_fail("ppm_rc_floodFill")
 !                    ELSE
@@ -1012,8 +1016,8 @@
 #if   __DIME == __2D
                 DO j=1,Nm(2)
                    DO i=1,Nm(1)
-                      IF (DTYPE(wpl)(i,j).GT.elem%m_ForegroundValue) THEN
-                         DTYPE(wpl)(i,j)=elem%m_ForegroundValue
+                      IF (DTYPE(wpl)(i,j).GT.FGValue) THEN
+                         DTYPE(wpl)(i,j)=FGValue
                       ENDIF
                    ENDDO !i=1,Nm(1)
                 ENDDO !j=1,Nm(2)
@@ -1042,8 +1046,8 @@
                 DO k=1,Nm(3)
                    DO j=1,Nm(2)
                       DO i=1,Nm(1)
-                         IF (DTYPE(wpl)(i,j,k).GT.elem%m_ForegroundValue) THEN
-                            DTYPE(wpl)(i,j,k)=elem%m_ForegroundValue
+                         IF (DTYPE(wpl)(i,j,k).GT.FGValue) THEN
+                            DTYPE(wpl)(i,j,k)=FGValue
                          ENDIF
                       ENDDO !i=1,Nm(1)
                    ENDDO !j=1,Nm(2)
