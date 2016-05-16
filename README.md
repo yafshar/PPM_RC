@@ -16,9 +16,9 @@ The present distributed implementation decomposes the input image into smaller s
 that are distributed across multiple computers. Using network communication, the computers
 orchestrate to collectively solve the global segmentation problem.
 
-1. Y. Afshar, and I. F. Sbalzarini. [A Parallel Distributed-Memory Particle Method
-   Enables Acquisition-Rate Segmentation of Large Fluorescence Microscopy Images](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0152528).
-   PLoS ONE 11(4):e0152528, 2016.
+1. [Y. Afshar, and I. F. Sbalzarini. A Parallel Distributed-Memory Particle Method
+   Enables Acquisition-Rate Segmentation of Large Fluorescence Microscopy Images.
+   PLoS ONE 11(4):e0152528, 2016](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0152528).
 
 2. J. Cardinale, G. Paul, and I. F. Sbalzarini. Discrete region competition for unknown
    numbers of connected regions. IEEE Trans. Image Process., 21(8):3531–3545, 2012
