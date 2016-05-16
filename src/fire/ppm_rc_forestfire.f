@@ -1182,45 +1182,6 @@
           CALL substart(caller,t0,info)
 
           IF (lfire) THEN
-
-
-! if (rank.eq.0) then
-!              sbpitr => MeshIn%subpatch%begin()
-!              DO WHILE (ASSOCIATED(sbpitr))
-!                 CALL sbpitr%get_field(labels,DTYPE(wpl),info)
-!                 or_fail("Failed to get field wpl data.")
-! #if   __DIME == __2D
-!                  stdout("---------f0--------")
-!                  stdout('wpl_2d(35,35)','wpl_2d(35,55)','wpl_2d(55,35)')
-!
-!            DO i=0,SIZE(e_data%gCount)-1
-!               IF (e_data%Rlabel(i).eq.wpl_2d(35,35).or.e_data%Rlabel(i).eq.wpl_2d(35,55).or.e_data%Rlabel(i).eq.wpl_2d(55,35)) THEN
-!                  stdout('e_data%Rlabel(i)','e_data%gCount(i)','e_data%gSums(i)','e_data%gSumsq(i)')
-!               ENDIF
-!            ENDDO
-!
-!
-! #endif
-!              sbpitr => MeshIn%subpatch%next()
-!           ENDDO !ASSOCIATED(sbpitr)
-!
-! else
-! do i=1,1000000
-! t0=log(real(i,8))
-! enddo
-! endif
-!
-! call mpi_barrier(comm,info)
-! call mpi_barrier(comm,info)
-! call mpi_barrier(comm,info)
-! call mpi_barrier(comm,info)
-! call mpi_barrier(comm,info)
-! call mpi_barrier(comm,info)
-
-
-
-
-
              !We want to gather statistical information about regions
              !with new color
              ALLOCATE(tmp_region_stat,STAT=info)
@@ -1237,45 +1198,6 @@
                 CALL DTYPE(fire)(MeshIn,info)
                 or_fail("fire")
              ENDIF
-
-! if (rank.eq.0) then
-!              sbpitr => MeshIn%subpatch%begin()
-!              DO WHILE (ASSOCIATED(sbpitr))
-!                 CALL sbpitr%get_field(labels,DTYPE(wpl),info)
-!                 or_fail("Failed to get field wpl data.")
-! #if   __DIME == __2D
-!                  stdout("---------ff0--------")
-!                  stdout('wpl_2d(35,35)','wpl_2d(35,55)','wpl_2d(55,35)')
-!
-!
-!            DO i=0,SIZE(e_data%gCount)-1
-!               IF (e_data%Rlabel(i).eq.wpl_2d(35,35).or.e_data%Rlabel(i).eq.wpl_2d(35,55).or.e_data%Rlabel(i).eq.wpl_2d(55,35)) THEN
-!                  stdout('e_data%Rlabel(i)','e_data%gCount(i)','e_data%gSums(i)','e_data%gSumsq(i)')
-!               ENDIF
-!            ENDDO
-!
-!
-!
-!
-! #endif
-!              sbpitr => MeshIn%subpatch%next()
-!           ENDDO !ASSOCIATED(sbpitr)
-!
-! else
-! do i=1,1000000
-! t0=log(real(i,8))
-! enddo
-! endif
-!
-! call mpi_barrier(comm,info)
-! call mpi_barrier(comm,info)
-! call mpi_barrier(comm,info)
-! call mpi_barrier(comm,info)
-! call mpi_barrier(comm,info)
-! call mpi_barrier(comm,info)
-
-
-
              GOTO 9999
           ENDIF
 
