@@ -85,9 +85,9 @@ Requirements for building PPM\_RC
   (object-oriented Fortran 2003) and can only be linked against this version.
   Please first check out the latest PPM development version (object-oriented
   Fortran 2003) by anonymous Git access:
-  For the PPML language and compiler:  `git clone http://ppm.mpi-cbg.de/git/cg.git`
-  For the PPM library core:            `git clone http://ppm.mpi-cbg.de/git/ppm.git`.
-  For more information and Installation Manual Please refer to:
+  For the PPML language and compiler:  `git clone https://github.com/PPMLibrary/ppml.git`
+  For the PPM library core:            `git clone https://github.com/PPMLibrary/ppm.git`.
+  For more information and [Installation Manual](http://mosaic.mpi-cbg.de/Downloads/NewPpmIntro.pdf) Please refer to:
   http://mosaic.mpi-cbg.de/?q=downloads/ppm\_lib
   Compile PPM core 1.2.2 latest development version before attempting to
   compiling this package.
