@@ -88,7 +88,7 @@ Requirements for building PPM\_RC
   For the PPML language and compiler:  `git clone https://github.com/PPMLibrary/ppml.git`
   For the PPM library core:            `git clone https://github.com/PPMLibrary/ppm.git`.
   For more information and [Installation Manual](http://mosaic.mpi-cbg.de/Downloads/NewPpmIntro.pdf) Please refer to:
-  http://mosaic.mpi-cbg.de/?q=downloads/ppm\_lib
+  http://mosaic.mpi-cbg.de/?q=downloads/ppm_lib
   Compile PPM core 1.2.2 latest development version before attempting to
   compiling this package.
   Make sure that all requirements are compiled with the same compiler that you
