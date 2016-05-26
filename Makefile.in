@@ -104,14 +104,19 @@ DEPENDENCIES += $(CXXSOURCES:%.cc=$(OBJ_DIR)/%.d)
 DEPENDENCIES += $(FSOURCES:%.f=$(OBJ_DIR)/%.d)
 
 # This creates the install directories if they don't exist
+ifneq ($(MAKECMDGOALS),clean)
 $(warning Checking for directories...)
 $(shell test -d $(OBJ_DIR) || mkdir $(OBJ_DIR))
 $(shell test -d $(MODULES_DIR) || mkdir -p $(MODULES_DIR))
 $(shell test -d $(RUN_DIR) || mkdir -p $(RUN_DIR))
-$(shell test -e $(LOG) && rm $(LOG))
 $(warning done.)
+else
+$(warning Removing the '$(LOG)' file)
+$(shell test -e $(LOG) && rm $(LOG))
+$(warning Clean up the files created by make)
+endif
 
-.PHONY: all clean install
+.PHONY: all clean install uninstall
 
 .DEFAULT: ;
 
@@ -191,7 +196,12 @@ clean:
 	rm -fR $(builddir)/*.mod
 
 install:
-	cp -r $(TARGET) $(prefix)/bin
+	mkdir -p $(prefix)/bin
+	cp $(TARGET) $(prefix)/bin
+
+unintsall:
+	rm $(prefix)/bin/$(PROGRAM)
+
 
 # This ensures all dependency files are up-to-date
 # WARNING: The directive below will fail silently, in case of problems
