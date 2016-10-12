@@ -262,10 +262,12 @@ Enjoy the PPM_RC experience!
 Examples                                                                                                           
 ------------ 
 If you want to try some examples, make sure the submodule Example is up to date. 
-You can do this by running the following commands from the root of PPM_RC directory.
+You can do this by running the following commands from the root of PPM_RC directoy.
 
-`git submodule init`
-`git submodule update`
+```
+git submodule init
+git submodule update
+```
 
 
 Contributors
