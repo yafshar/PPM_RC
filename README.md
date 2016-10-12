@@ -265,7 +265,6 @@ If you want to try some examples, make sure the submodule Example is up to date.
 You can do this by running the following commands from the root of PPM_RC directory.
 
 `git submodule init`
-
 `git submodule update`
 
 
