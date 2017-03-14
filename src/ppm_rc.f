@@ -499,6 +499,9 @@
            !  Finalize
            !-------------------------------------------------------------------------
            IF (rank.EQ.0) THEN
+              WRITE(cbuf,'(A,I0,A1)') "RESULTS_",ppm_nproc,CHAR(0)
+              OPEN(4444,FILE=cbuf,STATUS='REPLACE')
+
               stdout("")
               stdout("Segmentation took:           ",'tenergys+tcontours+tfilters+tmoves'," secs.")
               stdout("")
@@ -509,15 +512,24 @@
               stdout("Writing output images took:  ",timgs,    " secs.")
               stdout("Data structure update took:  ",tmoves,   " secs.")
               stdout("")
-              stdout("The algorithm found ",'COUNT(e_data%gCount.GT.one)-1'," connected FG region.")
+              j=COUNT(e_data%gCount.GT.one)-1
+              stdout("The algorithm found ",j," connected FG region.")
               stdout("")
+
+              WRITE(UNIT=4444,FMT='(I16)') j
+
               j=0
               DO i=0,SIZE(e_data%gCount)-1
                  IF (e_data%gCount(i).GT.oned) THEN
                     j=j+1
                     stdout(j,'e_data%Rlabel(i)','e_data%gCount(i)','e_data%gSums(i)')
+
+                    WRITE(UNIT=4444,FMT='(3(I16,2x),g30.15)') j,INT(e_data%Rlabel(i)),INT(e_data%gCount(i)),e_data%gSums(i)
                  ENDIF
               ENDDO
+
+              CLOSE(4444)
+
               IF (debug.GT.0) THEN
                  stdout("")
                  stdout("Data structure update took:  ",tmoves,          " secs.")
