@@ -17,7 +17,7 @@
 #endif
 
         FUNCTION DTYPE(E_PC_EvaluateEnergyDifference)(this, &
-        &        image_,labels_,coord,oldlabel,newlabel,    &
+        &        imageIn,labelsIn,coord,oldlabel,newlabel,  &
         &        oldlabel_region,newlabel_region)
 
           IMPLICIT NONE
@@ -25,15 +25,15 @@
           CLASS(E_PC)                                           :: this
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: imageIn
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
 #endif
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER        :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER        :: labelsIn
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER        :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER        :: labelsIn
 #endif
           INTEGER,             DIMENSION(:),      INTENT(IN   ) :: coord
           INTEGER,                                INTENT(IN   ) :: oldlabel
@@ -54,9 +54,9 @@
           ENDIF
 
 #if   __DIME == __2D
-          intensity=REAL(image_(coord(1),coord(2)),ppm_kind_double)
+          intensity=REAL(imageIn(coord(1),coord(2)),ppm_kind_double)
 #elif __DIME == __3D
-          intensity=REAL(image_(coord(1),coord(2),coord(3)),ppm_kind_double)
+          intensity=REAL(imageIn(coord(1),coord(2),coord(3)),ppm_kind_double)
 #endif
 
           ! compute the new mean of the old region after this pixel has left
@@ -72,22 +72,22 @@
 
         END FUNCTION DTYPE(E_PC_EvaluateEnergyDifference)
 
-        FUNCTION DTYPE(E_PC_CalculateTotalEnergy)(this,image_,labels_,Nm,info)
+        FUNCTION DTYPE(E_PC_CalculateTotalEnergy)(this,imageIn,labelsIn,Nm,info)
 
           IMPLICIT NONE
 
           CLASS(E_PC)                                           :: this
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: imageIn
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
 #endif
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labelsIn
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labelsIn
 #endif
           INTEGER,             DIMENSION(:),      INTENT(IN   ) :: Nm
           INTEGER,                                INTENT(  OUT) :: info
@@ -112,12 +112,12 @@
 #if   __DIME == __2D
           DO j=1,Nm(2)
              DO i=1,Nm(1)
-                intensity=REAL(image_(i,j),ppm_kind_double)
-                IF (labels_(i,j).EQ.0.OR.labels_(i,j).EQ.FORBIDDEN) THEN
+                intensity=REAL(imageIn(i,j),ppm_kind_double)
+                IF (labelsIn(i,j).EQ.0.OR.labelsIn(i,j).EQ.FORBIDDEN) THEN
                    d1=Mean0-intensity
                 ELSE
-                   IF (ABS(labels_(i,j)).NE.vlabel) THEN
-                      vlabel=ABS(labels_(i,j))
+                   IF (ABS(labelsIn(i,j)).NE.vlabel) THEN
+                      vlabel=ABS(labelsIn(i,j))
                       label_region=htable%search(vlabel)
                       IF (label_region.EQ.htable_null) CYCLE
                       Mean=this%gSums(label_region)/this%gCount(label_region)
@@ -131,12 +131,12 @@
           DO k=1,Nm(3)
              DO j=1,Nm(2)
                 DO i=1,Nm(1)
-                   intensity=REAL(image_(i,j,k),ppm_kind_double)
-                   IF (labels_(i,j,k).EQ.0.OR.labels_(i,j,k).EQ.FORBIDDEN) THEN
+                   intensity=REAL(imageIn(i,j,k),ppm_kind_double)
+                   IF (labelsIn(i,j,k).EQ.0.OR.labelsIn(i,j,k).EQ.FORBIDDEN) THEN
                       d1=Mean0-intensity
                    ELSE
-                      IF (ABS(labels_(i,j,k)).NE.vlabel) THEN
-                         vlabel=ABS(labels_(i,j,k))
+                      IF (ABS(labelsIn(i,j,k)).NE.vlabel) THEN
+                         vlabel=ABS(labelsIn(i,j,k))
                          label_region=htable%search(vlabel)
                          IF (label_region.EQ.htable_null) CYCLE
                          Mean=this%gSums(label_region)/this%gCount(label_region)
@@ -169,7 +169,7 @@
 #endif
 
         FUNCTION DTYPE(E_PCGaussian_EvaluateEnergyDifference)(this, &
-        &        image_,labels_,coord,oldlabel,newlabel,            &
+        &        imageIn,labelsIn,coord,oldlabel,newlabel,          &
         &        oldlabel_region,newlabel_region)
 
           IMPLICIT NONE
@@ -177,15 +177,15 @@
           CLASS(E_PCGaussian)                                   :: this
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: imageIn
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
 #endif
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labelsIn
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labelsIn
 #endif
           INTEGER,             DIMENSION(:),      INTENT(IN   ) :: coord
           INTEGER,                                INTENT(IN   ) :: oldlabel
@@ -212,9 +212,9 @@
           ENDIF
 
 #if   __DIME == __2D
-          intensity=REAL(image_(coord(1),coord(2)),ppm_kind_double)
+          intensity=REAL(imageIn(coord(1),coord(2)),ppm_kind_double)
 #elif __DIME == __3D
-          intensity=REAL(image_(coord(1),coord(2),coord(3)),ppm_kind_double)
+          intensity=REAL(imageIn(coord(1),coord(2),coord(3)),ppm_kind_double)
 #endif
 
           vNFrom      =this%gCount(oldlabel_region)
@@ -255,7 +255,7 @@
         END FUNCTION DTYPE(E_PCGaussian_EvaluateEnergyDifference)
 
         FUNCTION DTYPE(E_PCGaussian_EvaluateEnergyDifference_E_Merge)(this, &
-        &        image_,labels_,coord,oldlabel,newlabel,oldlabel_region,    &
+        &        imageIn,labelsIn,coord,oldlabel,newlabel,oldlabel_region,  &
         &        newlabel_region,e_merge)
 
           IMPLICIT NONE
@@ -263,15 +263,15 @@
           CLASS(E_PCGaussian)                                   :: this
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: imageIn
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
 #endif
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labelsIn
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labelsIn
 #endif
           INTEGER,             DIMENSION(:),      INTENT(IN   ) :: coord
           INTEGER,                                INTENT(IN   ) :: oldlabel
@@ -296,9 +296,9 @@
           REAL(MK)                         :: tmp
 
 #if   __DIME == __2D
-          intensity=REAL(image_(coord(1),coord(2)),ppm_kind_double)
+          intensity=REAL(imageIn(coord(1),coord(2)),ppm_kind_double)
 #elif __DIME == __3D
-          intensity=REAL(image_(coord(1),coord(2),coord(3)),ppm_kind_double)
+          intensity=REAL(imageIn(coord(1),coord(2),coord(3)),ppm_kind_double)
 #endif
 
           vNTo        =this%gCount(newlabel_region)
@@ -359,7 +359,7 @@
 #endif
 
         FUNCTION DTYPE(E_PCPoisson_EvaluateEnergyDifference)(this, &
-        &        image_,labels_,coord,oldlabel,newlabel,           &
+        &        imageIn,labelsIn,coord,oldlabel,newlabel,         &
         &        oldlabel_region,newlabel_region)
 
           IMPLICIT NONE
@@ -367,15 +367,15 @@
           CLASS(E_PCPoisson)                                    :: this
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER      :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER      :: imageIn
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER      :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER      :: imageIn
 #endif
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labelsIn
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labelsIn
 #endif
           INTEGER,             DIMENSION(:),      INTENT(IN   ) :: coord
           INTEGER,                                INTENT(IN   ) :: oldlabel
@@ -401,9 +401,9 @@
           ENDIF
 
 #if   __DIME == __2D
-          intensity=REAL(image_(coord(1),coord(2)),ppm_kind_double)
+          intensity=REAL(imageIn(coord(1),coord(2)),ppm_kind_double)
 #elif __DIME == __3D
-          intensity=REAL(image_(coord(1),coord(2),coord(3)),ppm_kind_double)
+          intensity=REAL(imageIn(coord(1),coord(2),coord(3)),ppm_kind_double)
 #endif
 
           !this%gCount(oldlabel_region) can not be less than or equal to oned
@@ -444,7 +444,7 @@
         END FUNCTION DTYPE(E_PCPoisson_EvaluateEnergyDifference)
 
         FUNCTION DTYPE(E_PCPoisson_EvaluateEnergyDifference_E_Merge)(this, &
-        &        image_,labels_,coord,oldlabel,newlabel,oldlabel_region,   &
+        &        imageIn,labelsIn,coord,oldlabel,newlabel,oldlabel_region, &
         &        newlabel_region,e_merge)
 
           IMPLICIT NONE
@@ -452,15 +452,15 @@
           CLASS(E_PCPoisson)                                    :: this
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: imageIn
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
 #endif
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labelsIn
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labelsIn
 #endif
           INTEGER,             DIMENSION(:),      INTENT(IN   ) :: coord
           INTEGER,                                INTENT(IN   ) :: oldlabel
@@ -484,9 +484,9 @@
           REAL(MK)              :: tmp
 
 #if   __DIME == __2D
-          intensity=REAL(image_(coord(1),coord(2)),ppm_kind_double)
+          intensity=REAL(imageIn(coord(1),coord(2)),ppm_kind_double)
 #elif __DIME == __3D
-          intensity=REAL(image_(coord(1),coord(2),coord(3)),ppm_kind_double)
+          intensity=REAL(imageIn(coord(1),coord(2),coord(3)),ppm_kind_double)
 #endif
 
           vNFrom      =this%gCount(oldlabel_region)

@@ -55,8 +55,8 @@
         !
         !  Revisions    :
         !-------------------------------------------------------------------------
-        SUBROUTINE DTYPE(ppm_rc_GaussianImageFilter)(G_Sigma, &
-        &          FieldIn,MeshIn,info,FieldOut,KernelFactor)
+        SUBROUTINE DTYPE(ppm_rc_GaussianImageFilter)(G_Sigma,FieldIn,MeshIn,info, &
+        &          FieldOut,KernelFactor,UseImageSpacing)
 
           IMPLICIT NONE
           !-------------------------------------------------------------------------
@@ -83,6 +83,10 @@
           REAL(MK),            OPTIONAL, INTENT(IN   ) :: KernelFactor
           !!! factor for the Gaussian kernel
           !!! The convolution mask will have the size of : FLOOR(KernelFactor*G_Sigma)
+
+          LOGICAL,             OPTIONAL, INTENT(IN   ) :: UseImageSpacing
+          !!! Use the image spacing information in calculations.
+          !!! Use this option if you want to specify ImageSpacing.
           !-------------------------------------------------------------------------
           !  Local variables
           !-------------------------------------------------------------------------
@@ -116,6 +120,7 @@
 
           LOGICAL :: lsymmetric
           LOGICAL :: is_discretized_on
+          LOGICAL :: UseImageSpacing_
           !-------------------------------------------------------------------------
           !  Initialize
           !-------------------------------------------------------------------------
@@ -125,35 +130,47 @@
           !symmetric Gaussian and 2 or 3 for Anisotropic Gaussian
           s1=SIZE(G_Sigma,1)
 
-          dy=pixel(1)/pixel(2)
+          ! Per default it uses the image spacing
+          UseImageSpacing_=MERGE(UseImageSpacing,.TRUE.,PRESENT(UseImageSpacing))
+
+          IF (UseImageSpacing_) THEN
+             dy=pixel(1)/pixel(2)
 #if   __DIME == __3D
-          dz=pixel(1)/pixel(3)
+             dz=pixel(1)/pixel(3)
 #endif
+          ELSE
+             dy=one
+#if   __DIME == __3D
+             dz=one
+#endif
+          ENDIF
 
           SELECT CASE (s1)
+          ! Isotropic (i.e. circularly symmetric) Gaussian
           CASE (1)
-          !!! isotropic (i.e. circularly symmetric) Gaussian
              lsymmetric=.TRUE.
           CASE (2)
              IF (INT(G_Sigma(1)).EQ.INT(G_Sigma(2))) THEN
+                ! Isotropic 2D Gaussian
                 lsymmetric=.TRUE.
              ELSE
+                ! Anisotropic 2D Gaussian
                 lsymmetric=.FALSE.
              ENDIF
-          !!! Anisotropic 2D Gaussian
           CASE (3)
              IF (INT(G_Sigma(1)).EQ.INT(G_Sigma(2)).AND.INT(G_Sigma(1)).EQ.INT(G_Sigma(3))) THEN
+                ! Isotropic 3D Gaussian
                 lsymmetric=.TRUE.
              ELSE
+                ! Anisotropic 3D Gaussian
                 lsymmetric=.FALSE.
              ENDIF
-             !!! Anisotropic 3D Gaussian
           CASE DEFAULT
              fail("Wrong dimension for GaussianImageFilter G_Sigma!")
           END SELECT
 
-          !!! We are considering two times G_Sigma as a default
-          !!! kernel size for convolution
+          ! We are considering two times G_Sigma as a default
+          ! kernel size for convolution
           coef= MERGE(KernelFactor,two,PRESENT(KernelFactor))
 
           s1=FLOOR(coef*G_Sigma(1))
@@ -175,6 +192,19 @@
           ENDIF
 
           CALL check()
+
+          IF (PRESENT(FieldOut)) THEN
+             IF (FieldOut%is_discretized_on(MeshIn)) THEN
+                is_discretized_on=.TRUE.
+                check_true(<#FieldOut%data_type.EQ.FieldIn%data_type#>, &
+                & "The Input and output fields have different data types!")
+             ELSE
+                is_discretized_on=.FALSE.
+             ENDIF
+          ELSE
+             ! If there is no FieldOut, the value is TRUE
+             is_discretized_on=.TRUE.
+          ENDIF
 
           !!! TODO
           !!! I should change this routine find the index if ghostsize>FLOOR(coef*G_Sigma)
@@ -588,16 +618,6 @@
           check_true(<#MeshIn%ghostsize(1).GE.s1.AND.MeshIn%ghostsize(2).GE.s2.AND.MeshIn%ghostsize(3).GE.s3#>, &
           & "The ghost size is smaller than the kernel size, so there would be problem at the borders!",exit_point=8888)
 #endif
-
-          IF (PRESENT(FieldOut)) THEN
-             IF (FieldOut%is_discretized_on(MeshIn)) THEN
-                is_discretized_on=.TRUE.
-                check_true(<#FieldOut%data_type.EQ.FieldIn%data_type#>, &
-                & "The Input and output fields have different data types!",exit_point=8888)
-             ELSE
-                is_discretized_on=.FALSE.
-             ENDIF
-          ENDIF
         8888 CONTINUE
         END SUBROUTINE check
 #if   __DIME == __2D
@@ -888,14 +908,14 @@
              CASE (20)
                 DO j=1,nnodes(2)
                    DO i=1,nnodes(1)
-                      tmp1_r(i)=wpin(i-20,j)*Mask(1)+wpin(i-19,j)*Mask(2)+wpin(i-18,j)*Mask(3)+wpin(i-17,j)*Mask(4)+     &
-                      &         wpin(i-16,j)*Mask(5)+wpin(i-15,j)*Mask(6)+wpin(i-14,j)*Mask(7)+wpin(i-13,j)*Mask(8)+     &
-                      &         wpin(i-12,j)*Mask(9)+wpin(i-11,j)*Mask(10)+wpin(i-10,j)*Mask(11)+wpin(i-9,j)*Mask(12)+   &
-                      &         wpin(i-8,j)*Mask(13)+wpin(i-7,j)*Mask(14)+wpin(i-6,j)*Mask(15)+wpin(i-5,j)*Mask(16)+     &
-                      &         wpin(i-4,j)*Mask(17)+wpin(i-3,j)*Mask(18)+wpin(i-2,j)*Mask(19)+wpin(i-1,j)*Mask(20)+     &
-                      &         wpin(i,j)*Mask(21)+wpin(i+1,j)*Mask(22)+wpin(i+2,j)*Mask(23)+wpin(i+3,j)*Mask(24)+       &
-                      &         wpin(i+4,j)*Mask(25)+wpin(i+5,j)*Mask(26)+wpin(i+6,j)*Mask(27)+wpin(i+7,j)*Mask(28)+     &
-                      &         wpin(i+8,j)*Mask(29)+wpin(i+9,j)*Mask(30)+wpin(i+10,j)*Mask(31)+wpin(i+11,j)*Mask(32)+   &
+                      tmp1_r(i)=wpin(i-20,j)*Mask( 1)+wpin(i-19,j)*Mask( 2)+wpin(i-18,j)*Mask( 3)+wpin(i-17,j)*Mask( 4)+ &
+                      &         wpin(i-16,j)*Mask( 5)+wpin(i-15,j)*Mask( 6)+wpin(i-14,j)*Mask( 7)+wpin(i-13,j)*Mask( 8)+ &
+                      &         wpin(i-12,j)*Mask( 9)+wpin(i-11,j)*Mask(10)+wpin(i-10,j)*Mask(11)+wpin(i- 9,j)*Mask(12)+ &
+                      &         wpin(i- 8,j)*Mask(13)+wpin(i- 7,j)*Mask(14)+wpin(i- 6,j)*Mask(15)+wpin(i- 5,j)*Mask(16)+ &
+                      &         wpin(i- 4,j)*Mask(17)+wpin(i- 3,j)*Mask(18)+wpin(i- 2,j)*Mask(19)+wpin(i- 1,j)*Mask(20)+ &
+                      &         wpin(i   ,j)*Mask(21)+wpin(i+ 1,j)*Mask(22)+wpin(i+ 2,j)*Mask(23)+wpin(i+ 3,j)*Mask(24)+ &
+                      &         wpin(i+ 4,j)*Mask(25)+wpin(i+ 5,j)*Mask(26)+wpin(i+ 6,j)*Mask(27)+wpin(i+ 7,j)*Mask(28)+ &
+                      &         wpin(i+ 8,j)*Mask(29)+wpin(i+ 9,j)*Mask(30)+wpin(i+10,j)*Mask(31)+wpin(i+11,j)*Mask(32)+ &
                       &         wpin(i+12,j)*Mask(33)+wpin(i+13,j)*Mask(34)+wpin(i+14,j)*Mask(35)+wpin(i+15,j)*Mask(36)+ &
                       &         wpin(i+16,j)*Mask(37)+wpin(i+17,j)*Mask(38)+wpin(i+18,j)*Mask(39)+wpin(i+19,j)*Mask(40)+ &
                       &         wpin(i+20,j)*Mask(41)

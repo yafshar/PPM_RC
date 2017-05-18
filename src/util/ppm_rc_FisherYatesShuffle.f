@@ -47,6 +47,7 @@
       !-------------------------------------------------------------------------
 
       SUBROUTINE ppm_rc_FisherYatesShuffle(a)
+        USE ppm_rc_module_rnd, ONLY : ppm_rc_Saru_PRNG
         IMPLICIT NONE
         !-------------------------------------------------------------------------
         !  Includes
@@ -64,7 +65,7 @@
         INTEGER :: i,idx,temp
 
         DO i = SIZE(a),2,-1
-           CALL RANDOM_NUMBER(r)
+           r=ppm_rc_Saru_PRNG()
            idx=INT(r*i) + 1
            temp  =a(idx)
            a(idx)=a(i)
@@ -78,6 +79,7 @@
       END SUBROUTINE ppm_rc_FisherYatesShuffle
 
       SUBROUTINE ppm_rc_FisherYatesShuffle_(a,asize)
+        USE ppm_rc_module_rnd, ONLY : ppm_rc_Saru_PRNG
         IMPLICIT NONE
         !-------------------------------------------------------------------------
         !  Includes
@@ -96,7 +98,7 @@
         INTEGER :: i,idx,temp
 
         DO i = asize,2,-1
-           CALL RANDOM_NUMBER(r)
+           r=ppm_rc_Saru_PRNG()
            idx=INT(r*i) + 1
            temp  =a(idx)
            a(idx)=a(i)

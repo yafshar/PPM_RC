@@ -710,7 +710,7 @@
 
           constructor=.FALSE.
 
-          IF (.NOT.(Connectivity_%Dimension.EQ.NeighborhoodConnectivity_%Dimension)) THEN
+          IF (Connectivity_%Dimension.NE.NeighborhoodConnectivity_%Dimension) THEN
              fail("check failed: (Connectivity_%Dimension.EQ.NeighborhoodConnectivity_%Dimension) is not true!", &
              & ppm_error=ppm_error_fatal,exit_point=no)
           ENDIF
@@ -886,7 +886,7 @@
           ELSE
              !!! This check should be done only once, when we are doing the BG
              !!! It is not necessary to do it again
-             IF (.NOT.(SIZE(this%m_Image).EQ.SubSize)) THEN
+             IF (SIZE(this%m_Image).NE.SubSize) THEN
                 fail("(check failed: SIZE(this%m_Image).EQ.SubSize) is not true!", &
                 & ppm_error=ppm_error_fatal,exit_point=no)
              ENDIF
@@ -934,10 +934,8 @@
 
           IF (seed.EQ.nSize+1) RETURN
 
-          ALLOCATE(vProcessed_new(nSize),STAT=info)
+          ALLOCATE(vProcessed_new(nSize),SOURCE=.FALSE.,STAT=info)
           or_fail_alloc("vProcessed_new",ppm_error=ppm_error_fatal,exit_point=no)
-
-          vProcessed_new=.FALSE.
 
           DO WHILE (seed.LE.nSize)
              ConnectedComponentCounter=ConnectedComponentCounter+1
@@ -1668,7 +1666,8 @@
 
           CALL this%readDataSubImage(coord,labels_)
 
-          this%SubImage=MERGE(.FALSE.,.TRUE.,this%DataSubImage.EQ.0)
+!           this%SubImage=MERGE(.FALSE.,.TRUE.,this%DataSubImage.EQ.0)
+          this%SubImage=this%DataSubImage.NE.0
 
           CALL this%ForegroundUnitCubeCCCounter%SetImage(this%SubImage)
 
@@ -1710,7 +1709,7 @@
 
           CALL this%readDataSubImage(coord,labels_)
 
-          this%SubImage=MERGE(.FALSE.,.TRUE.,this%DataSubImage.EQ.0)
+          this%SubImage=this%DataSubImage.NE.0
 
           CALL this%ForegroundUnitCubeCCCounter%SetImage(this%SubImage)
 
@@ -1751,7 +1750,7 @@
 
           CALL this%readDataSubImage(tmplabels)
 
-          this%SubImage=MERGE(.FALSE.,.TRUE.,this%DataSubImage.EQ.0)
+          this%SubImage=this%DataSubImage.NE.0
 
           CALL this%ForegroundUnitCubeCCCounter%SetImage(this%SubImage)
 
@@ -1792,7 +1791,7 @@
 
           CALL this%readDataSubImage(tmplabels)
 
-          this%SubImage=MERGE(.FALSE.,.TRUE.,this%DataSubImage.EQ.0)
+          this%SubImage=this%DataSubImage.NE.0
 
           CALL this%ForegroundUnitCubeCCCounter%SetImage(this%SubImage)
 
@@ -1836,7 +1835,7 @@
 
           CALL this%readDataSubImage(MeshIn,coord)
 
-          this%SubImage=MERGE(.FALSE.,.TRUE.,this%DataSubImage.EQ.0)
+          this%SubImage=this%DataSubImage.NE.0
 
           CALL this%ForegroundUnitCubeCCCounter%SetImage(this%SubImage)
 
@@ -1873,7 +1872,7 @@
           !  Local variables
           !-------------------------------------------------------------------------
 
-          this%SubImage=MERGE(.FALSE.,.TRUE.,this%DataSubImage.EQ.0)
+          this%SubImage=this%DataSubImage.NE.0
 
           CALL this%ForegroundUnitCubeCCCounter%SetImage(this%SubImage)
 
@@ -1916,7 +1915,7 @@
 
           CALL this%readDataSubImage(coord,labels_)
 
-          this%SubImage=MERGE(.TRUE.,.FALSE.,this%DataSubImage.EQ.LabelIn)
+          this%SubImage=this%DataSubImage.EQ.LabelIn
 
           CALL this%ForegroundUnitCubeCCCounter%SetImage(this%SubImage)
 
@@ -1951,7 +1950,7 @@
 
           CALL this%readDataSubImage(coord,labels_)
 
-          this%SubImage=MERGE(.TRUE.,.FALSE.,this%DataSubImage.EQ.LabelIn)
+          this%SubImage=this%DataSubImage.EQ.LabelIn
 
           CALL this%ForegroundUnitCubeCCCounter%SetImage(this%SubImage)
 
@@ -1985,7 +1984,7 @@
 
           CALL this%readDataSubImage(tmplabels)
 
-          this%SubImage=MERGE(.TRUE.,.FALSE.,this%DataSubImage.EQ.LabelIn)
+          this%SubImage=this%DataSubImage.EQ.LabelIn
 
           CALL this%ForegroundUnitCubeCCCounter%SetImage(this%SubImage)
 
@@ -2019,7 +2018,7 @@
 
           CALL this%readDataSubImage(tmplabels)
 
-          this%SubImage=MERGE(.TRUE.,.FALSE.,this%DataSubImage.EQ.LabelIn)
+          this%SubImage=this%DataSubImage.EQ.LabelIn
 
           CALL this%ForegroundUnitCubeCCCounter%SetImage(this%SubImage)
 
@@ -2056,7 +2055,7 @@
 
           CALL this%readDataSubImage(MeshIn,coord)
 
-          this%SubImage=MERGE(.TRUE.,.FALSE.,this%DataSubImage.EQ.LabelIn)
+          this%SubImage=this%DataSubImage.EQ.LabelIn
 
           CALL this%ForegroundUnitCubeCCCounter%SetImage(this%SubImage)
 
@@ -2087,7 +2086,7 @@
           !  Local variables
           !-------------------------------------------------------------------------
 
-          this%SubImage=MERGE(.TRUE.,.FALSE.,this%DataSubImage.EQ.LabelIn)
+          this%SubImage=this%DataSubImage.EQ.LabelIn
 
           CALL this%ForegroundUnitCubeCCCounter%SetImage(this%SubImage)
 

@@ -101,13 +101,10 @@
         !----------------------------------------------------------------------
         !  Define module interfaces
         !----------------------------------------------------------------------
-        INTERFACE ppm_rc_floodFill_2d
+        INTERFACE ppm_rc_floodFill
           MODULE PROCEDURE ppm_rc_floodFillScanline_2d
           MODULE PROCEDURE ppm_rc_floodFillScanline__2d
           MODULE PROCEDURE ppm_rc_floodFillScanlineConditional_2d
-        END INTERFACE
-
-        INTERFACE ppm_rc_floodFill_3d
           MODULE PROCEDURE ppm_rc_floodFillScanline_3d
           MODULE PROCEDURE ppm_rc_floodFillScanline__3d
           MODULE PROCEDURE ppm_rc_floodFillScanlineConditional_3d
@@ -120,8 +117,7 @@
         PUBLIC :: ppm_rc_initforestfire_3d
         PUBLIC :: ppm_rc_forestfire_2d
         PUBLIC :: ppm_rc_forestfire_3d
-        PUBLIC :: ppm_rc_floodFill_2d
-        PUBLIC :: ppm_rc_floodFill_3d
+        PUBLIC :: ppm_rc_floodFill
         PUBLIC :: ppm_rc_ghost_copy_2d
         PUBLIC :: ppm_rc_ghost_copy_3d
       CONTAINS

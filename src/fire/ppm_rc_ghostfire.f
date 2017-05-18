@@ -133,7 +133,7 @@
                               ENDIF
 
                               main_if2: IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(ld(1),ld(2))),nlabels,nsize,labelexist)) THEN
-                                 CALL DTYPE(ppm_rc_floodFill)(labelled,DTYPE(wpl),Nm,ld(1:__DIME), &
+                                 CALL ppm_rc_floodFill(labelled,DTYPE(wpl),Nm,ld(1:__DIME), &
                                  &    nlabels(labelexist),ghost_nlabels(idge),0,info)
 
                                  nn=0
@@ -194,7 +194,7 @@
                               ENDIF
 
                               main_if2: IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(ld(1),ld(2),ld(3))),nlabels,nsize,labelexist)) THEN
-                                 CALL DTYPE(ppm_rc_floodFill)(labelled,DTYPE(wpl),Nm,ld(1:__DIME), &
+                                 CALL ppm_rc_floodFill(labelled,DTYPE(wpl),Nm,ld(1:__DIME), &
                                  &    nlabels(labelexist),ghost_nlabels(idge),0,info)
 
                                  nn=0
@@ -619,8 +619,7 @@
                   CYCLE seed_loop
                ENDIF
 
-               CALL DTYPE(ppm_rc_floodFill)(labelled,DTYPE(wpl), &
-               &    Nm,seedn(1:__DIME),oldlabel,newlabel,0,info)
+               CALL ppm_rc_floodFill(labelled,DTYPE(wpl),Nm,seedn(1:__DIME),oldlabel,newlabel,0,info)
                or_fail("ppm_rc_floodFill")
 
                ALLOCATE(trstat,STAT=info)

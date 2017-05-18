@@ -1,4 +1,22 @@
-
+      !-------------------------------------------------------------------------
+      !  Subroutine   :                 ppm_rc_init_arg
+      !-------------------------------------------------------------------------
+      !
+      !  Purpose      : Initialize MPI, ppm, IO variables and other arguments
+      !
+      !  Input        :
+      !
+      !  Input/output :
+      !
+      !  Output       : info       (I) return status. 0 on success.
+      !
+      !  Routines     :
+      !
+      !
+      !  Remarks      :
+      !
+      !  References   :
+      !-------------------------------------------------------------------------
       SUBROUTINE ppm_rc_init_arg(info)
 
         !-------------------------------------------------------------------------
@@ -20,7 +38,8 @@
         USE ppm_rc_module_energy, ONLY : E_Gamma,E_ContourLengthApprox,E_PC, &
         &   E_PCGaussian,E_PCPoisson,E_PS,E_PSGaussian,E_PSPoisson,e_data,e_length
         USE ppm_rc_module_read, ONLY : ppm_rc_read_image_info
-        USE ppm_rc_module_rnd, ONLY : ppm_rc_saru_random_init,ppm_rc_mt_random_init
+        USE ppm_rc_module_rnd, ONLY : ppm_rc_saru_random_init, &
+        &   ppm_rc_mt_random_init
         USE ppm_rc_module_mcmc, ONLY : MCMCCheckParameters
         IMPLICIT NONE
 
@@ -45,14 +64,15 @@
         REAL(MK)              :: energy_local_window_radius_tmp
         REAL(MK)              :: energy_curvature_mask_radius_tmp
 
-        CHARACTER(LEN=ppm_char) :: caller="ppm_rc_init_arg"
-
 #ifdef __Linux
         INTEGER               :: memory
 #endif
         INTEGER               :: tolexp
-        INTEGER               :: iopt
+        INTEGER               :: iopt,nsize
         INTEGER, DIMENSION(1) :: ldl,ldu
+
+        CHARACTER(LEN=ppm_char) :: caller="ppm_rc_init_arg"
+        CHARACTER(LEN=ppm_char) :: cbuf
         !-------------------------------------------------------------------------
         !  Initialize
         !-------------------------------------------------------------------------
@@ -107,10 +127,11 @@
         !  Initialize the ppm library
         !-------------------------------------------------------------------------
         !TODO
-        !TOCHECK
-        tolexp = INT(LOG10(EPSILON(lmyeps)))+3
+        !TOCHECK I should remove + 2
+        ! now the precision is 10^-4
+        tolexp = INT(LOG10(EPSILON(lmyeps)))+2
 
-        CALL ppm_init(ppm_rc_dim,MK,tolexp,comm,debug,info,ppm_log_unit)
+        CALL ppm_init(ppm_rc_dim,MK,tolexp,comm,ppm_rc_debug,info,ppm_log_unit)
         or_fail('Failed to initialize PPM library.')
 
         rank=ppm_rank
@@ -126,12 +147,33 @@
         !  This way, we can initialize local labels on every processor
         !  from a big number and will reduce them one by one.
         !-------------------------------------------------------------------------
-        IF (ppm_nproc.LE.1024) THEN
-           !Max number of regions in one processor is limited to 262144
-           loc_label=ISHFT(rank+1,SHIFT=18)
+        IF (ppm_nproc.LE.2048) THEN
+           ! Max number of regions in one processor is limited to 262143
+           ! 29 BITS
+           loc_label=ISHFT(rank+1,SHIFT=18)-1
         ELSE
-           !Max number of regions in one processor is limited to 131072
-           loc_label=ISHFT(rank+1,SHIFT=17)
+           ! Max number of regions in one processor is limited to 131071
+           ! 30 BITS till 8192 processors
+           loc_label=ISHFT(rank+1,SHIFT=17)-1
+        ENDIF
+
+        !-------------------------------------------------------------------------
+        !  Initialize IO related members
+        !-------------------------------------------------------------------------
+        IF (n_io_procs.GT.0.AND.(n_procs_read.GT.0.OR.n_procs_write.GT.0)) THEN
+           fail("You can not have both n_io_procs & n_procs_read/write at the same time!")
+        ELSE IF (n_procs_read.GT.0.AND.n_procs_write.EQ.0) THEN
+           n_procs_write=ppm_nproc
+        ELSE IF (n_procs_read.EQ.0.AND.n_procs_write.GT.0) THEN
+           n_procs_read=ppm_nproc
+        ELSE IF (n_procs_read.EQ.0.AND.n_procs_write.EQ.0) THEN
+           IF (n_io_procs.GT.0) THEN
+              n_procs_read =n_io_procs
+              n_procs_write=n_io_procs
+           ELSE
+              n_procs_read =ppm_nproc
+              n_procs_write=ppm_nproc
+           ENDIF
         ENDIF
 
         !-------------------------------------------------------------------------
@@ -165,65 +207,93 @@
         CALL ppm_rc_uppercase(init_mode)
 
         SELECT CASE (TRIM(init_mode))
+        CASE ("E_FROMFILE","FROMFILE","E_FFile","FFILE")
+           vInitKind=e_fromfile
         CASE ("E_RECT","RECT")
            vInitKind=e_rect
-
         CASE ("E_SPHERE","SPHERE")
            vInitKind=e_sphere
-
         CASE ("E_OTSU","OTSU")
            vInitKind=e_otsu
-
         CASE ("E_LOCALMAX","LOCALMAX")
            vInitKind=e_localmax
-
         CASE DEFAULT
            vInitKind=e_localmax
-
         END SELECT
 
+        !-------------------------------------------------------------------------
+        !  Initialize Energy terms
+        !-------------------------------------------------------------------------
+        ! In case of equilibrium iteration, we always have the DRC energy parameters
+        !-------------------------------------------------------------------------
         IF (nsteql.GT.0) THEN
-           energy_coeff_data_tmp  =MERGE(energy_coeff_data_equil,energy_coeff_data, &
-           &                             energy_coeff_data_equil.GT.smallest)
+           energy_coeff_data_tmp           =MERGE(energy_coeff_data_equil,           energy_coeff_data,           energy_coeff_data_equil           .LT.bigs)
+           energy_coeff_length_tmp         =MERGE(energy_coeff_length_equil,         energy_coeff_length,         energy_coeff_length_equil         .LT.bigs)
+           energy_region_merge_ths_tmp     =MERGE(energy_region_merge_ths_equil,     energy_region_merge_ths,     energy_region_merge_ths_equil     .LT.bigs)
+           energy_local_window_radius_tmp  =MERGE(energy_local_window_radius_equil,  energy_local_window_radius,  energy_local_window_radius_equil  .LT.bigs)
+           energy_curvature_mask_radius_tmp=MERGE(energy_curvature_mask_radius_equil,energy_curvature_mask_radius,energy_curvature_mask_radius_equil.LT.bigs)
 
-           energy_coeff_length_tmp=MERGE(energy_coeff_length_equil,energy_coeff_length, &
-           &                             energy_coeff_length_equil.GT.smallest)
-
-           IF (energy_coeff_balloon_equil.GT.smallest.OR. &
-           &   energy_coeff_balloon_equil.LT.-smallest) THEN
-              energy_coeff_balloon_tmp=energy_coeff_balloon
-              energy_coeff_balloon=energy_coeff_balloon_equil
+           IF (energy_coeff_balloon_equil.LT.bigs) THEN
+              energy_coeff_balloon_tmp  =energy_coeff_balloon
+              energy_coeff_balloon      =energy_coeff_balloon_equil
               energy_coeff_balloon_equil=energy_coeff_balloon_tmp
            ELSE
               energy_coeff_balloon_equil=energy_coeff_balloon
            ENDIF
 
-           IF (energy_coeff_outward_flow_equil.GT.smallest.OR. &
-           &   energy_coeff_outward_flow_equil.LT.-smallest) THEN
-              energy_coeff_outward_flow_tmp=energy_coeff_outward_flow
-              energy_coeff_outward_flow=energy_coeff_outward_flow_equil
+           IF (energy_coeff_outward_flow_equil.LT.bigs) THEN
+              energy_coeff_outward_flow_tmp  =energy_coeff_outward_flow
+              energy_coeff_outward_flow      =energy_coeff_outward_flow_equil
               energy_coeff_outward_flow_equil=energy_coeff_outward_flow_tmp
            ELSE
               energy_coeff_outward_flow_equil=energy_coeff_outward_flow
            ENDIF
-
-           energy_region_merge_ths_tmp=MERGE(energy_region_merge_ths_equil, &
-           &                                 energy_region_merge_ths,       &
-           &                                 energy_region_merge_ths_equil.GT.smallest)
-
-           energy_local_window_radius_tmp=MERGE(energy_local_window_radius_equil, &
-           &                                    energy_local_window_radius,       &
-           &                                    energy_local_window_radius_equil.GT.smallest)
-
-           energy_curvature_mask_radius_tmp=MERGE(energy_curvature_mask_radius_equil, &
-           &                                      energy_curvature_mask_radius,       &
-           &                                      energy_curvature_mask_radius_equil.GT.smallest)
         ELSE
-           energy_coeff_data_tmp=energy_coeff_data
-           energy_coeff_length_tmp=energy_coeff_length
-           energy_region_merge_ths_tmp=energy_region_merge_ths
-           energy_local_window_radius_tmp=energy_local_window_radius
-           energy_curvature_mask_radius_tmp=energy_curvature_mask_radius
+           !-------------------------------------------------------------------------
+           ! We are only doing segmentation or, at first segmentation followed by sampling
+           !-------------------------------------------------------------------------
+           IF (.NOT.UseMCMC.OR.(UseMCMC.AND.MCMCcontinue)) THEN
+              energy_coeff_data_tmp           =energy_coeff_data
+              energy_coeff_length_tmp         =energy_coeff_length
+              energy_region_merge_ths_tmp     =energy_region_merge_ths
+              energy_local_window_radius_tmp  =energy_local_window_radius
+              energy_curvature_mask_radius_tmp=energy_curvature_mask_radius
+           !-------------------------------------------------------------------------
+           ! We are only doing sampling
+           ! If the user provided mcmc parameters we use them
+           !-------------------------------------------------------------------------
+           ELSE
+              IF (energy_coeff_data_mcmc.LT.bigs) THEN
+                 energy_coeff_data_tmp=energy_coeff_data_mcmc
+                 energy_coeff_data    =energy_coeff_data_mcmc
+              ELSE
+                 energy_coeff_data_tmp=energy_coeff_data
+              ENDIF
+              IF (energy_coeff_length_mcmc.LT.bigs) THEN
+                 energy_coeff_length_tmp=energy_coeff_length_mcmc
+                 energy_coeff_length    =energy_coeff_length_mcmc
+              ELSE
+                 energy_coeff_length_tmp=energy_coeff_length
+              ENDIF
+              IF (energy_region_merge_ths_mcmc.LT.bigs) THEN
+                 energy_region_merge_ths_tmp=energy_region_merge_ths_mcmc
+                 energy_region_merge_ths    =energy_region_merge_ths_mcmc
+              ELSE
+                 energy_region_merge_ths_tmp=energy_region_merge_ths
+              ENDIF
+              IF (energy_local_window_radius_mcmc.LT.bigs) THEN
+                 energy_local_window_radius_tmp=energy_local_window_radius_mcmc
+                 energy_local_window_radius    =energy_local_window_radius_mcmc
+              ELSE
+                 energy_local_window_radius_tmp=energy_local_window_radius
+              ENDIF
+              IF (energy_curvature_mask_radius_mcmc.LT.bigs) THEN
+                 energy_curvature_mask_radius_tmp=energy_curvature_mask_radius_mcmc
+                 energy_curvature_mask_radius    =energy_curvature_mask_radius_mcmc
+              ELSE
+                 energy_curvature_mask_radius_tmp=energy_curvature_mask_radius
+              ENDIF
+           ENDIF
         ENDIF
 
         !-------------------------------------------------------------------------
@@ -317,9 +387,23 @@
            END SELECT
         END SELECT
 
-        IF (energy_coeff_balloon.GT.smallest.OR. &
-        &   energy_coeff_balloon.LT.-smallest) THEN
-           e_data%m_EnergyFunctional=e_data%m_EnergyFunctional+1000
+        !-------------------------------------------------------------------------
+        ! If we are only doing segmentation or at first segmentation followed by sampling
+        !-------------------------------------------------------------------------
+        IF (.NOT.UseMCMC.OR.(UseMCMC.AND.MCMCcontinue)) THEN
+        !-------------------------------------------------------------------------
+        ! We are only doing sampling
+        ! If the user provided mcmc parameters we use them
+        !-------------------------------------------------------------------------
+        ELSE
+           IF (energy_coeff_balloon_mcmc.LT.bigs) THEN
+              energy_coeff_balloon=energy_coeff_balloon_mcmc
+           ENDIF
+        ENDIF
+        IF (energy_coeff_balloon.LT.bigs) THEN
+           IF (energy_coeff_balloon.GT.smallest.OR.energy_coeff_balloon.LT.-smallest) THEN
+              e_data%m_EnergyFunctional=e_data%m_EnergyFunctional+1000
+           ENDIF
         ENDIF
 
         !-------------------------------------------------------------------------
@@ -354,9 +438,20 @@
            END SELECT
         END SELECT
 
-        IF (energy_coeff_outward_flow.GT.smallest.OR. &
-        &   energy_coeff_outward_flow.LT.-smallest) THEN
-           e_length%m_EnergyFunctional=e_length%m_EnergyFunctional+1000
+        ! If we are only doing segmentation or at first segmentation followed by sampling
+        IF (.NOT.UseMCMC.OR.(UseMCMC.AND.MCMCcontinue)) THEN
+        ! We are only doing sampling
+        ! If the user provided mcmc parameters we use them
+        ELSE
+           IF (energy_coeff_outward_flow_mcmc.LT.bigs) THEN
+              energy_coeff_outward_flow=energy_coeff_outward_flow_mcmc
+           ENDIF
+        ENDIF
+
+        IF (energy_coeff_outward_flow.LT.bigs) THEN
+           IF (energy_coeff_outward_flow.GT.smallest.OR.energy_coeff_outward_flow.LT.-smallest) THEN
+              e_length%m_EnergyFunctional=e_length%m_EnergyFunctional+1000
+           ENDIF
         ENDIF
 
         !-------------------------------------------------------------------------
@@ -365,7 +460,7 @@
         CALL ppm_rc_read_image_info(inputimage,ninputimage,info)
         or_fail('Failed to read image information.',ppm_error=ppm_error_fatal)
 
-        max_phys(1:ppm_rc_dim) = REAL(Ngrid(1:ppm_rc_dim)-1,MK)  !+smallest
+        max_phys(1:ppm_rc_dim) = REAL(Ngrid(1:ppm_rc_dim)-1,MK)
 
         !-------------------------------------------------------------------------
         !  Write some of the parameters
@@ -390,25 +485,6 @@
            or_fail("ppm_set_proc_speed")
         ENDIF
 
-        SELECT CASE (UseMCMC)
-        CASE (.TRUE.)
-           CALL MCMCCheckParameters(info)
-           or_fail("MCMCCheckParameters")
-
-           CALL ppm_rc_saru_random_init(info)
-           or_fail("ppm_rc_saru_random_init")
-
-           CALL ppm_rc_mt_random_init(info)
-           or_fail("ppm_rc_mt_random_init")
-
-           SELECT CASE (lNormalize)
-           CASE (.TRUE.)
-              IF (rank.EQ.0) THEN
-                 stdout("Warning: MCMC on normalized image!")
-              ENDIF
-           END SELECT
-        END SELECT
-
         SELECT CASE (ppm_nproc)
         CASE (1)
            !---------------------------------------------------------------------
@@ -417,7 +493,7 @@
            !---------------------------------------------------------------------
            SELECT CASE (vInitKind)
            !Local maxima initialization
-           CASE (6)
+           CASE (e_localmax)
               ioghostsize(1)=CEILING(2.05_MK*init_rd(1))
               ioghostsize(2)=CEILING(2.05_MK*init_rd(2)*pixel(1)/pixel(2))
               ioghostsize(ppm_rc_dim)=CEILING(2.05_MK*init_rd(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
@@ -433,6 +509,32 @@
 
            SELECT TYPE (e_data)
            CLASS IS (E_PS)
+              ghostsize=INT(e_data%m_Radius)
+              ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+              ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+              ioghostsize=MAX(ioghostsize,ghostsize+1)
+              ! ghostsize(1) = MAX(ghostsize(1),CEILING(e_data%m_Radius)+1)
+              ! ghostsize(2:__DIME) = MAX(ghostsize(2:__DIME),CEILING(e_data%m_Radius*pixel(1)/pixel(2:__DIME))+1)
+              ! if the energy functional is Piecewise Smooth, we need a
+              ! bigger ghost layer
+              ! This part should be removed when we correct the particle
+              ! topo routines, as for now the topology during initialization
+              ! and main part are the same
+           CLASS IS (E_PSGaussian)
+              ghostsize=INT(e_data%m_Radius)
+              ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+              ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+              ioghostsize=MAX(ioghostsize,ghostsize+1)
+              ! ghostsize(1) = MAX(ghostsize(1),CEILING(e_data%m_Radius)+1)
+              ! ghostsize(2:__DIME) = MAX(ghostsize(2:__DIME),CEILING(e_data%m_Radius*pixel(1)/pixel(2:__DIME))+1)
+              ! if the energy functional is Piecewise Smooth, we need a
+              ! bigger ghost layer
+              ! This part should be removed when we correct the particle
+              ! topo routines, as for now the topology during initialization
+              ! and main part are the same
+           CLASS IS (E_PSPoisson)
               ghostsize=INT(e_data%m_Radius)
               ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
               ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
@@ -462,6 +564,9 @@
            IF (nsteql.GT.0) THEN
               ghostsize_equil=ioghostsize
            ENDIF
+           IF (UseMCMC) THEN
+              ghostsize_mcmc=ioghostsize
+           ENDIF
            inighostsize=ioghostsize
            ghostsize_run=ioghostsize
         CASE DEFAULT
@@ -472,7 +577,7 @@
 
            SELECT CASE (vInitKind)
            !Local maxima initialization
-           CASE (6)
+           CASE (e_localmax)
               inighostsize(1)=CEILING(2.05_MK*init_rd(1))
               inighostsize(2)=CEILING(2.05_MK*init_rd(2)*pixel(1)/pixel(2))
               inighostsize(ppm_rc_dim)=CEILING(2.05_MK*init_rd(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
@@ -488,6 +593,18 @@
 
            SELECT TYPE (e_data)
            CLASS IS (E_PS)
+              ghostsize=INT(e_data%m_Radius)
+              ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+              ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+              inighostsize=MAX(inighostsize,ghostsize+1)
+           CLASS IS (E_PSGaussian)
+              ghostsize=INT(e_data%m_Radius)
+              ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+              ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+              inighostsize=MAX(inighostsize,ghostsize+1)
+           CLASS IS (E_PSPoisson)
               ghostsize=INT(e_data%m_Radius)
               ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
               ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
@@ -522,16 +639,129 @@
               ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
 
               ghostsize_equil=MAX(2,ghostsize+1)
+
+              IF (UseMCMC) THEN
+                 IF (energy_local_window_radius_mcmc.LT.bigs) THEN
+                    ghostsize=INT(energy_local_window_radius_mcmc)
+                    ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+                    ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+                    ghostsize_mcmc=MAX(2,ghostsize+1)
+                 ELSE
+                    ghostsize_mcmc=ghostsize_equil
+                 ENDIF
+              ENDIF
            ELSE
               ghostsize=INT(e_data%m_Radius)
               ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
               ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
 
               ghostsize_run=MAX(2,ghostsize+1)
+
+              IF (UseMCMC) THEN
+                 IF (energy_local_window_radius_mcmc.LT.bigs) THEN
+                    ghostsize=INT(energy_local_window_radius_mcmc)
+                    ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+                    ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+                    ghostsize_mcmc=MAX(2,ghostsize+1)
+                 ELSE
+                    ghostsize_mcmc=ghostsize_run
+                 ENDIF
+              ENDIF
+           ENDIF
+        CLASS IS (E_PSGaussian)
+           IF (nsteql.GT.0) THEN
+              ghostsize=INT(e_data%m_Radius)
+              ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+              ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+              ghostsize_run=MAX(2,ghostsize+1)
+
+              ghostsize=INT(energy_local_window_radius)
+              ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+              ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+              ghostsize_equil=MAX(2,ghostsize+1)
+
+              IF (UseMCMC) THEN
+                 IF (energy_local_window_radius_mcmc.LT.bigs) THEN
+                    ghostsize=INT(energy_local_window_radius_mcmc)
+                    ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+                    ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+                    ghostsize_mcmc=MAX(2,ghostsize+1)
+                 ELSE
+                    ghostsize_mcmc=ghostsize_equil
+                 ENDIF
+              ENDIF
+           ELSE
+              ghostsize=INT(e_data%m_Radius)
+              ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+              ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+              ghostsize_run=MAX(2,ghostsize+1)
+
+              IF (UseMCMC) THEN
+                 IF (energy_local_window_radius_mcmc.LT.bigs) THEN
+                    ghostsize=INT(energy_local_window_radius_mcmc)
+                    ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+                    ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+                    ghostsize_mcmc=MAX(2,ghostsize+1)
+                 ELSE
+                    ghostsize_mcmc=ghostsize_run
+                 ENDIF
+              ENDIF
+           ENDIF
+        CLASS IS (E_PSPoisson)
+           IF (nsteql.GT.0) THEN
+              ghostsize=INT(e_data%m_Radius)
+              ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+              ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+              ghostsize_run=MAX(2,ghostsize+1)
+
+              ghostsize=INT(energy_local_window_radius)
+              ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+              ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+              ghostsize_equil=MAX(2,ghostsize+1)
+
+              IF (UseMCMC) THEN
+                 IF (energy_local_window_radius_mcmc.LT.bigs) THEN
+                    ghostsize=INT(energy_local_window_radius_mcmc)
+                    ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+                    ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+                    ghostsize_mcmc=MAX(2,ghostsize+1)
+                 ELSE
+                    ghostsize_mcmc=ghostsize_equil
+                 ENDIF
+              ENDIF
+           ELSE
+              ghostsize=INT(e_data%m_Radius)
+              ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+              ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+              ghostsize_run=MAX(2,ghostsize+1)
+
+              IF (UseMCMC) THEN
+                 IF (energy_local_window_radius_mcmc.LT.bigs) THEN
+                    ghostsize=INT(energy_local_window_radius_mcmc)
+                    ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+                    ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+                    ghostsize_mcmc=MAX(2,ghostsize+1)
+                 ELSE
+                    ghostsize_mcmc=ghostsize_run
+                 ENDIF
+              ENDIF
            ENDIF
         CLASS DEFAULT
            IF (nsteql.GT.0) ghostsize_equil=2
            ghostsize_run=2
+           IF (UseMCMC) ghostsize_mcmc=2
         END SELECT
 
         SELECT TYPE (e_length)
@@ -548,14 +778,77 @@
               ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
 
               ghostsize_equil=MAX(ghostsize_equil,ghostsize+1)
+
+              IF (UseMCMC) THEN
+                 IF (energy_curvature_mask_radius_mcmc.LT.bigs) THEN
+                    ghostsize=INT(energy_curvature_mask_radius_mcmc)
+                    ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+                    ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+                    ghostsize_mcmc=MAX(ghostsize_mcmc,ghostsize+1)
+                 ELSE
+                    ghostsize_mcmc=ghostsize_equil
+                 ENDIF
+              ENDIF
            ELSE
               ghostsize=INT(energy_curvature_mask_radius)
               ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
               ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
 
               ghostsize_run=MAX(ghostsize_run,ghostsize+1)
+
+              IF (UseMCMC) THEN
+                 IF (energy_curvature_mask_radius_mcmc.LT.bigs) THEN
+                    ghostsize=INT(energy_curvature_mask_radius_mcmc)
+                    ghostsize(2)=CEILING(ghostsize(2)*pixel(1)/pixel(2))
+                    ghostsize(ppm_rc_dim)=CEILING(ghostsize(ppm_rc_dim)*pixel(1)/pixel(ppm_rc_dim))
+
+                    ghostsize_mcmc=MAX(ghostsize_mcmc,ghostsize+1)
+                 ELSE
+                    ghostsize_mcmc=ghostsize_run
+                 ENDIF
+              ENDIF
            ENDIF
         END SELECT
+
+        SELECT CASE (UseMCMC)
+        CASE (.TRUE.)
+           CALL MCMCCheckParameters(info)
+           or_fail("MCMCCheckParameters")
+
+           CALL ppm_rc_saru_random_init(info)
+           or_fail("ppm_rc_saru_random_init")
+
+           CALL ppm_rc_mt_random_init(info)
+           or_fail("ppm_rc_mt_random_init")
+        END SELECT
+
+        debug=ppm_rc_debug
+
+        !-------------------------------------------------------------------------
+        !  Write initial diagnostics
+        !-------------------------------------------------------------------------
+        !-------------------------------------------------------------------------
+        !  Write initial condition to output file
+        !-------------------------------------------------------------------------
+        !-------------------------------------------------------------------------
+        !  extra debugging options for RC
+        !  debug = 0, no debugging
+        !  debug = 1, activate debugging time variables
+        !  debug = 2, on LINUX trying to compute the memory use by every processor
+        !  debug = 4, computing and writing the total energy for PC & PS energy functional
+        !             the outputfile will be created with number of processors as a suffix
+        !             and at every step the total energy will be written there
+        !-------------------------------------------------------------------------
+        IF (.NOT.UseMCMC.OR.(UseMCMC.AND.MCMCcontinue)) THEN
+           IF (debug.GT.3) THEN
+              IF (rank.EQ.0) THEN
+                 WRITE(cbuf,'(A,I0,A1)') "TotalEnergy_",ppm_nproc,CHAR(0)
+                 OPEN(3333,FILE=cbuf,STATUS='REPLACE')
+              ENDIF
+           ENDIF
+        ENDIF
+
         !-------------------------------------------------------------------------
         !  Return
         !-------------------------------------------------------------------------

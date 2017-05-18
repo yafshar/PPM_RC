@@ -195,21 +195,16 @@
         END TYPE ppm_rc_c_list_
 
         !!! This type will only get one INTEGER value as an input
-        !!! In case of two or three inputs, they are hashed to one value
-        !!! Using utility IndexHashFunctor, which is useful for converting
-        !!! x,y,z to one INTEGER to save memory
+        !!! In case of two or three inputs, they are iteration number and label index
         TYPE :: ppm_rc_link_2
           PRIVATE
-          INTEGER(ppm_kind_int64)     :: key
-          INTEGER                     :: value
+          INTEGER(ppm_kind_int64)      :: Iteration
+          INTEGER                      :: Label
           !!! value stored in link
           TYPE(ppm_rc_link_2), POINTER :: next => NULL()
           !!! next link in the list
         CONTAINS
-          PROCEDURE :: getValue_2
-          PROCEDURE :: getValue_2_2d
-          PROCEDURE :: getValue_2_3d
-          GENERIC   :: getValue => getValue_2,getValue_2_2d,getValue_2_3d
+          PROCEDURE :: getValue    => getValue_2
           !!! return value pointer
           PROCEDURE :: nextLink    => nextLink_2
           !!! return next pointer
@@ -218,8 +213,7 @@
         END TYPE ppm_rc_link_2
 
         INTERFACE ppm_rc_link_2
-          MODULE PROCEDURE constructor_2_2d
-          MODULE PROCEDURE constructor_2_3d
+          MODULE PROCEDURE constructor_2
           !!! construct/initialize a link
         END INTERFACE
 
@@ -228,12 +222,8 @@
            !!! first link in list
            TYPE(ppm_rc_link_2), POINTER :: last  => NULL()
            !!! last link in list
-!            TYPE(ppm_rc_link_2), POINTER :: current => NULL()
-!            !!! current link in list
          CONTAINS
-           PROCEDURE :: addValue_2_
-           PROCEDURE :: addValue_2_2d
-           PROCEDURE :: addValue_2_3d
+           PROCEDURE :: addValue_2
            ! add value to linked list
            PROCEDURE :: removeLink_2
            ! remove a link from the list
@@ -245,7 +235,7 @@
            PROCEDURE :: swap2_2
 
            GENERIC   :: destroy => destroy_2
-           GENERIC   :: add     => addValue_2_2d,addValue_2_3d,addValue_2_
+           GENERIC   :: add     => addValue_2
            GENERIC   :: remove  => removeLink_2
            GENERIC   :: merge   => mergeLinks_2
            GENERIC   :: swap    => swap1_2,swap2_2

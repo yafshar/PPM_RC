@@ -113,8 +113,6 @@
         PUBLIC :: ppm_rc_FilterCandidatesContainerUsingRanks_3d
         PUBLIC :: ppm_rc_DetectOscillations
         PUBLIC :: ppm_rc_DetectOscillations2
-        PUBLIC :: ppm_rc_ChangeContourParticleLabelToCandidateLabel_2d
-        PUBLIC :: ppm_rc_ChangeContourParticleLabelToCandidateLabel_3d
         PUBLIC :: ppm_rc_move_2d
         PUBLIC :: ppm_rc_move_3d
 

@@ -1,5 +1,5 @@
       !!! [NOTE]
-      !!! These routines are not general, they are provided for the especial
+      !!! These routines are not general, they are provided for this special
       !!! purpose to work on the input array of labels
       !!!
       !!! The unique routines here are for the purpose of unique array of

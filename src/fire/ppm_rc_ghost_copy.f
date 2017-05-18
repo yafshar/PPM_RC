@@ -49,7 +49,7 @@
       !
       !  Revisions    :
       !-------------------------------------------------------------------------
-      SUBROUTINE DTYPE(ppm_rc_ghost_copy)(sbpitr,reshapedghost,info)
+      SUBROUTINE DTYPE(ppm_rc_ghost_copy)(sbpitr,reshapedghost,StartIdx,info)
 
         IMPLICIT NONE
         !-------------------------------------------------------------------------
@@ -61,6 +61,8 @@
         CLASS(ppm_t_subpatch_), POINTER       :: sbpitr
 
         INTEGER,  DIMENSION(:), INTENT(INOUT) :: reshapedghost
+        INTEGER,                INTENT(IN   ) :: StartIdx
+        !!! Starting index in the reshapedghost array
         INTEGER,                INTENT(  OUT) :: info
         !-------------------------------------------------------------------------
         !  Local variables
@@ -69,9 +71,9 @@
 
         INTEGER,             DIMENSION(:),     POINTER :: Nm
 #if   __DIME == __2D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wp)
+        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpi
 #elif __DIME == __3D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wp)
+        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpi
         INTEGER                                        :: k
 #endif
         INTEGER                                        :: i,j,l,m
@@ -85,12 +87,12 @@
 
         Nm => sbpitr%nnodes
 
-        NULLIFY(DTYPE(wp))
+        NULLIFY(wpi)
 
-        CALL sbpitr%get_field(labels,DTYPE(wp),info)
+        CALL sbpitr%get_field(labels,wpi,info)
         or_fail("Failed to get field wp data.")
 
-        m=1
+        m=StartIdx
 
 #if   __DIME == __2D
         !-x west
@@ -98,7 +100,7 @@
            l=m
            i=0
            DO j=1,Nm(2)
-              reshapedghost(l)=wp_2d(i,j)
+              reshapedghost(l)=wpi(i,j)
               l=l+1
            ENDDO !j=1,Nm(2)
            m=m+Nm(2)
@@ -108,7 +110,7 @@
            l=m
            i=Nm(1)+1
            DO j=1,Nm(2)
-              reshapedghost(l)=wp_2d(i,j)
+              reshapedghost(l)=wpi(i,j)
               l=l+1
            ENDDO !j=1,Nm(2)
            m=m+Nm(2)
@@ -118,7 +120,7 @@
            l=m
            j=0
            DO i=0,Nm(1)+1
-              reshapedghost(l)=wp_2d(i,j)
+              reshapedghost(l)=wpi(i,j)
               l=l+1
            ENDDO !j=1,Nm(2)
            m=m+Nm(1)+2
@@ -128,7 +130,7 @@
            l=m
            j=Nm(2)+1
            DO i=0,Nm(1)+1
-              reshapedghost(l)=wp_2d(i,j)
+              reshapedghost(l)=wpi(i,j)
               l=l+1
            ENDDO !j=1,Nm(2)
         ENDIF
@@ -139,7 +141,7 @@
            i=0
            DO k=1,Nm(3)
               DO j=1,Nm(2)
-                 reshapedghost(l)=wp_3d(i,j,k)
+                 reshapedghost(l)=wpi(i,j,k)
                  l=l+1
               ENDDO !i=1,Nm(2)
            ENDDO !j=1,Nm(3)
@@ -151,7 +153,7 @@
            i=Nm(1)+1
            DO k=1,Nm(3)
               DO j=1,Nm(2)
-                 reshapedghost(l)=wp_3d(i,j,k)
+                 reshapedghost(l)=wpi(i,j,k)
                  l=l+1
               ENDDO !i=1,Nm(2)
            ENDDO !j=1,Nm(3)
@@ -163,7 +165,7 @@
            j=0
            DO k=1,Nm(3)
               DO i=0,Nm(1)+1
-                 reshapedghost(l)=wp_3d(i,j,k)
+                 reshapedghost(l)=wpi(i,j,k)
                  l=l+1
               ENDDO !i=1,Nm(2)
            ENDDO !j=1,Nm(3)
@@ -175,7 +177,7 @@
            j=Nm(2)+1
            DO k=1,Nm(3)
               DO i=0,Nm(1)+1
-                 reshapedghost(l)=wp_3d(i,j,k)
+                 reshapedghost(l)=wpi(i,j,k)
                  l=l+1
               ENDDO !i=1,Nm(2)
            ENDDO !j=1,Nm(3)
@@ -187,7 +189,7 @@
            k=0
            DO j=0,Nm(2)+1
               DO i=0,Nm(1)+1
-                 reshapedghost(l)=wp_3d(i,j,k)
+                 reshapedghost(l)=wpi(i,j,k)
                  l=l+1
               ENDDO !i=1,Nm(2)
            ENDDO !j=1,Nm(3)
@@ -199,7 +201,7 @@
            k=Nm(3)+1
            DO j=0,Nm(2)+1
               DO i=0,Nm(1)+1
-                 reshapedghost(l)=wp_3d(i,j,k)
+                 reshapedghost(l)=wpi(i,j,k)
                  l=l+1
               ENDDO !i=1,Nm(2)
            ENDDO !j=1,Nm(3)

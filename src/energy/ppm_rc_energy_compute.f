@@ -103,23 +103,23 @@
         TYPE(ppm_rc_list), POINTER :: seedi
 
 #if   __DIME == __2D
-        REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wpi)
+        REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpr
         !!!pointer to the intensity field data
 #elif __DIME == __3D
-        REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wpi)
+        REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpr
 #endif
         REAL(ppm_kind_double)                           :: t0
         REAL(MK)                                        :: etemp,etemp1,etemp2
         REAL(MK)                                        :: TotalEnergy_,TotalEnergy
 
 #if   __DIME == __2D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wpl)
+        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpil
         !!!pointer to the label data
-        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wpp)
+        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpip
         !!!pointer to the particle index data
 #elif __DIME == __3D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wpl)
-        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wpp)
+        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpil
+        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpip
 #endif
         INTEGER,             DIMENSION(:),     POINTER :: seedn
         INTEGER,             DIMENSION(:),     POINTER :: Nm
@@ -143,23 +143,20 @@
            SELECT TYPE (e_data)
            TYPE IS (E_PC)
               TotalEnergy_=zero
-              NULLIFY(DTYPE(wpi),DTYPE(wpl))
+              NULLIFY(wpr,wpil)
               sbpitr => mesh%subpatch%begin()
-              ipatch=1
               DO WHILE (ASSOCIATED(sbpitr))
                  Nm => sbpitr%nnodes
 
-                 CALL sbpitr%get_field(image,DTYPE(wpi),info)
+                 CALL sbpitr%get_field(image,wpr,info)
                  or_fail("Failed to get field r_wp data.")
 
-                 CALL sbpitr%get_field(labels,DTYPE(wpl),info)
+                 CALL sbpitr%get_field(labels,wpil,info)
                  or_fail("Failed to get field i_wp data.")
 
-                 TotalEnergy_=TotalEnergy_+ &
-                 & e_data%CalculateTotalEnergy(DTYPE(wpi),DTYPE(wpl),Nm,info)
+                 TotalEnergy_=TotalEnergy_+ e_data%CalculateTotalEnergy(wpr,wpil,Nm,info)
 
                  sbpitr => mesh%subpatch%next()
-                 ipatch=ipatch+1
               ENDDO !WHILE (ASSOCIATED(sbpitr))
 
               CALL MPI_Reduce(TotalEnergy_,TotalEnergy, &
@@ -174,24 +171,22 @@
 
            TYPE IS (E_PS)
               TotalEnergy_=zero
-              NULLIFY(DTYPE(wpi),DTYPE(wpl))
+              NULLIFY(wpr,wpil)
               sbpitr => mesh%subpatch%begin()
-              ipatch=1
               DO WHILE (ASSOCIATED(sbpitr))
                  Nm => sbpitr%nnodes
 
-                 CALL sbpitr%get_field(image,DTYPE(wpi),info)
+                 CALL sbpitr%get_field(image,wpr,info)
                  or_fail("Failed to get field r_wp data.")
 
-                 CALL sbpitr%get_field(labels,DTYPE(wpl),info)
+                 CALL sbpitr%get_field(labels,wpil,info)
                  or_fail("Failed to get field i_wp data.")
 
                  TotalEnergy_=TotalEnergy_+ &
-                 & e_data%CalculateTotalEnergy(DTYPE(wpi),DTYPE(wpl), &
+                 & e_data%CalculateTotalEnergy(wpr,wpil, &
                  & (/Nm(1:__DIME),sbpitr%istart(1:__DIME),sbpitr%iend(1:__DIME)/),info)
 
                  sbpitr => mesh%subpatch%next()
-                 ipatch=ipatch+1
               ENDDO !WHILE (ASSOCIATED(sbpitr))
 
               CALL MPI_Reduce(TotalEnergy_,TotalEnergy, &
@@ -234,31 +229,25 @@
               ipatch=ipatch+1
            ENDDO !WHILE (ASSOCIATED(sbpitr))
         ENDIF
-        ALLOCATE(energya(nsize),       STAT=ierr(1))
-        ALLOCATE(labela(nsize),        STAT=ierr(2))
-        ALLOCATE(candlabela(nsize),    STAT=ierr(3))
-        ALLOCATE(ccandlabela(nsize),   STAT=ierr(4))
-        ALLOCATE(ndaughtersa(nsize),   STAT=ierr(5))
-        ALLOCATE(daughtersa(2*__DIME,nsize),STAT=ierr(6))
-        ALLOCATE(nmothersa(nsize),     STAT=ierr(7))
-        ALLOCATE(accepteda(nsize),     STAT=ierr(8))
-        ALLOCATE(mothersa(2*__DIME,nsize),  STAT=ierr(9))
+        ALLOCATE(energya(nsize),              STAT=ierr(1))
+        ALLOCATE(labela(nsize),               STAT=ierr(2))
+        ALLOCATE(candlabela(nsize),           STAT=ierr(3))
+        ALLOCATE(ccandlabela(nsize),SOURCE= 0,STAT=ierr(4))
+        ALLOCATE(ndaughtersa(nsize),SOURCE= 0,STAT=ierr(5))
+        ALLOCATE(daughtersa(2*__DIME,nsize),  STAT=ierr(6))
+        ALLOCATE(nmothersa(nsize),  SOURCE= 0,STAT=ierr(7))
+        ALLOCATE(accepteda(nsize),  SOURCE=-1,STAT=ierr(8))
+        ALLOCATE(mothersa(2*__DIME,nsize),    STAT=ierr(9))
         IF (ANY(ierr.NE.0)) info=ppm_error_fatal
         or_fail_alloc("Array allocation to the new size is failed", ppm_error=ppm_error_fatal)
 
-        ccandlabela=0
-        ndaughtersa=0
-        nmothersa=0
-        accepteda=-1
-
-        ALLOCATE(missedparticles(1:Npart),STAT=info)
+        ALLOCATE(missedparticles(1:Npart),SOURCE=0,STAT=info)
         or_fail_alloc("missedparticles")
-        missedparticles=0
 
         !By DEFAULT no fusion between regions is happening
         e_merge=.FALSE.
 
-        NULLIFY(DTYPE(wpi),DTYPE(wpl),DTYPE(wpp))
+        NULLIFY(wpr,wpil,wpip)
         !TODO
         !TOCHECK
         !there is an optimization here to not compute energy for ghost particles
@@ -266,13 +255,13 @@
         sbpitr => mesh%subpatch%begin()
         ipatch=1
         DO WHILE (ASSOCIATED(sbpitr))
-           CALL sbpitr%get_field(image,DTYPE(wpi),info)
+           CALL sbpitr%get_field(image,wpr,info)
            or_fail("Failed to get field r_wp data.")
 
-           CALL sbpitr%get_field(labels,DTYPE(wpl),info)
+           CALL sbpitr%get_field(labels,wpil,info)
            or_fail("Failed to get field i_wp data.")
 
-           CALL sbpitr%get_field(pind,DTYPE(wpp),info)
+           CALL sbpitr%get_field(pind,wpip,info)
            or_fail("Failed to get field i_wp data.")
 
            seed => InnerContourContainer(ipatch)%begin()
@@ -280,9 +269,9 @@
               seedn => seed%first%getValue()
 
 #if   __DIME == __2D
-              ppart=DTYPE(wpp)(seedn(1),seedn(2))
+              ppart=wpip(seedn(1),seedn(2))
 #elif __DIME == __3D
-              ppart=DTYPE(wpp)(seedn(1),seedn(2),seedn(3))
+              ppart=wpip(seedn(1),seedn(2),seedn(3))
 #endif
 
               IF (ppart.LE.0) THEN
@@ -291,9 +280,9 @@
               ENDIF
 
 #if   __DIME == __2D
-              mylabel = ABS(DTYPE(wpl)(seedn(1),seedn(2)))
+              mylabel = ABS(wpil(seedn(1),seedn(2)))
 #elif __DIME == __3D
-              mylabel = ABS(DTYPE(wpl)(seedn(1),seedn(2),seedn(3)))
+              mylabel = ABS(wpil(seedn(1),seedn(2),seedn(3)))
 #endif
 
               !Assign the particle label and candidate label
@@ -307,10 +296,8 @@
               !within the current implementation at least two layers of ghost
               !would be updated which is OK for this compuation, but for future
               !optimization one should be careful about this!
-              etemp=e_data%EvaluateEnergyDifference                 &
-              &     (DTYPE(wpi),DTYPE(wpl),seedn,mylabel,0,e_merge) &
-              &    +e_length%EvaluateEnergyDifference               &
-              &     (DTYPE(wpi),DTYPE(wpl),seedn,mylabel,0,e_merge)
+              etemp=e_data%EvaluateEnergyDifference(wpr,wpil,seedn,mylabel,0,e_merge) &
+              &    +e_length%EvaluateEnergyDifference(wpr,wpil,seedn,mylabel,0,e_merge)
 
               energya(ppart)=etemp
 
@@ -332,7 +319,7 @@
            ipatch=ipatch+1
         ENDDO !WHILE (ASSOCIATED(sbpitr))
 
-        NULLIFY(DTYPE(wpi),DTYPE(wpl),DTYPE(wpp))
+        NULLIFY(wpr,wpil,wpip)
 
         sbpitr => mesh%subpatch%begin()
         qpart=Mpart
@@ -340,13 +327,13 @@
         DO WHILE (ASSOCIATED(sbpitr))
            Nm => sbpitr%nnodes
 
-           CALL sbpitr%get_field(image,DTYPE(wpi),info)
+           CALL sbpitr%get_field(image,wpr,info)
            or_fail("Failed to get field r_wp data.")
 
-           CALL sbpitr%get_field(labels,DTYPE(wpl),info)
+           CALL sbpitr%get_field(labels,wpil,info)
            or_fail("Failed to get field i_wp data.")
 
-           CALL sbpitr%get_field(pind,DTYPE(wpp),info)
+           CALL sbpitr%get_field(pind,wpip,info)
            or_fail("Failed to get field i_wp data.")
 
            seed => InnerContourContainer(ipatch)%begin()
@@ -354,9 +341,9 @@
               seedn => seed%first%getValue()
 
 #if   __DIME == __2D
-              ppart=DTYPE(wpp)(seedn(1),seedn(2))
+              ppart=wpip(seedn(1),seedn(2))
 #elif __DIME == __3D
-              ppart=DTYPE(wpp)(seedn(1),seedn(2),seedn(3))
+              ppart=wpip(seedn(1),seedn(2),seedn(3))
 #endif
 
               IF (ppart.LE.0) THEN
@@ -370,9 +357,9 @@
 
               ! store the label at this point
 #if   __DIME == __2D
-              mylabel = ABS(DTYPE(wpl)(seedn(1),seedn(2)))
+              mylabel = ABS(wpil(seedn(1),seedn(2)))
 #elif __DIME == __3D
-              mylabel = ABS(DTYPE(wpl)(seedn(1),seedn(2),seedn(3)))
+              mylabel = ABS(wpil(seedn(1),seedn(2),seedn(3)))
 #endif
 
               neigh_loop: DO i=1,FG_ConnectivityType%NumberOfNeighbors
@@ -383,9 +370,9 @@
                  !to be sure that the cash misses is the least
                  IF (ALL(ll.GE.1.AND.ll.LE.Nm)) THEN
 #if   __DIME == __2D
-                    newlabel = ABS(DTYPE(wpl)(ll(1),ll(2)))
+                    newlabel = ABS(wpil(ll(1),ll(2)))
 #elif __DIME == __3D
-                    newlabel = ABS(DTYPE(wpl)(ll(1),ll(2),ll(3)))
+                    newlabel = ABS(wpil(ll(1),ll(2),ll(3)))
 #endif
 
                     IF (newlabel.EQ.mylabel) THEN
@@ -398,9 +385,9 @@
                     IsEnclosedByLabelFGConnectivity=.FALSE.
 
 #if   __DIME == __2D
-                    ipart = DTYPE(wpp)(ll(1),ll(2))
+                    ipart = wpip(ll(1),ll(2))
 #elif __DIME == __3D
-                    ipart = DTYPE(wpp)(ll(1),ll(2),ll(3))
+                    ipart = wpip(ll(1),ll(2),ll(3))
 #endif
 
                     ! if there is not particle yet, create one
@@ -414,15 +401,15 @@
                        !have no idea about
 ! ! !                        IF (ppart.LE.Npart) THEN
 ! ! ! #if   __DIME == __2D
-! ! !                           IF (DTYPE(wpl)(ll(1),ll(2)).NE.0) THEN
+! ! !                           IF (wpil(ll(1),ll(2)).NE.0) THEN
 ! ! !                              stdout("************** St is wrong here******************")
 ! ! !                              stdout(Npart,Mpart,ipart,ppart,seedn,istep)
-! ! !                              stdout('wpl_2d(ll(1),ll(2))',ll,mylabel,newlabel)
+! ! !                              stdout('wpil_2d(ll(1),ll(2))',ll,mylabel,newlabel)
 ! ! !                           ENDIF
-! ! !                           DTYPE(wpl)(ll(1),ll(2))=0
+! ! !                           wpil(ll(1),ll(2))=0
 ! ! !                           newlabel=0
 ! ! ! #elif __DIME == __3D
-! ! !                           DTYPE(wpl)(ll(1),ll(2),LL(3))=0
+! ! !                           wpil(ll(1),ll(2),LL(3))=0
 ! ! !                           newlabel=0
 ! ! ! #endif
 ! ! !                        ENDIF
@@ -431,10 +418,8 @@
 
                        e_merge=.FALSE.
 
-                       etemp=e_data%EvaluateEnergyDifference                     &
-                       &     (DTYPE(wpi),DTYPE(wpl),ll,newlabel,mylabel,e_merge) &
-                       &    +e_length%EvaluateEnergyDifference                   &
-                       &     (DTYPE(wpi),DTYPE(wpl),ll,newlabel,mylabel,e_merge)
+                       etemp=e_data%EvaluateEnergyDifference(wpr,wpil,ll,newlabel,mylabel,e_merge) &
+                       &    +e_length%EvaluateEnergyDifference(wpr,wpil,ll,newlabel,mylabel,e_merge)
 
                        !TOCHECK
                        !this is what I think is right you should be sure about this
@@ -442,9 +427,9 @@
 
                        qpart=qpart+1
 #if   __DIME == __2D
-                       DTYPE(wpp)(ll(1),ll(2))=qpart
+                       wpip(ll(1),ll(2))=qpart
 #elif __DIME == __3D
-                       DTYPE(wpp)(ll(1),ll(2),ll(3))=qpart
+                       wpip(ll(1),ll(2),ll(3))=qpart
 #endif
 
                        ALLOCATE(seedi,STAT=info)
@@ -498,10 +483,8 @@
                           ! candlabel has previously been computed
                           etemp1=energya(ipart)
 
-                          etemp2=e_data%EvaluateEnergyDifference                     &
-                          &      (DTYPE(wpi),DTYPE(wpl),ll,newlabel,mylabel,e_merge) &
-                          &     +e_length%EvaluateEnergyDifference                   &
-                          &      (DTYPE(wpi),DTYPE(wpl),ll,newlabel,mylabel,e_merge)
+                          etemp2=e_data%EvaluateEnergyDifference(wpr,wpil,ll,newlabel,mylabel,e_merge) &
+                          &     +e_length%EvaluateEnergyDifference(wpr,wpil,ll,newlabel,mylabel,e_merge)
 
                           !I have seen a very strange behavior,
                           !I can have a single particle among 4 other particles
@@ -551,8 +534,8 @@
                              IF (AllowFusion.AND.labela(ipart).NE.0.AND.candlabela(ipart).NE.0) THEN
                                 IF (.NOT.l_e_merge) THEN
                                    e_merge=.TRUE.
-                                   etemp=e_data%EvaluateEnergyDifference(DTYPE(wpi), &
-                                   &     DTYPE(wpl),ll,newlabel,mylabel,e_merge)
+                                   etemp=e_data%EvaluateEnergyDifference(wpr, &
+                                   &     wpil,ll,newlabel,mylabel,e_merge)
                                 ENDIF
                                 IF (e_merge) THEN
                                    IF (AllowFusionZ) THEN
@@ -597,9 +580,9 @@
                     ENDIF !(ipart.LT.0)
                  ELSE IF (ppart.LE.Npart) THEN
 #if   __DIME == __2D
-                    ipart = DTYPE(wpp)(ll(1),ll(2))
+                    ipart = wpip(ll(1),ll(2))
 #elif __DIME == __3D
-                    ipart = DTYPE(wpp)(ll(1),ll(2),ll(3))
+                    ipart = wpip(ll(1),ll(2),ll(3))
 #endif
 
                     ! if there is not particle yet, this one could be a missedparticles
@@ -610,16 +593,16 @@
                        missedparticles(ppart)=1
 
 ! #if   __DIME == __2D
-!                        newlabel = ABS(DTYPE(wpl)(ll(1),ll(2)))
+!                        newlabel = ABS(wpil(ll(1),ll(2)))
 ! #elif __DIME == __3D
-!                        newlabel = ABS(DTYPE(wpl)(ll(1),ll(2),ll(3)))
+!                        newlabel = ABS(wpil(ll(1),ll(2),ll(3)))
 ! #endif
 
                        IF (IsEnclosedByLabelFGConnectivity) THEN
 #if   __DIME == __2D
-                          newlabel = -DTYPE(wpl)(ll(1),ll(2))
+                          newlabel = -wpil(ll(1),ll(2))
 #elif __DIME == __3D
-                          newlabel = -DTYPE(wpl)(ll(1),ll(2),ll(3))
+                          newlabel = -wpil(ll(1),ll(2),ll(3))
 #endif
                           IF (newlabel.NE.mylabel) THEN
                              IsEnclosedByLabelFGConnectivity=.FALSE.
@@ -633,16 +616,16 @@
 !                        etemp1=energya(ipart)
 !
 !                        etemp2=e_data%EvaluateEnergyDifference                     &
-!                        &      (DTYPE(wpi),DTYPE(wpl),ll,newlabel,mylabel,e_merge) &
+!                        &      (wpr,wpil,ll,newlabel,mylabel,e_merge) &
 !                        &     +e_length%EvaluateEnergyDifference                   &
-!                        &      (DTYPE(wpi),DTYPE(wpl),ll,newlabel,mylabel,e_merge)
+!                        &      (wpr,wpil,ll,newlabel,mylabel,e_merge)
 !
 !                        IF (etemp1.GE.etemp2) THEN
 !                           IF (AllowFusion) THEN
 !                              IF (.NOT.l_e_merge) THEN
 !                                 e_merge=.TRUE.
-!                                 etemp=e_data%EvaluateEnergyDifference(DTYPE(wpi), &
-!                                 &     DTYPE(wpl),ll,newlabel,mylabel,e_merge)
+!                                 etemp=e_data%EvaluateEnergyDifference(wpr, &
+!                                 &     wpil,ll,newlabel,mylabel,e_merge)
 !                              ENDIF
 !                              IF (e_merge) THEN
 !                                 IF (AllowFusionZ) THEN
@@ -688,9 +671,9 @@
                     ENDIF
 
 #if   __DIME == __2D
-                    newlabel = DTYPE(wpl)(ll(1),ll(2))
+                    newlabel = wpil(ll(1),ll(2))
 #elif __DIME == __3D
-                    newlabel = DTYPE(wpl)(ll(1),ll(2),ll(3))
+                    newlabel = wpil(ll(1),ll(2),ll(3))
 #endif
 
                     ! If thers is a label, then it is inside
@@ -706,10 +689,8 @@
 
                     e_merge=.FALSE.
 
-                    etemp=e_data%EvaluateEnergyDifference              &
-                    &     (DTYPE(wpi),DTYPE(wpl),ll,0,mylabel,e_merge) &
-                    &    +e_length%EvaluateEnergyDifference            &
-                    &     (DTYPE(wpi),DTYPE(wpl),ll,0,mylabel,e_merge)
+                    etemp=e_data%EvaluateEnergyDifference(wpr,wpil,ll,0,mylabel,e_merge) &
+                    &    +e_length%EvaluateEnergyDifference(wpr,wpil,ll,0,mylabel,e_merge)
 
                     !TOCHECK
                     !TODO
@@ -725,11 +706,11 @@
 
               IF (IsEnclosedByLabelFGConnectivity) THEN
 #if   __DIME == __2D
-                 DTYPE(wpl)(seedn(1),seedn(2))=mylabel
-                 DTYPE(wpp)(seedn(1),seedn(2))=0
+                 wpil(seedn(1),seedn(2))=mylabel
+                 wpip(seedn(1),seedn(2))=0
 #elif __DIME == __3D
-                 DTYPE(wpl)(seedn(1),seedn(2),seedn(3))=mylabel
-                 DTYPE(wpp)(seedn(1),seedn(2),seedn(3))=0
+                 wpil(seedn(1),seedn(2),seedn(3))=mylabel
+                 wpip(seedn(1),seedn(2),seedn(3))=0
 #endif
                  del_parts=del_parts+1
                  list_del_parts(del_parts)=ppart

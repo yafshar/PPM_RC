@@ -18,6 +18,8 @@
 #endif
 
         SUBROUTINE DTYPE(E_PS_PrepareEnergyCalculation)(this,info)
+          !!! Method is used to prepare energy functions.
+          !!! It is called only once in the beginning of the filter.
 
           IMPLICIT NONE
 
@@ -142,7 +144,7 @@
         END SUBROUTINE DTYPE(E_PS_PrepareEnergyCalculation)
 
         FUNCTION DTYPE(E_PS_EvaluateEnergyDifference)(this, &
-        &        image_,labels_,coord,oldlabel,newlabel,    &
+        &        imageIn,labelsIn,coord,oldlabel,newlabel,  &
         &        oldlabel_region,newlabel_region)
 
           IMPLICIT NONE
@@ -150,15 +152,15 @@
           CLASS(E_PS)                                           :: this
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: imageIn
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
 #endif
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labelsIn
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labelsIn
 #endif
           INTEGER,             DIMENSION(:),      INTENT(IN   ) :: coord
           INTEGER,                                INTENT(IN   ) :: oldlabel
@@ -195,21 +197,21 @@
           ENDIF
 
 #if   __DIME == __2D
-          intensity=image_(coord(1),coord(2))
+          intensity=imageIn(coord(1),coord(2))
 
-          tmpimage  =>  image_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmpimage  =>  imageIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY)
 
-          tmplabels => labels_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmplabels => labelsIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY)
 #elif __DIME == __3D
-          intensity=image_(coord(1),coord(2),coord(3))
+          intensity=imageIn(coord(1),coord(2),coord(3))
 
-          tmpimage  =>  image_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmpimage  =>  imageIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY, &
           &                    coord(3)-e_dZ:coord(3)+e_dZ)
 
-          tmplabels => labels_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmplabels => labelsIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY, &
           &                    coord(3)-e_dZ:coord(3)+e_dZ)
 #endif
@@ -270,22 +272,22 @@
 
         END FUNCTION DTYPE(E_PS_EvaluateEnergyDifference)
 
-        FUNCTION DTYPE(E_PS_CalculateTotalEnergy)(this,image_,labels_,Nm,info)
+        FUNCTION DTYPE(E_PS_CalculateTotalEnergy)(this,imageIn,labelsIn,Nm,info)
 
           IMPLICIT NONE
 
           CLASS(E_PS)                                           :: this
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: imageIn
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
 #endif
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labelsIn
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labelsIn
 #endif
           INTEGER,             DIMENSION(:),      INTENT(IN   ) :: Nm
           INTEGER,                                INTENT(  OUT) :: info
@@ -324,10 +326,10 @@
 #if   __DIME == __2D
           DO j=1,Nm(2)
              DO i=1,Nm(1)
-                intensity=REAL(image_(i,j),ppm_kind_double)
-                tmpimage  =>  image_(i-e_dX:i+e_dX,j-e_dY:j+e_dY)
-                vlabel=ABS(labels_(i,j))
-                tmplabels => labels_(i-e_dX:i+e_dX,j-e_dY:j+e_dY)
+                intensity=REAL(imageIn(i,j),ppm_kind_double)
+                tmpimage  =>  imageIn(i-e_dX:i+e_dX,j-e_dY:j+e_dY)
+                vlabel=ABS(labelsIn(i,j))
+                tmplabels => labelsIn(i-e_dX:i+e_dX,j-e_dY:j+e_dY)
 
                 vSum=zero
                 vN  =0
@@ -389,13 +391,13 @@
           DO k=1,Nm(3)
              DO j=1,Nm(2)
                 DO i=1,Nm(1)
-                   intensity=REAL(image_(i,j,k),ppm_kind_double)
+                   intensity=REAL(imageIn(i,j,k),ppm_kind_double)
 
-                   tmpimage  =>  image_(i-e_dX:i+e_dX,j-e_dY:j+e_dY,k-e_dZ:k+e_dZ)
+                   tmpimage  =>  imageIn(i-e_dX:i+e_dX,j-e_dY:j+e_dY,k-e_dZ:k+e_dZ)
 
-                   tmplabels => labels_(i-e_dX:i+e_dX,j-e_dY:j+e_dY,k-e_dZ:k+e_dZ)
+                   tmplabels => labelsIn(i-e_dX:i+e_dX,j-e_dY:j+e_dY,k-e_dZ:k+e_dZ)
 
-                   vlabel=ABS(labels_(i,j,k))
+                   vlabel=ABS(labelsIn(i,j,k))
 
                    vSum=zero
                    vN  =0
@@ -479,7 +481,7 @@
         END FUNCTION DTYPE(E_PS_CalculateTotalEnergy)
 
         FUNCTION DTYPE(E_PS_EvaluateEnergyDifference_E_Merge)(this, &
-        &        image_,labels_,coord,oldlabel,newlabel,            &
+        &        imageIn,labelsIn,coord,oldlabel,newlabel,          &
         &        oldlabel_region,newlabel_region,e_merge)
 
           IMPLICIT NONE
@@ -487,15 +489,15 @@
           CLASS(E_PS)                                           :: this
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: imageIn
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
 #endif
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labelsIn
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labelsIn
 #endif
           INTEGER,             DIMENSION(:),      INTENT(IN   ) :: coord
           INTEGER,                                INTENT(IN   ) :: oldlabel
@@ -532,21 +534,21 @@
           INTEGER                            :: vNFrom_,vNTo_
 
 #if   __DIME == __2D
-          intensity=image_(coord(1),coord(2))
+          intensity=imageIn(coord(1),coord(2))
 
-          tmpimage  =>  image_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmpimage  =>  imageIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY)
 
-          tmplabels => labels_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmplabels => labelsIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY)
 #elif __DIME == __3D
-          intensity=image_(coord(1),coord(2),coord(3))
+          intensity=imageIn(coord(1),coord(2),coord(3))
 
-          tmpimage  =>  image_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmpimage  =>  imageIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY, &
           &                    coord(3)-e_dZ:coord(3)+e_dZ)
 
-          tmplabels => labels_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmplabels => labelsIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY, &
           &                    coord(3)-e_dZ:coord(3)+e_dZ)
 #endif
@@ -661,6 +663,8 @@
 #endif
 
         SUBROUTINE DTYPE(E_PSGaussian_PrepareEnergyCalculation)(this,info)
+          !!! Method is used to prepare energy functions.
+          !!! It is called only once in the beginning of the filter.
 
           IMPLICIT NONE
 
@@ -780,7 +784,7 @@
         END SUBROUTINE DTYPE(E_PSGaussian_PrepareEnergyCalculation)
 
         FUNCTION DTYPE(E_PSGaussian_EvaluateEnergyDifference)(this, &
-        &        image_,labels_,coord,oldlabel,newlabel,            &
+        &        imageIn,labelsIn,coord,oldlabel,newlabel,          &
         &        oldlabel_region,newlabel_region)
 
           IMPLICIT NONE
@@ -788,15 +792,15 @@
           CLASS(E_PSGaussian)                                   :: this
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: imageIn
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
 #endif
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labelsIn
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labelsIn
 #endif
           INTEGER,             DIMENSION(:),      INTENT(IN   ) :: coord
           INTEGER,                                INTENT(IN   ) :: oldlabel
@@ -836,21 +840,21 @@
           ENDIF
 
 #if   __DIME == __2D
-          intensity=image_(coord(1),coord(2))
+          intensity=imageIn(coord(1),coord(2))
 
-          tmpimage  =>  image_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmpimage  =>  imageIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY)
 
-          tmplabels => labels_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmplabels => labelsIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY)
 #elif __DIME == __3D
-          intensity=image_(coord(1),coord(2),coord(3))
+          intensity=imageIn(coord(1),coord(2),coord(3))
 
-          tmpimage  =>  image_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmpimage  =>  imageIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY, &
           &                    coord(3)-e_dZ:coord(3)+e_dZ)
 
-          tmplabels => labels_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmplabels => labelsIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY, &
           &                    coord(3)-e_dZ:coord(3)+e_dZ)
 #endif
@@ -941,7 +945,7 @@
 
 
         FUNCTION DTYPE(E_PSGaussian_EvaluateEnergyDifference_E_Merge)(this, &
-        &        image_,labels_,coord,oldlabel,newlabel,oldlabel_region,    &
+        &        imageIn,labelsIn,coord,oldlabel,newlabel,oldlabel_region,  &
         &        newlabel_region,e_merge)
 
           IMPLICIT NONE
@@ -949,15 +953,15 @@
           CLASS(E_PSGaussian)                                   :: this
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: imageIn
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
 #endif
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labelsIn
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labelsIn
 #endif
           INTEGER,                DIMENSION(:),   INTENT(IN   ) :: coord
           INTEGER,                                INTENT(IN   ) :: oldlabel
@@ -994,21 +998,21 @@
           INTEGER                            :: vNFrom_,vNTo_
 
 #if   __DIME == __2D
-          intensity=image_(coord(1),coord(2))
+          intensity=imageIn(coord(1),coord(2))
 
-          tmpimage  =>  image_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmpimage  =>  imageIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY)
 
-          tmplabels => labels_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmplabels => labelsIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY)
 #elif __DIME == __3D
-          intensity=image_(coord(1),coord(2),coord(3))
+          intensity=imageIn(coord(1),coord(2),coord(3))
 
-          tmpimage  =>  image_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmpimage  =>  imageIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY, &
           &                    coord(3)-e_dZ:coord(3)+e_dZ)
 
-          tmplabels => labels_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmplabels => labelsIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY, &
           &                    coord(3)-e_dZ:coord(3)+e_dZ)
 #endif
@@ -1129,6 +1133,8 @@
 #endif
 
         SUBROUTINE DTYPE(E_PSPoisson_PrepareEnergyCalculation)(this,info)
+          !!! Method is used to prepare energy functions.
+          !!! It is called only once in the beginning of the filter.
 
           IMPLICIT NONE
 
@@ -1248,7 +1254,7 @@
         END SUBROUTINE DTYPE(E_PSPoisson_PrepareEnergyCalculation)
 
         FUNCTION DTYPE(E_PSPoisson_EvaluateEnergyDifference)(this, &
-        &        image_,labels_,coord,oldlabel,newlabel,           &
+        &        imageIn,labelsIn,coord,oldlabel,newlabel,         &
         &        oldlabel_region,newlabel_region)
 
           IMPLICIT NONE
@@ -1256,15 +1262,15 @@
           CLASS(E_PSPoisson)                                    :: this
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: imageIn
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
 #endif
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labelsIn
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labelsIn
 #endif
           INTEGER,                DIMENSION(:),   INTENT(IN   ) :: coord
           INTEGER,                                INTENT(IN   ) :: oldlabel
@@ -1304,21 +1310,21 @@
           ENDIF
 
 #if   __DIME == __2D
-          intensity=image_(coord(1),coord(2))
+          intensity=imageIn(coord(1),coord(2))
 
-          tmpimage  =>  image_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmpimage  =>  imageIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY)
 
-          tmplabels => labels_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmplabels => labelsIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY)
 #elif __DIME == __3D
-          intensity=image_(coord(1),coord(2),coord(3))
+          intensity=imageIn(coord(1),coord(2),coord(3))
 
-          tmpimage  =>  image_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmpimage  =>  imageIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY, &
           &                    coord(3)-e_dZ:coord(3)+e_dZ)
 
-          tmplabels => labels_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmplabels => labelsIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY, &
           &                    coord(3)-e_dZ:coord(3)+e_dZ)
 #endif
@@ -1410,7 +1416,7 @@
 
 
         FUNCTION DTYPE(E_PSPoisson_EvaluateEnergyDifference_E_Merge)(this, &
-        &        image_,labels_,coord,oldlabel,newlabel,oldlabel_region,   &
+        &        imageIn,labelsIn,coord,oldlabel,newlabel,oldlabel_region, &
         &        newlabel_region,e_merge)
 
           IMPLICIT NONE
@@ -1418,15 +1424,15 @@
           CLASS(E_PSPoisson)                                    :: this
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: imageIn
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
 #endif
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),    POINTER       :: labelsIn
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labels_
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:),  POINTER       :: labelsIn
 #endif
           INTEGER,                DIMENSION(:),   INTENT(IN   ) :: coord
           INTEGER,                                INTENT(IN   ) :: oldlabel
@@ -1463,21 +1469,21 @@
           INTEGER                            :: vNFrom_,vNTo_
 
 #if   __DIME == __2D
-          intensity=image_(coord(1),coord(2))
+          intensity=imageIn(coord(1),coord(2))
 
-          tmpimage  =>  image_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmpimage  =>  imageIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY)
 
-          tmplabels => labels_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmplabels => labelsIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY)
 #elif __DIME == __3D
-          intensity=image_(coord(1),coord(2),coord(3))
+          intensity=imageIn(coord(1),coord(2),coord(3))
 
-          tmpimage  =>  image_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmpimage  =>  imageIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY, &
           &                    coord(3)-e_dZ:coord(3)+e_dZ)
 
-          tmplabels => labels_(coord(1)-e_dX:coord(1)+e_dX, &
+          tmplabels => labelsIn(coord(1)-e_dX:coord(1)+e_dX, &
           &                    coord(2)-e_dY:coord(2)+e_dY, &
           &                    coord(3)-e_dZ:coord(3)+e_dZ)
 #endif

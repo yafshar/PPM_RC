@@ -57,6 +57,12 @@
         IMPLICIT NONE
 
         PRIVATE
+        !---------------------------------------------------------------------
+        !  Some work memory on the heap
+        !---------------------------------------------------------------------
+        INTEGER, DIMENSION(:), ALLOCATABLE :: nlabels
+        INTEGER, DIMENSION(:), ALLOCATABLE :: bufi
+
         !----------------------------------------------------------------------
         !  Define module interfaces
         !----------------------------------------------------------------------
@@ -72,6 +78,8 @@
         PUBLIC :: ppm_rc_write_image_label_3d
         PUBLIC :: ppm_rc_read_write_image_2d
         PUBLIC :: ppm_rc_read_write_image_3d
+        PUBLIC :: ppm_rc_read_write_unique_label_2d
+        PUBLIC :: ppm_rc_read_write_unique_label_3d
 
       CONTAINS
 
@@ -82,6 +90,7 @@
 #define __DIME  __3D
 #include "./io/ppm_rc_write_image.f"
 #include "./io/ppm_rc_read_write_image.f"
+#include "./io/ppm_rc_read_write_unique_label.f"
 #undef  __DIME
 #undef  DTYPE
 
@@ -89,6 +98,7 @@
 #define __DIME  __2D
 #include "./io/ppm_rc_write_image.f"
 #include "./io/ppm_rc_read_write_image.f"
+#include "./io/ppm_rc_read_write_unique_label.f"
 #undef  __DIME
 #undef  DTYPE
 #undef  __2D

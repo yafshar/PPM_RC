@@ -21,24 +21,26 @@
         TYPE(ppm_rc_link), POINTER :: seedlnk
 
 #if   __DIME == __2D
-        REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wpi)
+        REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpi
 #elif __DIME == __3D
-        REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wpi)
+        REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpi
 #endif
         REAL(ppm_kind_double), DIMENSION(:),     POINTER :: value
         REAL(ppm_kind_double), DIMENSION(3)              :: val
         REAL(ppm_kind_double)                            :: t0,dummy
 
 #if   __DIME == __2D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:), POINTER :: DTYPE(wpl)
+        INTEGER, CONTIGUOUS, DIMENSION(:,:), POINTER :: wpl
 #elif __DIME == __3D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wpl)
+        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpl
 #endif
         INTEGER, DIMENSION(:),     POINTER :: seedn
         INTEGER, DIMENSION(:),     POINTER :: Nm
         INTEGER, DIMENSION(__DIME)              :: ld,ld_
         INTEGER                            :: kk,ipatch,iseed
-        INTEGER                            :: i,j,nsize
+        INTEGER                            :: nsize,nrg,arrayindex
+        INTEGER                            :: clabel
+        INTEGER                            :: i,j,z
 #if   __DIME == __3D
         INTEGER                            :: k
 #endif
@@ -57,7 +59,7 @@
          CALL substart(caller,t0,info)
 
          NULLIFY(seedlst,trstat)
-         NULLIFY(DTYPE(wpi),DTYPE(wpl))
+         NULLIFY(wpi,wpl)
 
          sbpitr => MeshIn%subpatch%begin()
          ipatch=1
@@ -65,10 +67,10 @@
          patch_loop: DO WHILE (ASSOCIATED(sbpitr))
             Nm => sbpitr%nnodes
 
-            CALL sbpitr%get_field(image,DTYPE(wpi),info)
+            CALL sbpitr%get_field(image,wpi,info)
             or_fail("Failed to get field r_wp data.")
 
-            CALL sbpitr%get_field(labels,DTYPE(wpl),info)
+            CALL sbpitr%get_field(labels,wpl,info)
             or_fail("Failed to get field i1_wp data.")
 
             seed => ppm_rc_seeds(ipatch)%begin()
@@ -77,9 +79,9 @@
                seedn   => seedlnk%getValue()
 
 #if   __DIME == __2D
-               IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(seedn(1),seedn(2))),nlabels,iseed-1,.TRUE.)) THEN
+               IF (ppm_rc_label_exist(ABS(wpl(seedn(1),seedn(2))),nlabels,iseed-1,.TRUE.)) THEN
 #elif __DIME == __3D
-               IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(seedn(1),seedn(2),seedn(3))),nlabels,iseed-1,.TRUE.)) THEN
+               IF (ppm_rc_label_exist(ABS(wpl(seedn(1),seedn(2),seedn(3))),nlabels,iseed-1,.TRUE.)) THEN
 #endif
                    CALL ppm_rc_seeds(ipatch)%remove(info)
                    or_fail("ppm_rc_seeds(ipatch)%remove")
@@ -92,18 +94,18 @@
                ENDIF
 
 #if   __DIME == __2D
-               IF (DTYPE(wpl)(seedn(1),seedn(2)).NE.FORBIDDEN) THEN
-                  DTYPE(wpl)(seedn(1),seedn(2))=nlabels(iseed)
+               IF (wpl(seedn(1),seedn(2)).NE.FORBIDDEN) THEN
+                  wpl(seedn(1),seedn(2))=nlabels(iseed)
 #elif __DIME == __3D
-               IF (DTYPE(wpl)(seedn(1),seedn(2),seedn(3)).NE.FORBIDDEN) THEN
-                  DTYPE(wpl)(seedn(1),seedn(2),seedn(3))=nlabels(iseed)
+               IF (wpl(seedn(1),seedn(2),seedn(3)).NE.FORBIDDEN) THEN
+                  wpl(seedn(1),seedn(2),seedn(3))=nlabels(iseed)
 #endif
                   val(1)=REAL(nlabels(iseed),ppm_kind_double)
                   val(2)=oned
 #if   __DIME == __2D
-                  val(3)=REAL(DTYPE(wpi)(seedn(1),seedn(2)),ppm_kind_double)
+                  val(3)=REAL(wpi(seedn(1),seedn(2)),ppm_kind_double)
 #elif __DIME == __3D
-                  val(3)=REAL(DTYPE(wpi)(seedn(1),seedn(2),seedn(3)),ppm_kind_double)
+                  val(3)=REAL(wpi(seedn(1),seedn(2),seedn(3)),ppm_kind_double)
 #endif
                ELSE
                   !It is possible that the seed is in the padded layer at image
@@ -113,9 +115,9 @@
                      ld=seedn(1:__DIME)+FG_ConnectivityType%NeighborsPoints(:,kk)
                      IF (ALL(ld.GE.1.AND.ld.LE.Nm)) THEN
 #if   __DIME == __2D
-                        IF (DTYPE(wpl)(ld(1),ld(2)).EQ.1) THEN
+                        IF (wpl(ld(1),ld(2)).EQ.1) THEN
 #elif __DIME == __3D
-                        IF (DTYPE(wpl)(ld(1),ld(2),ld(3)).EQ.1) THEN
+                        IF (wpl(ld(1),ld(2),ld(3)).EQ.1) THEN
 #endif
                            IsSeedForgotten=.TRUE.
                            EXIT
@@ -162,9 +164,9 @@
                      seedn => seedlnk%getValue()
                      IF (ALL(seedn.GE.1.AND.seedn.LE.Nm)) THEN
 #if   __DIME == __2D
-                     IF (DTYPE(wpl)(seedn(1),seedn(2)).NE.0) THEN
+                     IF (wpl(seedn(1),seedn(2)).NE.0) THEN
 #elif __DIME == __3D
-                     IF (DTYPE(wpl)(seedn(1),seedn(2),seedn(3)).NE.0) THEN
+                     IF (wpl(seedn(1),seedn(2),seedn(3)).NE.0) THEN
 #endif
                         DO kk = 1,FG_ConnectivityType%NumberOfNeighbors
                            ld=seedn(1:__DIME)+FG_ConnectivityType%NeighborsPoints(:,kk)
@@ -172,39 +174,39 @@
                            !check to see whether we are inside the domain-+1 ghost
                            IF (ALL(ld.GE.0.AND.ld.LE.Nm+1)) THEN
 #if   __DIME == __2D
-                              IF (ABS(DTYPE(wpl)(ld(1),ld(2))).EQ.nlabels(iseed)) CYCLE
-                              IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(seedn(1),seedn(2))),nlabels,iseed-1,.TRUE.)) THEN
-                                 IF (DTYPE(wpl)(seedn(1),seedn(2)).NE.FORBIDDEN) THEN
-                                    DTYPE(wpl)(seedn(1),seedn(2))=-nlabels(iseed)
+                              IF (ABS(wpl(ld(1),ld(2))).EQ.nlabels(iseed)) CYCLE
+                              IF (ppm_rc_label_exist(ABS(wpl(seedn(1),seedn(2))),nlabels,iseed-1,.TRUE.)) THEN
+                                 IF (wpl(seedn(1),seedn(2)).NE.FORBIDDEN) THEN
+                                    wpl(seedn(1),seedn(2))=-nlabels(iseed)
                                  ENDIF
 #elif __DIME == __3D
-                              IF (ABS(DTYPE(wpl)(ld(1),ld(2),ld(3))).EQ.nlabels(iseed)) CYCLE
-                              IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(seedn(1),seedn(2),seedn(3))),nlabels,iseed-1,.TRUE.)) THEN
-                                 IF (DTYPE(wpl)(seedn(1),seedn(2),seedn(3)).NE.FORBIDDEN) THEN
-                                    DTYPE(wpl)(seedn(1),seedn(2),seedn(3))=-nlabels(iseed)
+                              IF (ABS(wpl(ld(1),ld(2),ld(3))).EQ.nlabels(iseed)) CYCLE
+                              IF (ppm_rc_label_exist(ABS(wpl(seedn(1),seedn(2),seedn(3))),nlabels,iseed-1,.TRUE.)) THEN
+                                 IF (wpl(seedn(1),seedn(2),seedn(3)).NE.FORBIDDEN) THEN
+                                    wpl(seedn(1),seedn(2),seedn(3))=-nlabels(iseed)
                                  ENDIF
 #endif
                                  CYCLE
                               ENDIF
 #if   __DIME == __2D
-                              SELECT CASE (DTYPE(wpl)(ld(1),ld(2)))
+                              SELECT CASE (wpl(ld(1),ld(2)))
 #elif __DIME == __3D
-                              SELECT CASE (DTYPE(wpl)(ld(1),ld(2),ld(3)))
+                              SELECT CASE (wpl(ld(1),ld(2),ld(3)))
 #endif
                               CASE (1)
 #if   __DIME == __2D
-                                 DTYPE(wpl)(ld(1),ld(2))=nlabels(iseed)
+                                 wpl(ld(1),ld(2))=nlabels(iseed)
 #elif __DIME == __3D
-                                 DTYPE(wpl)(ld(1),ld(2),ld(3))=nlabels(iseed)
+                                 wpl(ld(1),ld(2),ld(3))=nlabels(iseed)
 #endif
                                  CALL seedlst%add(ld)
 
                                  IF (ALL(ld.GE.1.AND.ld.LE.Nm)) THEN
                                     val(1)=oned
 #if   __DIME == __2D
-                                    val(2)=REAL(DTYPE(wpi)(ld(1),ld(2)),ppm_kind_double)
+                                    val(2)=REAL(wpi(ld(1),ld(2)),ppm_kind_double)
 #elif __DIME == __3D
-                                    val(2)=REAL(DTYPE(wpi)(ld(1),ld(2),ld(3)),ppm_kind_double)
+                                    val(2)=REAL(wpi(ld(1),ld(2),ld(3)),ppm_kind_double)
 #endif
                                     val(3)=val(2)*val(2)
 
@@ -215,11 +217,11 @@
                               !region border
                               CASE DEFAULT
 #if   __DIME == __2D
-                                 IF (DTYPE(wpl)(seedn(1),seedn(2)).NE.FORBIDDEN) THEN
-                                     DTYPE(wpl)(seedn(1),seedn(2))=-nlabels(iseed)
+                                 IF (wpl(seedn(1),seedn(2)).NE.FORBIDDEN) THEN
+                                     wpl(seedn(1),seedn(2))=-nlabels(iseed)
 #elif __DIME == __3D
-                                 IF (DTYPE(wpl)(seedn(1),seedn(2),seedn(3)).NE.FORBIDDEN) THEN
-                                     DTYPE(wpl)(seedn(1),seedn(2),seedn(3))=-nlabels(iseed)
+                                 IF (wpl(seedn(1),seedn(2),seedn(3)).NE.FORBIDDEN) THEN
+                                     wpl(seedn(1),seedn(2),seedn(3))=-nlabels(iseed)
 #endif
                                  ENDIF
 
@@ -261,207 +263,428 @@
          ENDDO patch_loop
 
          NULLIFY(seed)
-         NULLIFY(DTYPE(wpi),DTYPE(wpl))
+         NULLIFY(wpi,wpl)
 
+         SELECT CASE (vInitKind)
+         CASE (e_fromfile)
+            nsize=SIZE(nlabels,DIM=1)
+            check_true(<#nsize.EQ.0#>,"Error SIZE(nlabels)/=0!")
 
-         sbpitr => MeshIn%subpatch%begin()
-         ipatch=1
-         DO WHILE (ASSOCIATED(sbpitr))
-            Nm => sbpitr%nnodes
+            nrg=0
 
-            CALL sbpitr%get_field(image,DTYPE(wpi),info)
-            or_fail("Failed to get field r_wp data.")
+            sbpitr => MeshIn%subpatch%begin()
+            ipatch=1
+            DO WHILE (ASSOCIATED(sbpitr))
+               Nm => sbpitr%nnodes
 
-            CALL sbpitr%get_field(labels,DTYPE(wpl),info)
-            or_fail("Failed to get field i1_wp data.")
+               seednm(ipatch)=0
 
-            ld_=1
+               CALL sbpitr%get_field(image,wpi,info)
+               or_fail("Failed to get field r_wp data.")
+
+               CALL sbpitr%get_field(labels,wpl,info)
+               or_fail("Failed to get field i1_wp data.")
+
 #if   __DIME == __2D
-            DO WHILE (ANY(DTYPE(wpl)(1:Nm(1),ld_(2):Nm(2)).EQ.1))
-               j_loop: DO j=ld_(2),Nm(2)
+               DO j=1,Nm(2)
                   DO i=1,Nm(1)
-                     IF (DTYPE(wpl)(i,j).EQ.1) EXIT j_loop
-                  ENDDO
-               ENDDO j_loop
-               ld_(1)=i
-               ld_(2)=j
-#elif __DIME == __3D
-            DO WHILE (ANY(DTYPE(wpl)(1:Nm(1),1:Nm(2),ld_(3):Nm(3)).EQ.1))
-               k_loop: DO k=ld_(3),Nm(3)
-                  DO j=1,Nm(2)
-                     DO i=1,Nm(1)
-                        IF (DTYPE(wpl)(i,j,k).EQ.1) EXIT k_loop
-                     ENDDO
-                  ENDDO
-               ENDDO k_loop
-               ld_(1)=i
-               ld_(2)=j
-               ld_(3)=k
-#endif
+                     ! Current label
+                     clabel=wpl(i,j)
 
-               ALLOCATE(seed,STAT=info)
-               or_fail_alloc("seed")
-               CALL seed%add(ld_)
-               CALL ppm_rc_seeds(ipatch)%push(seed,info)
-               or_fail("could not add new seed to the collection")
+                     IF (clabel.GT.0.AND.clabel.NE.FORBIDDEN) THEN
+                        IF (ppm_rc_label_exist(clabel,nlabels,nrg)) THEN
+                           val(1)=oned
+                           val(2)=REAL(wpi(i,j),ppm_kind_double)
+                           val(3)=val(2)*val(2)
 
-               nsize=SIZE(nlabels,DIM=1)
-               seednm(ipatch)=seednm(ipatch)+1
-               !one seed has been added
-               iseed=SUM(seednm)
+                           IF (clabel.EQ.INT(value(1))) THEN
+                              CALL trstat%add(val)
+                           ELSE
+                              trstat => tmp_region_stat%last()
+                              trstat_loop: DO WHILE (ASSOCIATED(trstat))
+                                 value => trstat%getValue()
+                                 IF (clabel.EQ.INT(value(1))) THEN
+                                    CALL trstat%add(val)
+                                    EXIT trstat_loop
+                                 ENDIF
+                                 trstat => tmp_region_stat%prev()
+                              ENDDO trstat_loop
+                           ENDIF
+                        ELSE
+                           arrayindex=ppm_rc_label_index(clabel,nlabels,nrg)
 
-               IF (nsize.LT.iseed) THEN
-                  ld(1)=nsize+16
+                           ! New label
+                           nrg=nrg+1
+                           IF (nrg.GT.nsize) THEN
+                              ALLOCATE(tmp1_i(nrg*2),STAT=info)
+                              or_fail_alloc("Tmp array allocation failed!")
 
-                  ALLOCATE(tmp1_i(ld(1)),STAT=info)
-                  or_fail_alloc("Temp array allocation failed!")
-
-                  FORALL (i=1:nsize) tmp1_i(i)=nlabels(i)
-
-                  CALL MOVE_ALLOC(tmp1_i,nlabels)
-
-                  nsize=ld(1)
-
-                  FORALL (i=iseed:nsize) nlabels(i)=-bigi
-               ENDIF
-
-               IF (nlabels(iseed).EQ.-bigi) THEN
-                  nlabels(iseed)=loc_label
-                  loc_label=loc_label-1
-               ENDIF
-
-#if   __DIME == __2D
-               DTYPE(wpl)(ld_(1),ld_(2))=nlabels(iseed)
-#elif __DIME == __3D
-               DTYPE(wpl)(ld_(1),ld_(2),ld_(3))=nlabels(iseed)
-#endif
-
-               ALLOCATE(trstat,STAT=info)
-               or_fail_alloc("trstat")
-
-               val(1)=REAL(nlabels(iseed),ppm_kind_double)
-               val(2)=oned
-#if   __DIME == __2D
-               val(3)=REAL(DTYPE(wpi)(ld_(1),ld_(2)),ppm_kind_double)
-#elif __DIME == __3D
-               val(3)=REAL(DTYPE(wpi)(ld_(1),ld_(2),ld_(3)),ppm_kind_double)
-#endif
-               dummy=val(3)*val(3)
-
-               CALL trstat%add(val(1),val(2),val(3),dummy)
-               CALL tmp_region_stat%push(trstat,info)
-               or_fail("tmp_region_stat%push")
-
-               trstat => tmp_region_stat%last()
-
-               seed    => ppm_rc_seeds(ipatch)%last()
-               seedlnk => seed%first
-
-               safe_loop_: DO
-
-                  IF (.NOT.ASSOCIATED(seedlst)) THEN
-                     ALLOCATE(seedlst,STAT=info)
-                     or_fail_alloc("seedlst")
-                  ENDIF
-
-                  DO WHILE (ASSOCIATED(seedlnk))
-                     seedn => seedlnk%getValue()
-                     IF (ALL(seedn.GE.1.AND.seedn.LE.Nm)) THEN
-#if   __DIME == __2D
-                     IF (DTYPE(wpl)(seedn(1),seedn(2)).NE.0) THEN
-#elif __DIME == __3D
-                     IF (DTYPE(wpl)(seedn(1),seedn(2),seedn(3)).NE.0) THEN
-#endif
-                        DO kk = 1,FG_ConnectivityType%NumberOfNeighbors
-                           ld=seedn(1:__DIME)+FG_ConnectivityType%NeighborsPoints(:,kk)
-
-                           !check to see whether we are inside the domain-+1 ghost
-                           IF (ALL(ld.GE.0.AND.ld.LE.Nm+1)) THEN
-#if   __DIME == __2D
-                              IF (ABS(DTYPE(wpl)(ld(1),ld(2))).EQ.nlabels(iseed)) CYCLE
-                              IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(ld(1),ld(2))),nlabels,iseed-1,.TRUE.)) THEN
-                                 DTYPE(wpl)(seedn(1),seedn(2))=-nlabels(iseed)
-#elif __DIME == __3D
-                              IF (ABS(DTYPE(wpl)(ld(1),ld(2),ld(3))).EQ.nlabels(iseed)) CYCLE
-                              IF (ppm_rc_label_exist(ABS(DTYPE(wpl)(ld(1),ld(2),ld(3))),nlabels,iseed-1,.TRUE.)) THEN
-                                 DTYPE(wpl)(seedn(1),seedn(2),seedn(3))=-nlabels(iseed)
-#endif
-                                 CYCLE
+                              IF (arrayindex.EQ.0) THEN
+                                 tmp1_i(nrg)=clabel
+                              ELSE
+                                 FORALL (z=1:arrayindex-1) tmp1_i(z)=nlabels(z)
+                                 tmp1_i(arrayindex)=clabel
+                                 FORALL (z=arrayindex:nsize) tmp1_i(z+1)=nlabels(z)
                               ENDIF
 
-#if   __DIME == __2D
-                              SELECT CASE (DTYPE(wpl)(ld(1),ld(2)))
-#elif __DIME == __3D
-                              SELECT CASE (DTYPE(wpl)(ld(1),ld(2),ld(3)))
-#endif
-                              CASE (1)
-#if   __DIME == __2D
-                                 DTYPE(wpl)(ld(1),ld(2))=nlabels(iseed)
-#elif __DIME == __3D
-                                 DTYPE(wpl)(ld(1),ld(2),ld(3))=nlabels(iseed)
-#endif
-                                 CALL seedlst%add(ld)
+                              nsize=nrg*2
 
-                                 IF (ALL(ld.GE.1.AND.ld.LE.Nm)) THEN
-                                    val(1)=oned
-#if   __DIME == __2D
-                                    val(2)=REAL(DTYPE(wpi)(ld(1),ld(2)),ppm_kind_double)
-#elif __DIME == __3D
-                                    val(2)=REAL(DTYPE(wpi)(ld(1),ld(2),ld(3)),ppm_kind_double)
-#endif
-                                    val(3)=val(2)*val(2)
+                              CALL MOVE_ALLOC(tmp1_i,nlabels)
+                           ELSE
+                              IF      (arrayindex.EQ.nrg) THEN
+                                 nlabels(nrg)=clabel
+                              ELSE IF (arrayindex.GT.1) THEN
+                                 DO z=nrg,arrayindex+1,-1
+                                    nlabels(z)=nlabels(z-1)
+                                 ENDDO
+                                 nlabels(arrayindex)=clabel
+                              ELSE IF (arrayindex.EQ.1) THEN
+                                 DO z=nrg,2,-1
+                                    nlabels(z)=nlabels(z-1)
+                                 ENDDO
+                                 nlabels(1)=clabel
+                              ELSE IF (arrayindex.EQ.0) THEN
+                                 nlabels(nrg)=clabel
+                              ENDIF
+                           ENDIF
 
-                                    CALL trstat%add(val)
+
+                           val(1)=REAL(clabel,ppm_kind_double)
+                           val(2)=oned
+                           val(3)=REAL(wpi(i,j),ppm_kind_double)
+                           dummy=val(3)*val(3)
+
+                           NULLIFY(trstat)
+                           ALLOCATE(trstat,STAT=info)
+                           or_fail_alloc("trstat")
+                           CALL trstat%add(val(1),val(2),val(3),dummy)
+                           CALL tmp_region_stat%push(trstat,info)
+                           or_fail("tmp_region_stat%push")
+
+                           trstat => tmp_region_stat%last()
+                           value => trstat%getValue()
+                        ENDIF
+
+                        DO kk =1,FG_ConnectivityType%NumberOfNeighbors
+                           ld(1)=i+FG_ConnectivityType%NeighborsPoints(1,kk)
+                           ld(2)=j+FG_ConnectivityType%NeighborsPoints(2,kk)
+                           IF (ABS(wpl(ld(1),ld(2))).NE.clabel) THEN
+                               wpl(i,j)=-clabel
+                               EXIT
+                           ENDIF
+                        ENDDO !kk =1,FG_ConnectivityType%NumberOfNeighbors
+                     ENDIF !clabel.GT.0.AND.clabel.NE.FORBIDDEN
+                  ENDDO !i=1,Nm(1)
+               ENDDO !j=1,Nm(2)
+#elif __DIME == __3D
+               DO k=1,Nm(3)
+                  DO j=1,Nm(2)
+                     DO i=1,Nm(1)
+                        ! Current label
+                        clabel=wpl(i,j,k)
+
+                        IF (clabel.GT.0.AND.clabel.NE.FORBIDDEN) THEN
+                           IF (ppm_rc_label_exist(clabel,nlabels,nrg)) THEN
+                              val(1)=oned
+                              val(2)=REAL(wpi(i,j,k),ppm_kind_double)
+                              val(3)=val(2)*val(2)
+
+                              IF (clabel.EQ.INT(value(1))) THEN
+                                 CALL trstat%add(val)
+                              ELSE
+                                 trstat => tmp_region_stat%last()
+                                 trstat_loop: DO WHILE (ASSOCIATED(trstat))
+                                    value => trstat%getValue()
+                                    IF (clabel.EQ.INT(value(1))) THEN
+                                       CALL trstat%add(val)
+                                       EXIT trstat_loop
+                                    ENDIF
+                                    trstat => tmp_region_stat%prev()
+                                 ENDDO trstat_loop
+                              ENDIF
+                           ELSE
+                              arrayindex=ppm_rc_label_index(clabel,nlabels,nrg)
+
+                              ! New label
+                              nrg=nrg+1
+                              IF (nrg.GT.nsize) THEN
+                                 ALLOCATE(tmp1_i(nrg*2),STAT=info)
+                                 or_fail_alloc("Tmp array allocation failed!")
+
+                                 IF (arrayindex.EQ.0) THEN
+                                    tmp1_i(nrg)=clabel
+                                 ELSE
+                                    FORALL (z=1:arrayindex-1) tmp1_i(z)=nlabels(z)
+                                    tmp1_i(arrayindex)=clabel
+                                    FORALL (z=arrayindex:nsize) tmp1_i(z+1)=nlabels(z)
                                  ENDIF
 
-                              CASE DEFAULT
-#if   __DIME == __2D
-                                 DTYPE(wpl)(seedn(1),seedn(2))=-nlabels(iseed)
-#elif __DIME == __3D
-                                 DTYPE(wpl)(seedn(1),seedn(2),seedn(3))=-nlabels(iseed)
+                                 nsize=nrg*2
+
+                                 CALL MOVE_ALLOC(tmp1_i,nlabels)
+                              ELSE
+                                 IF      (arrayindex.EQ.nrg) THEN
+                                    nlabels(nrg)=clabel
+                                 ELSE IF (arrayindex.GT.1) THEN
+                                    DO z=nrg,arrayindex+1,-1
+                                       nlabels(z)=nlabels(z-1)
+                                    ENDDO
+                                    nlabels(arrayindex)=clabel
+                                 ELSE IF (arrayindex.EQ.1) THEN
+                                    DO z=nrg,2,-1
+                                       nlabels(z)=nlabels(z-1)
+                                    ENDDO
+                                    nlabels(1)=clabel
+                                 ELSE IF (arrayindex.EQ.0) THEN
+                                    nlabels(nrg)=clabel
+                                 ENDIF
+                              ENDIF
+
+
+                              val(1)=REAL(clabel,ppm_kind_double)
+                              val(2)=oned
+                              val(3)=REAL(wpi(i,j,k),ppm_kind_double)
+                              dummy=val(3)*val(3)
+
+                              NULLIFY(trstat)
+                              ALLOCATE(trstat,STAT=info)
+                              or_fail_alloc("trstat")
+                              CALL trstat%add(val(1),val(2),val(3),dummy)
+                              CALL tmp_region_stat%push(trstat,info)
+                              or_fail("tmp_region_stat%push")
+
+                              trstat => tmp_region_stat%last()
+                              value => trstat%getValue()
+                           ENDIF
+
+                           DO kk =1,FG_ConnectivityType%NumberOfNeighbors
+                              ld(1)=i+FG_ConnectivityType%NeighborsPoints(1,kk)
+                              ld(2)=j+FG_ConnectivityType%NeighborsPoints(2,kk)
+                              ld(3)=k+FG_ConnectivityType%NeighborsPoints(3,kk)
+                              IF (ABS(wpl(ld(1),ld(2),ld(3))).NE.clabel) THEN
+                                 wpl(i,j,k)=-clabel
+                                 EXIT
+                              ENDIF
+                           ENDDO !kk =1,FG_ConnectivityType%NumberOfNeighbors
+                        ENDIF !clabel.GT.0.AND.clabel.NE.FORBIDDEN
+                     ENDDO !i=1,Nm(1)
+                  ENDDO !j=1,Nm(2)
+               ENDDO !k=1,Nm(3)
 #endif
 
-                              END SELECT
+               sbpitr => MeshIn%subpatch%next()
+               ipatch=ipatch+1
+            ENDDO !WHILE (ASSOCIATED(sbpitr))
 
-                           ENDIF !(ALL(ld.GE.0.AND.ld.LE.Nm+1))
+            FORALL (i=nrg+1:nsize) nlabels(i)=-bigi
 
-                        ENDDO !kk = 1,
-                     ENDIF !DTYPE(wpl)(seedn(1),seedn(2)).GT.0
-                     ENDIF !(ALL(seedn.GE.1.AND.seedn.LE.Nm)) THEN
-                     seedlnk => seedlnk%nextLink()
-                  ENDDO !WHILE (ASSOCIATED(seedlnk))
+            IF (ppm_rc_label_exist(1,nlabels,nrg)) THEN
+               stdout("In initializiation from a file there is a region with label intensity of 1.")
+               fail("Region with label of 1! Label 1 is not allowed! (Please at first use createuniquelabel)", &
+               & ppm_error=ppm_error_fatal)
+            ENDIF
 
-                  IF (ASSOCIATED(seedlst%first)) THEN
-                     seedlnk => seedlst%first
-                     CALL seed%merge(seedlst)
-                  ELSE
-                     IF (ASSOCIATED(seedlst)) THEN
-                        DEALLOCATE(seedlst,STAT=info)
-                        or_fail_dealloc("seedlst")
-                     ENDIF
-                     NULLIFY(seedlst)
-                     EXIT safe_loop_
+         CASE DEFAULT
+            sbpitr => MeshIn%subpatch%begin()
+            ipatch=1
+            DO WHILE (ASSOCIATED(sbpitr))
+               Nm => sbpitr%nnodes
+
+               CALL sbpitr%get_field(image,wpi,info)
+               or_fail("Failed to get field r_wp data.")
+
+               CALL sbpitr%get_field(labels,wpl,info)
+               or_fail("Failed to get field i1_wp data.")
+
+               ld_=1
+#if   __DIME == __2D
+               DO WHILE (ANY(wpl(1:Nm(1),ld_(2):Nm(2)).EQ.1))
+                  j_loop: DO j=ld_(2),Nm(2)
+                     DO i=1,Nm(1)
+                        IF (wpl(i,j).EQ.1) EXIT j_loop
+                     ENDDO
+                  ENDDO j_loop
+                  ld_(1)=i
+                  ld_(2)=j
+#elif __DIME == __3D
+               DO WHILE (ANY(wpl(1:Nm(1),1:Nm(2),ld_(3):Nm(3)).EQ.1))
+                  k_loop: DO k=ld_(3),Nm(3)
+                     DO j=1,Nm(2)
+                        DO i=1,Nm(1)
+                           IF (wpl(i,j,k).EQ.1) EXIT k_loop
+                        ENDDO
+                     ENDDO
+                  ENDDO k_loop
+                  ld_(1)=i
+                  ld_(2)=j
+                  ld_(3)=k
+#endif
+
+                  ALLOCATE(seed,STAT=info)
+                  or_fail_alloc("seed")
+                  CALL seed%add(ld_)
+                  CALL ppm_rc_seeds(ipatch)%push(seed,info)
+                  or_fail("could not add new seed to the collection")
+
+                  nsize=SIZE(nlabels,DIM=1)
+                  seednm(ipatch)=seednm(ipatch)+1
+                  !one seed has been added
+                  iseed=SUM(seednm)
+
+                  IF (nsize.LT.iseed) THEN
+                     ld(1)=nsize+16
+
+                     ALLOCATE(tmp1_i(ld(1)),STAT=info)
+                     or_fail_alloc("Temp array allocation failed!")
+
+                     FORALL (i=1:nsize) tmp1_i(i)=nlabels(i)
+
+                     CALL MOVE_ALLOC(tmp1_i,nlabels)
+
+                     nsize=ld(1)
+
+                     FORALL (i=iseed:nsize) nlabels(i)=-bigi
                   ENDIF
 
-               ENDDO safe_loop_
+                  IF (nlabels(iseed).EQ.-bigi) THEN
+                     nlabels(iseed)=loc_label
+                     loc_label=loc_label-1
+                  ENDIF
 
-               seedlnk => seed%first
-               CALL seed%destroy(seedlnk)
+#if   __DIME == __2D
+                  wpl(ld_(1),ld_(2))=nlabels(iseed)
+#elif __DIME == __3D
+                  wpl(ld_(1),ld_(2),ld_(3))=nlabels(iseed)
+#endif
 
-            ENDDO ! WHILE (ANY(DTYPE(wpl)(1:Nm(1),ld_(2):Nm(2)).EQ.1))
+                  ALLOCATE(trstat,STAT=info)
+                  or_fail_alloc("trstat")
 
-            sbpitr => MeshIn%subpatch%next()
-            ipatch=ipatch+1
-         ENDDO !WHILE (ASSOCIATED(sbpitr))
+                  val(1)=REAL(nlabels(iseed),ppm_kind_double)
+                  val(2)=oned
+#if   __DIME == __2D
+                  val(3)=REAL(wpi(ld_(1),ld_(2)),ppm_kind_double)
+#elif __DIME == __3D
+                  val(3)=REAL(wpi(ld_(1),ld_(2),ld_(3)),ppm_kind_double)
+#endif
+                  dummy=val(3)*val(3)
 
-         NULLIFY(DTYPE(wpi),DTYPE(wpl))
+                  CALL trstat%add(val(1),val(2),val(3),dummy)
+                  CALL tmp_region_stat%push(trstat,info)
+                  or_fail("tmp_region_stat%push")
+
+                  trstat => tmp_region_stat%last()
+
+                  seed    => ppm_rc_seeds(ipatch)%last()
+                  seedlnk => seed%first
+
+                  safe_loop_: DO
+
+                     IF (.NOT.ASSOCIATED(seedlst)) THEN
+                        ALLOCATE(seedlst,STAT=info)
+                        or_fail_alloc("seedlst")
+                     ENDIF
+
+                     DO WHILE (ASSOCIATED(seedlnk))
+                        seedn => seedlnk%getValue()
+                        IF (ALL(seedn.GE.1.AND.seedn.LE.Nm)) THEN
+#if   __DIME == __2D
+                        IF (wpl(seedn(1),seedn(2)).NE.0) THEN
+#elif __DIME == __3D
+                        IF (wpl(seedn(1),seedn(2),seedn(3)).NE.0) THEN
+#endif
+                           DO kk = 1,FG_ConnectivityType%NumberOfNeighbors
+                              ld=seedn(1:__DIME)+FG_ConnectivityType%NeighborsPoints(:,kk)
+
+                              !check to see whether we are inside the domain-+1 ghost
+                              IF (ALL(ld.GE.0.AND.ld.LE.Nm+1)) THEN
+#if   __DIME == __2D
+                                 IF (ABS(wpl(ld(1),ld(2))).EQ.nlabels(iseed)) CYCLE
+                                 IF (ppm_rc_label_exist(ABS(wpl(ld(1),ld(2))),nlabels,iseed-1,.TRUE.)) THEN
+                                    wpl(seedn(1),seedn(2))=-nlabels(iseed)
+#elif __DIME == __3D
+                                 IF (ABS(wpl(ld(1),ld(2),ld(3))).EQ.nlabels(iseed)) CYCLE
+                                 IF (ppm_rc_label_exist(ABS(wpl(ld(1),ld(2),ld(3))),nlabels,iseed-1,.TRUE.)) THEN
+                                    wpl(seedn(1),seedn(2),seedn(3))=-nlabels(iseed)
+#endif
+                                    CYCLE
+                                 ENDIF
+
+#if   __DIME == __2D
+                                 SELECT CASE (wpl(ld(1),ld(2)))
+#elif __DIME == __3D
+                                 SELECT CASE (wpl(ld(1),ld(2),ld(3)))
+#endif
+                                 CASE (1)
+#if   __DIME == __2D
+                                    wpl(ld(1),ld(2))=nlabels(iseed)
+#elif __DIME == __3D
+                                    wpl(ld(1),ld(2),ld(3))=nlabels(iseed)
+#endif
+                                    CALL seedlst%add(ld)
+
+                                    IF (ALL(ld.GE.1.AND.ld.LE.Nm)) THEN
+                                       val(1)=oned
+#if   __DIME == __2D
+                                       val(2)=REAL(wpi(ld(1),ld(2)),ppm_kind_double)
+#elif __DIME == __3D
+                                       val(2)=REAL(wpi(ld(1),ld(2),ld(3)),ppm_kind_double)
+#endif
+                                       val(3)=val(2)*val(2)
+
+                                       CALL trstat%add(val)
+                                    ENDIF
+
+                                 CASE DEFAULT
+#if   __DIME == __2D
+                                    wpl(seedn(1),seedn(2))=-nlabels(iseed)
+#elif __DIME == __3D
+                                    wpl(seedn(1),seedn(2),seedn(3))=-nlabels(iseed)
+#endif
+
+                                 END SELECT
+
+                              ENDIF !(ALL(ld.GE.0.AND.ld.LE.Nm+1))
+
+                           ENDDO !kk = 1,
+                        ENDIF !wpl(seedn(1),seedn(2)).GT.0
+                        ENDIF !(ALL(seedn.GE.1.AND.seedn.LE.Nm)) THEN
+                        seedlnk => seedlnk%nextLink()
+                     ENDDO !WHILE (ASSOCIATED(seedlnk))
+
+                     IF (ASSOCIATED(seedlst%first)) THEN
+                        seedlnk => seedlst%first
+                        CALL seed%merge(seedlst)
+                     ELSE
+                        IF (ASSOCIATED(seedlst)) THEN
+                           DEALLOCATE(seedlst,STAT=info)
+                           or_fail_dealloc("seedlst")
+                        ENDIF
+                        NULLIFY(seedlst)
+                        EXIT safe_loop_
+                     ENDIF
+
+                  ENDDO safe_loop_
+
+                  seedlnk => seed%first
+                  CALL seed%destroy(seedlnk)
+
+               ENDDO ! WHILE (ANY(wpl(1:Nm(1),ld_(2):Nm(2)).EQ.1))
+
+               sbpitr => MeshIn%subpatch%next()
+               ipatch=ipatch+1
+            ENDDO !WHILE (ASSOCIATED(sbpitr))
+
+         END SELECT
+
+         NULLIFY(wpi,wpl)
 
          !Some thresholding which you should check later!
          !Here I get rid of all the regions which have intensity
          !below 1
          sbpitr => MeshIn%subpatch%begin()
          DO WHILE (ASSOCIATED(sbpitr))
-            CALL sbpitr%get_field(labels,DTYPE(wpl),info)
+            CALL sbpitr%get_field(labels,wpl,info)
             or_fail("Failed to get field i1_wp data.")
 
             trstat => tmp_region_stat%begin()
@@ -472,7 +695,7 @@
                !TOCHECK
                !check this criteria later
                IF (value(3).LT.smalld) THEN
-                  DTYPE(wpl)=MERGE(0,DTYPE(wpl),ABS(DTYPE(wpl)).EQ.INT(value(1)))
+                  wpl=MERGE(0,wpl,ABS(wpl).EQ.INT(value(1)))
 
                   CALL tmp_region_stat%remove(info)
                   or_fail("tmp_region_stat%remove")
@@ -515,18 +738,18 @@
         TYPE(ppm_rc_list), POINTER :: vseed
 
 #if   __DIME == __2D
-        REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wpi)
+        REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpi
 #elif __DIME == __3D
-        REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wpi)
+        REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpi
 #endif
         REAL(ppm_kind_double), DIMENSION(:),    POINTER :: value
         REAL(ppm_kind_double), DIMENSION(3)             :: val
         REAL(ppm_kind_double)                           :: t0,dummy
 
 #if   __DIME == __2D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER     :: DTYPE(wpl)
+        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER     :: wpl
 #elif __DIME == __3D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER     :: DTYPE(wpl)
+        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER     :: wpl
 #endif
         INTEGER, DIMENSION(:),     POINTER     :: seedn
         INTEGER, DIMENSION(:),     POINTER     :: Nm
@@ -556,7 +779,7 @@
          ALLOCATE(labelled(__DIME,nsize),STAT=info)
          or_fail_alloc("labelled")
 
-         NULLIFY(DTYPE(wpi),DTYPE(wpl))
+         NULLIFY(wpi,wpl)
 
          sbpitr => MeshIn%subpatch%begin()
          ipatch=1
@@ -566,10 +789,10 @@
          patch_loop: DO WHILE (ASSOCIATED(sbpitr))
             Nm => sbpitr%nnodes
 
-            CALL sbpitr%get_field(image,DTYPE(wpi),info)
+            CALL sbpitr%get_field(image,wpi,info)
             or_fail("Failed to get field r_wp data.")
 
-            CALL sbpitr%get_field(labels,DTYPE(wpl),info)
+            CALL sbpitr%get_field(labels,wpl,info)
             or_fail("Failed to get field i_wp data.")
 
             seed => ppm_rc_seeds(ipatch)%last()
@@ -577,9 +800,9 @@
                seedn => seed%first%getValue()
 
 #if   __DIME == __2D
-               oldlabel=ABS(DTYPE(wpl)(seedn(1),seedn(2)))
+               oldlabel=ABS(wpl(seedn(1),seedn(2)))
 #elif __DIME == __3D
-               oldlabel=ABS(DTYPE(wpl)(seedn(1),seedn(2),seedn(3)))
+               oldlabel=ABS(wpl(seedn(1),seedn(2),seedn(3)))
 #endif
                IF (oldlabel.EQ.0) THEN
                   CALL ppm_rc_seeds(ipatch)%remove(info)
@@ -606,8 +829,7 @@
 
                newlabel=nlabels(iseed)
 
-               CALL DTYPE(ppm_rc_floodFill)(labelled,DTYPE(wpl), &
-               &    Nm,seedn(1:__DIME),oldlabel,newlabel,0,info)
+               CALL ppm_rc_floodFill(labelled,wpl,Nm,seedn(1:__DIME),oldlabel,newlabel,0,info)
                or_fail("ppm_rc_floodFill")
 
                nsize=COUNT(labelled(1,:).GE.0)
@@ -626,9 +848,9 @@
                   ELSE
                      ld_=ld+FG_ConnectivityType%NeighborsPoints(:,1)
 #if   __DIME == __2D
-                     vLabel=ABS(DTYPE(wpl)(ld_(1),ld_(2)))
+                     vLabel=ABS(wpl(ld_(1),ld_(2)))
 #elif __DIME == __3D
-                     vLabel=ABS(DTYPE(wpl)(ld_(1),ld_(2),ld_(3)))
+                     vLabel=ABS(wpl(ld_(1),ld_(2),ld_(3)))
 #endif
 
                      newlabel=0
@@ -641,20 +863,20 @@
                         IF (vLabel.EQ.FORBIDDEN) THEN
                            ld_=ld+FG_ConnectivityType%NeighborsPoints(:,2)
 #if   __DIME == __2D
-                           vLabel=ABS(DTYPE(wpl)(ld_(1),ld_(2)))
+                           vLabel=ABS(wpl(ld_(1),ld_(2)))
 #elif __DIME == __3D
-                           vLabel=ABS(DTYPE(wpl)(ld_(1),ld_(2),ld_(3)))
+                           vLabel=ABS(wpl(ld_(1),ld_(2),ld_(3)))
 #endif
                         ENDIF
 
                         DO i=2,FG_ConnectivityType%NumberOfNeighbors
                            ld_=ld+FG_ConnectivityType%NeighborsPoints(:,i)
 #if   __DIME == __2D
-                           IF (ABS(DTYPE(wpl)(ld_(1),ld_(2))).NE.vLabel) THEN
-                              IF (ABS(DTYPE(wpl)(ld_(1),ld_(2))).EQ.FORBIDDEN) CYCLE
+                           IF (ABS(wpl(ld_(1),ld_(2))).NE.vLabel) THEN
+                              IF (ABS(wpl(ld_(1),ld_(2))).EQ.FORBIDDEN) CYCLE
 #elif __DIME == __3D
-                           IF (ABS(DTYPE(wpl)(ld_(1),ld_(2),ld_(3))).NE.vLabel) THEN
-                              IF (ABS(DTYPE(wpl)(ld_(1),ld_(2),ld_(3))).EQ.FORBIDDEN) CYCLE
+                           IF (ABS(wpl(ld_(1),ld_(2),ld_(3))).NE.vLabel) THEN
+                              IF (ABS(wpl(ld_(1),ld_(2),ld_(3))).EQ.FORBIDDEN) CYCLE
 #endif
                               IsEnclosedByLabelFGConnectivity=.FALSE.
                               EXIT
@@ -665,23 +887,23 @@
                      IF (IsEnclosedByLabelFGConnectivity) THEN
                         newlabel=vLabel
 #if   __DIME == __2D
-                        DTYPE(wpl)(ld(1),ld(2))=newlabel
+                        wpl(ld(1),ld(2))=newlabel
 #elif __DIME == __3D
-                        DTYPE(wpl)(ld(1),ld(2),ld(3))=newlabel
+                        wpl(ld(1),ld(2),ld(3))=newlabel
 #endif
 
                         old_label_region=htable%search(oldlabel)
                         new_label_region=htable%search(newlabel)
                         IF (old_label_region.NE.htable_null.AND.new_label_region.NE.htable_null) THEN
-                           CALL e_data%UpdateStatisticsWhenJump(DTYPE(wpi),ld,oldlabel,newlabel,info)
+                           CALL e_data%UpdateStatisticsWhenJump(wpi,ld,oldlabel,newlabel,info)
                            or_fail("e_data%UpdateStatisticsWhenJump")
                         ELSE IF (old_label_region.NE.htable_null.AND.new_label_region.EQ.htable_null) THEN
                            e_data%lCount(old_label_region)=e_data%lCount(old_label_region)-oned
                            i=old_label_region*2
 #if   __DIME == __2D
-                           dummy=REAL(DTYPE(wpi)(ld(1),ld(2)),ppm_kind_double)
+                           dummy=REAL(wpi(ld(1),ld(2)),ppm_kind_double)
 #elif __DIME == __3D
-                           dummy=REAL(DTYPE(wpi)(ld(1),ld(2),ld(3)),ppm_kind_double)
+                           dummy=REAL(wpi(ld(1),ld(2),ld(3)),ppm_kind_double)
 #endif
                            e_data%lSumslSumsq(i)  =e_data%lSumslSumsq(i)  -dummy
                            e_data%lSumslSumsq(i+1)=e_data%lSumslSumsq(i+1)-dummy*dummy
@@ -701,9 +923,9 @@
                            e_data%lCount(new_label_region)=e_data%lCount(new_label_region)+oned
                            i=new_label_region*2
 #if   __DIME == __2D
-                           dummy=REAL(DTYPE(wpi)(ld(1),ld(2)),ppm_kind_double)
+                           dummy=REAL(wpi(ld(1),ld(2)),ppm_kind_double)
 #elif __DIME == __3D
-                           dummy=REAL(DTYPE(wpi)(ld(1),ld(2),ld(3)),ppm_kind_double)
+                           dummy=REAL(wpi(ld(1),ld(2),ld(3)),ppm_kind_double)
 #endif
                            e_data%lSumslSumsq(i)  =e_data%lSumslSumsq(i)  +dummy
                            e_data%lSumslSumsq(i+1)=e_data%lSumslSumsq(i+1)+dummy*dummy
@@ -721,9 +943,9 @@
                            ENDDO
                         ELSE
 #if   __DIME == __2D
-                           dummy=REAL(DTYPE(wpi)(ld(1),ld(2)),ppm_kind_double)
+                           dummy=REAL(wpi(ld(1),ld(2)),ppm_kind_double)
 #elif __DIME == __3D
-                           dummy=REAL(DTYPE(wpi)(ld(1),ld(2),ld(3)),ppm_kind_double)
+                           dummy=REAL(wpi(ld(1),ld(2),ld(3)),ppm_kind_double)
 #endif
 
                            trstat => tmp_region_stat%begin()
@@ -759,21 +981,21 @@
                         or_fail("could not add new seed to the collection")
                      ELSE
 #if   __DIME == __2D
-                        DTYPE(wpl)(ld(1),ld(2))=0
+                        wpl(ld(1),ld(2))=0
 #elif __DIME == __3D
-                        DTYPE(wpl)(ld(1),ld(2),ld(3))=0
+                        wpl(ld(1),ld(2),ld(3))=0
 #endif
 
                         old_label_region=htable%search(oldlabel)
                         IF (old_label_region.NE.htable_null) THEN
-                           CALL e_data%UpdateStatisticsWhenJump(DTYPE(wpi),ld,oldlabel,0,info)
+                           CALL e_data%UpdateStatisticsWhenJump(wpi,ld,oldlabel,0,info)
                            or_fail("e_data%UpdateStatisticsWhenJump")
                         ELSE
                            e_data%lCount(0)=e_data%lCount(0)+oned
 #if   __DIME == __2D
-                           dummy=REAL(DTYPE(wpi)(ld(1),ld(2)),ppm_kind_double)
+                           dummy=REAL(wpi(ld(1),ld(2)),ppm_kind_double)
 #elif __DIME == __3D
-                           dummy=REAL(DTYPE(wpi)(ld(1),ld(2),ld(3)),ppm_kind_double)
+                           dummy=REAL(wpi(ld(1),ld(2),ld(3)),ppm_kind_double)
 #endif
                            e_data%lSumslSumsq(0)=e_data%lSumslSumsq(0)+dummy
                            e_data%lSumslSumsq(1)=e_data%lSumslSumsq(1)+dummy*dummy
@@ -816,9 +1038,9 @@
                         ld=labelled(:,i)
                         IF (ANY(ld.LT.1.OR.ld.GT.Nm)) CYCLE
 #if   __DIME == __2D
-                        IF (DTYPE(wpl)(ld(1),ld(2)).LT.0) THEN
+                        IF (wpl(ld(1),ld(2)).LT.0) THEN
 #elif __DIME == __3D
-                        IF (DTYPE(wpl)(ld(1),ld(2),ld(3)).LT.0) THEN
+                        IF (wpl(ld(1),ld(2),ld(3)).LT.0) THEN
 #endif
                            CALL seed%add(ld)
                            !IF Fusion is allowed, later we wanna check the
@@ -829,9 +1051,9 @@
 
                         val(1)=val(1)+oned
 #if   __DIME == __2D
-                        dummy=REAL(DTYPE(wpi)(ld(1),ld(2)),ppm_kind_double)
+                        dummy=REAL(wpi(ld(1),ld(2)),ppm_kind_double)
 #elif __DIME == __3D
-                        dummy=REAL(DTYPE(wpi)(ld(1),ld(2),ld(3)),ppm_kind_double)
+                        dummy=REAL(wpi(ld(1),ld(2),ld(3)),ppm_kind_double)
 #endif
                         val(2)=val(2)+dummy
                         val(3)=val(3)+dummy*dummy
@@ -846,9 +1068,9 @@
 
                         val(1)=val(1)+oned
 #if   __DIME == __2D
-                        dummy=REAL(DTYPE(wpi)(ld(1),ld(2)),ppm_kind_double)
+                        dummy=REAL(wpi(ld(1),ld(2)),ppm_kind_double)
 #elif __DIME == __3D
-                        dummy=REAL(DTYPE(wpi)(ld(1),ld(2),ld(3)),ppm_kind_double)
+                        dummy=REAL(wpi(ld(1),ld(2),ld(3)),ppm_kind_double)
 #endif
                         val(2)=val(2)+dummy
                         val(3)=val(3)+dummy*dummy

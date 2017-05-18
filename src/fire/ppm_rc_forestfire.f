@@ -29,18 +29,18 @@
           TYPE(ppm_rc_stat), POINTER :: trstat
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wpi)
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpi
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wpi)
+          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpi
 #endif
           REAL(ppm_kind_double),DIMENSION(:),     POINTER :: value
           REAL(ppm_kind_double),DIMENSION(3)              :: val
           REAL(ppm_kind_double)                           :: t0,dummy
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wpl)
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpl
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wpl)
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpl
 #endif
           INTEGER, DIMENSION(:), ALLOCATABLE :: old_ghost
           INTEGER, DIMENSION(:),     POINTER :: Nm
@@ -140,7 +140,7 @@
                    nsize=nsize+(Nm(1)+2)*(Nm(2)+2)
                 ENDIF
 #endif
-                CALL DTYPE(ppm_rc_ghost_copy)(sbpitr,old_ghost(isize+1:nsize),info)
+                CALL DTYPE(ppm_rc_ghost_copy)(sbpitr,old_ghost,isize+1,info)
                 or_fail("ppm_rc_ghost_copy")
 
                 isize=nsize
@@ -155,7 +155,7 @@
              or_fail("labels%map_ghost_pop")
           ENDIF
 
-          NULLIFY(DTYPE(wpl))
+          NULLIFY(wpl)
 
           sbpitr => MeshIn%subpatch%begin()
           nsize=0
@@ -163,7 +163,7 @@
           DO WHILE (ASSOCIATED(sbpitr))
              Nm => sbpitr%nnodes
 
-             CALL sbpitr%get_field(labels,DTYPE(wpl),info)
+             CALL sbpitr%get_field(labels,wpl,info)
              or_fail("Failed to get field i_wp data.")
 
 #if   __DIME == __2D
@@ -173,15 +173,15 @@
              IF (sbpitr%istart(1).NE.1) THEN
                 DO j=1,Nm(2)
                    l=l+1
-                   IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j)) &
-                   &   .AND.ABS(DTYPE(wpl)(i,j)).GT.1)) THEN
+                   IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j)) &
+                   &   .AND.ABS(wpl(i,j)).GT.1)) THEN
                       ALLOCATE(seed,STAT=info)
                       or_fail_alloc("seed")
                       CALL seed%add(i,j)
                       CALL ppm_rc_seeds(ipatch)%push(seed,info)
                       or_fail("could not add new seed to the collection")
                    ELSE
-                      DTYPE(wpl)(i,j)=old_ghost(l)
+                      wpl(i,j)=old_ghost(l)
                    ENDIF
                 ENDDO !j
 
@@ -193,15 +193,15 @@
              IF (sbpitr%iend(1).NE.Ngrid(1)) THEN
                 DO j=1,Nm(2)
                    l=l+1
-                   IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j)) &
-                   &   .AND.ABS(DTYPE(wpl)(i,j)).GT.1)) THEN
+                   IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j)) &
+                   &   .AND.ABS(wpl(i,j)).GT.1)) THEN
                       ALLOCATE(seed,STAT=info)
                       or_fail_alloc("seed")
                       CALL seed%add(i,j)
                       CALL ppm_rc_seeds(ipatch)%push(seed,info)
                       or_fail("could not add new seed to the collection")
                    ELSE
-                      DTYPE(wpl)(i,j)=old_ghost(l)
+                      wpl(i,j)=old_ghost(l)
                    ENDIF
                 ENDDO !j
                 nsize=nsize+Nm(2)
@@ -212,23 +212,23 @@
              IF (sbpitr%istart(2).NE.1) THEN
                 i=0
                 l=l+1
-                DTYPE(wpl)(i,j)=old_ghost(l)
+                wpl(i,j)=old_ghost(l)
                 DO i=1,Nm(1)
                    l=l+1
-                   IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j)) &
-                   &   .AND.ABS(DTYPE(wpl)(i,j)).GT.1)) THEN
+                   IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j)) &
+                   &   .AND.ABS(wpl(i,j)).GT.1)) THEN
                       ALLOCATE(seed,STAT=info)
                       or_fail_alloc("seed")
                       CALL seed%add(i,j)
                       CALL ppm_rc_seeds(ipatch)%push(seed,info)
                       or_fail("could not add new seed to the collection")
                    ELSE
-                      DTYPE(wpl)(i,j)=old_ghost(l)
+                      wpl(i,j)=old_ghost(l)
                    ENDIF
                 ENDDO !i
                 i=Nm(1)+1
                 l=l+1
-                DTYPE(wpl)(i,j)=old_ghost(l)
+                wpl(i,j)=old_ghost(l)
                 nsize=nsize+Nm(1)+2
              ENDIF
              !+y north
@@ -237,23 +237,23 @@
              IF (sbpitr%iend(2).NE.Ngrid(2)) THEN
                 i=0
                 l=l+1
-                DTYPE(wpl)(i,j)=old_ghost(l)
+                wpl(i,j)=old_ghost(l)
                 DO i=1,Nm(1)
                    l=l+1
-                   IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j)) &
-                   &   .AND.ABS(DTYPE(wpl)(i,j)).GT.1)) THEN
+                   IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j)) &
+                   &   .AND.ABS(wpl(i,j)).GT.1)) THEN
                       ALLOCATE(seed,STAT=info)
                       or_fail_alloc("seed")
                       CALL seed%add(i,j)
                       CALL ppm_rc_seeds(ipatch)%push(seed,info)
                       or_fail("could not add new seed to the collection")
                    ELSE
-                      DTYPE(wpl)(i,j)=old_ghost(l)
+                      wpl(i,j)=old_ghost(l)
                    ENDIF
                 ENDDO !j
                 i=Nm(1)+1
                 l=l+1
-                DTYPE(wpl)(i,j)=old_ghost(l)
+                wpl(i,j)=old_ghost(l)
                 nsize=nsize+Nm(1)+2
              ENDIF
 #elif __DIME == __3D
@@ -264,15 +264,15 @@
                 DO k=1,Nm(3)
                    DO j=1,Nm(2)
                       l=l+1
-                      IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j,k)) &
-                      &   .AND.ABS(DTYPE(wpl)(i,j,k)).GT.1)) THEN
+                      IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j,k)) &
+                      &   .AND.ABS(wpl(i,j,k)).GT.1)) THEN
                          ALLOCATE(seed,STAT=info)
                          or_fail_alloc("seed")
                          CALL seed%add(i,j,k)
                          CALL ppm_rc_seeds(ipatch)%push(seed,info)
                          or_fail("could not add new seed to the collection")
                       ELSE
-                         DTYPE(wpl)(i,j,k)=old_ghost(l)
+                         wpl(i,j,k)=old_ghost(l)
                       ENDIF
                    ENDDO !j
                 ENDDO !k
@@ -285,15 +285,15 @@
                 DO k=1,Nm(3)
                    DO j=1,Nm(2)
                       l=l+1
-                      IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j,k)) &
-                      &   .AND.ABS(DTYPE(wpl)(i,j,k)).GT.1)) THEN
+                      IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j,k)) &
+                      &   .AND.ABS(wpl(i,j,k)).GT.1)) THEN
                          ALLOCATE(seed,STAT=info)
                          or_fail_alloc("seed")
                          CALL seed%add(i,j,k)
                          CALL ppm_rc_seeds(ipatch)%push(seed,info)
                          or_fail("could not add new seed to the collection")
                       ELSE
-                         DTYPE(wpl)(i,j,k)=old_ghost(l)
+                         wpl(i,j,k)=old_ghost(l)
                       ENDIF
                    ENDDO !j
                 ENDDO !k
@@ -306,23 +306,23 @@
                 DO k=1,Nm(3)
                    i=0
                    l=l+1
-                   DTYPE(wpl)(i,j,k)=old_ghost(l)
+                   wpl(i,j,k)=old_ghost(l)
                    DO i=1,Nm(1)
                       l=l+1
-                      IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j,k)) &
-                      &   .AND.ABS(DTYPE(wpl)(i,j,k)).GT.1)) THEN
+                      IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j,k)) &
+                      &   .AND.ABS(wpl(i,j,k)).GT.1)) THEN
                          ALLOCATE(seed,STAT=info)
                          or_fail_alloc("seed")
                          CALL seed%add(i,j,k)
                          CALL ppm_rc_seeds(ipatch)%push(seed,info)
                          or_fail("could not add new seed to the collection")
                       ELSE
-                         DTYPE(wpl)(i,j,k)=old_ghost(l)
+                         wpl(i,j,k)=old_ghost(l)
                       ENDIF
                    ENDDO !i
                    i=Nm(1)+1
                    l=l+1
-                   DTYPE(wpl)(i,j,k)=old_ghost(l)
+                   wpl(i,j,k)=old_ghost(l)
                 ENDDO !k
                 nsize=nsize+(Nm(1)+2)*Nm(3)
              ENDIF
@@ -333,23 +333,23 @@
                 DO k=1,Nm(3)
                    i=0
                    l=l+1
-                   DTYPE(wpl)(i,j,k)=old_ghost(l)
+                   wpl(i,j,k)=old_ghost(l)
                    DO i=1,Nm(1)
                       l=l+1
-                      IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j,k)) &
-                      &   .AND.ABS(DTYPE(wpl)(i,j,k)).GT.1)) THEN
+                      IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j,k)) &
+                      &   .AND.ABS(wpl(i,j,k)).GT.1)) THEN
                          ALLOCATE(seed,STAT=info)
                          or_fail_alloc("seed")
                          CALL seed%add(i,j,k)
                          CALL ppm_rc_seeds(ipatch)%push(seed,info)
                          or_fail("could not add new seed to the collection")
                       ELSE
-                         DTYPE(wpl)(i,j,k)=old_ghost(l)
+                         wpl(i,j,k)=old_ghost(l)
                       ENDIF
                    ENDDO !i
                    i=Nm(1)+1
                    l=l+1
-                   DTYPE(wpl)(i,j,k)=old_ghost(l)
+                   wpl(i,j,k)=old_ghost(l)
                 ENDDO !k
                 nsize=nsize+(Nm(1)+2)*Nm(3)
              ENDIF
@@ -360,33 +360,33 @@
                 j=0
                 DO i=0,Nm(1)+1
                    l=l+1
-                   DTYPE(wpl)(i,j,k)=old_ghost(l)
+                   wpl(i,j,k)=old_ghost(l)
                 ENDDO
                 DO j=1,Nm(2)
                    i=0
                    l=l+1
-                   DTYPE(wpl)(i,j,k)=old_ghost(l)
+                   wpl(i,j,k)=old_ghost(l)
                    DO i=1,Nm(1)
                       l=l+1
-                      IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j,k)) &
-                      &   .AND.ABS(DTYPE(wpl)(i,j,k)).GT.1)) THEN
+                      IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j,k)) &
+                      &   .AND.ABS(wpl(i,j,k)).GT.1)) THEN
                          ALLOCATE(seed,STAT=info)
                          or_fail_alloc("seed")
                          CALL seed%add(i,j,k)
                          CALL ppm_rc_seeds(ipatch)%push(seed,info)
                          or_fail("could not add new seed to the collection")
                       ELSE
-                         DTYPE(wpl)(i,j,k)=old_ghost(l)
+                         wpl(i,j,k)=old_ghost(l)
                       ENDIF
                    ENDDO !i
                    i=Nm(1)+1
                    l=l+1
-                   DTYPE(wpl)(i,j,k)=old_ghost(l)
+                   wpl(i,j,k)=old_ghost(l)
                 ENDDO !j
                 j=Nm(2)+1
                 DO i=0,Nm(1)+1
                    l=l+1
-                   DTYPE(wpl)(i,j,k)=old_ghost(l)
+                   wpl(i,j,k)=old_ghost(l)
                 ENDDO
                 nsize=nsize+(Nm(1)+2)*(Nm(2)+2)
              ENDIF
@@ -397,33 +397,33 @@
                 j=0
                 DO i=0,Nm(1)+1
                    l=l+1
-                   DTYPE(wpl)(i,j,k)=old_ghost(l)
+                   wpl(i,j,k)=old_ghost(l)
                 ENDDO
                 DO j=1,Nm(2)
                    i=0
                    l=l+1
-                   DTYPE(wpl)(i,j,k)=old_ghost(l)
+                   wpl(i,j,k)=old_ghost(l)
                    DO i=1,Nm(1)
                       l=l+1
-                      IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j,k)) &
-                      &   .AND.ABS(DTYPE(wpl)(i,j,k)).GT.1)) THEN
+                      IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j,k)) &
+                      &   .AND.ABS(wpl(i,j,k)).GT.1)) THEN
                          ALLOCATE(seed,STAT=info)
                          or_fail_alloc("seed")
                          CALL seed%add(i,j,k)
                          CALL ppm_rc_seeds(ipatch)%push(seed,info)
                          or_fail("could not add new seed to the collection")
                       ELSE
-                         DTYPE(wpl)(i,j,k)=old_ghost(l)
+                         wpl(i,j,k)=old_ghost(l)
                       ENDIF
                    ENDDO !i
                    i=Nm(1)+1
                    l=l+1
-                   DTYPE(wpl)(i,j,k)=old_ghost(l)
+                   wpl(i,j,k)=old_ghost(l)
                 ENDDO !j
                 j=Nm(2)+1
                 DO i=0,Nm(1)+1
                    l=l+1
-                   DTYPE(wpl)(i,j,k)=old_ghost(l)
+                   wpl(i,j,k)=old_ghost(l)
                 ENDDO
                 nsize=nsize+(Nm(1)+2)*(Nm(2)+2)
              ENDIF
@@ -433,7 +433,7 @@
              ipatch=ipatch+1
           ENDDO
 
-          NULLIFY(DTYPE(wpl))
+          NULLIFY(wpl)
 
           l=MeshIn%subpatch%nb
           ldu(1)=SUM(ppm_rc_seeds(1:l)%nb-seednm(1:l))
@@ -534,7 +534,7 @@
                 ENDIF
 #endif
 
-                CALL DTYPE(ppm_rc_ghost_copy)(sbpitr,old_ghost(isize+1:nsize),info)
+                CALL DTYPE(ppm_rc_ghost_copy)(sbpitr,old_ghost,isize+1,info)
                 or_fail("ppm_rc_ghost_copy")
 
                 isize=nsize
@@ -554,7 +554,7 @@
              DO WHILE (ASSOCIATED(sbpitr))
                 Nm => sbpitr%nnodes
 
-                CALL sbpitr%get_field(labels,DTYPE(wpl),info)
+                CALL sbpitr%get_field(labels,wpl,info)
                 or_fail("Failed to get field i_wp data.")
 
 #if   __DIME == __2D
@@ -564,15 +564,15 @@
                 IF (sbpitr%istart(1).NE.1) THEN
                    DO j=1,Nm(2)
                       l=l+1
-                      IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j)) &
-                      &   .AND.ABS(DTYPE(wpl)(i,j)).GT.1)) THEN
+                      IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j)) &
+                      &   .AND.ABS(wpl(i,j)).GT.1)) THEN
                          ALLOCATE(seed,STAT=info)
                          or_fail_alloc("seed")
                          CALL seed%add(i,j)
                          CALL ppm_rc_seeds(ipatch)%push(seed,info)
                          or_fail("could not add new seed to the collection")
                       ELSE
-                         DTYPE(wpl)(i,j)=old_ghost(l)
+                         wpl(i,j)=old_ghost(l)
                       ENDIF
                    ENDDO !j
                    nsize=nsize+Nm(2)
@@ -583,15 +583,15 @@
                 IF (sbpitr%iend(1).NE.Ngrid(1)) THEN
                    DO j=1,Nm(2)
                       l=l+1
-                      IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j)) &
-                      &   .AND.ABS(DTYPE(wpl)(i,j)).GT.1)) THEN
+                      IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j)) &
+                      &   .AND.ABS(wpl(i,j)).GT.1)) THEN
                          ALLOCATE(seed,STAT=info)
                          or_fail_alloc("seed")
                          CALL seed%add(i,j)
                          CALL ppm_rc_seeds(ipatch)%push(seed,info)
                          or_fail("could not add new seed to the collection")
                       ELSE
-                         DTYPE(wpl)(i,j)=old_ghost(l)
+                         wpl(i,j)=old_ghost(l)
                       ENDIF
                    ENDDO !i
                    nsize=nsize+Nm(2)
@@ -602,23 +602,23 @@
                 IF (sbpitr%istart(2).NE.1) THEN
                    i=0
                    l=l+1
-                   DTYPE(wpl)(i,j)=old_ghost(l)
+                   wpl(i,j)=old_ghost(l)
                    DO i=1,Nm(1)
                       l=l+1
-                      IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j)) &
-                      &   .AND.ABS(DTYPE(wpl)(i,j)).GT.1)) THEN
+                      IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j)) &
+                      &   .AND.ABS(wpl(i,j)).GT.1)) THEN
                          ALLOCATE(seed,STAT=info)
                          or_fail_alloc("seed")
                          CALL seed%add(i,j)
                          CALL ppm_rc_seeds(ipatch)%push(seed,info)
                          or_fail("could not add new seed to the collection")
                       ELSE
-                         DTYPE(wpl)(i,j)=old_ghost(l)
+                         wpl(i,j)=old_ghost(l)
                       ENDIF
                    ENDDO !i
                    i=Nm(1)+1
                    l=l+1
-                   DTYPE(wpl)(i,j)=old_ghost(l)
+                   wpl(i,j)=old_ghost(l)
                    nsize=nsize+Nm(1)+2
                 ENDIF
                 !+y north
@@ -627,23 +627,23 @@
                 IF (sbpitr%iend(2).NE.Ngrid(2)) THEN
                    i=0
                    l=l+1
-                   DTYPE(wpl)(i,j)=old_ghost(l)
+                   wpl(i,j)=old_ghost(l)
                    DO i=1,Nm(1)
                       l=l+1
-                      IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j)) &
-                      &   .AND.ABS(DTYPE(wpl)(i,j)).GT.1)) THEN
+                      IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j)) &
+                      &   .AND.ABS(wpl(i,j)).GT.1)) THEN
                          ALLOCATE(seed,STAT=info)
                          or_fail_alloc("seed")
                          CALL seed%add(i,j)
                          CALL ppm_rc_seeds(ipatch)%push(seed,info)
                          or_fail("could not add new seed to the collection")
                       ELSE
-                         DTYPE(wpl)(i,j)=old_ghost(l)
+                         wpl(i,j)=old_ghost(l)
                       ENDIF
                    ENDDO !i
                    i=Nm(1)+1
                    l=l+1
-                   DTYPE(wpl)(i,j)=old_ghost(l)
+                   wpl(i,j)=old_ghost(l)
                    nsize=nsize+Nm(1)+2
                 ENDIF
 #elif __DIME == __3D
@@ -654,15 +654,15 @@
                    DO k=1,Nm(3)
                       DO j=1,Nm(2)
                          l=l+1
-                         IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j,k)) &
-                         &   .AND.ABS(DTYPE(wpl)(i,j,k)).GT.1)) THEN
+                         IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j,k)) &
+                         &   .AND.ABS(wpl(i,j,k)).GT.1)) THEN
                             ALLOCATE(seed,STAT=info)
                             or_fail_alloc("seed")
                             CALL seed%add(i,j,k)
                             CALL ppm_rc_seeds(ipatch)%push(seed,info)
                             or_fail("could not add new seed to the collection")
                          ELSE
-                            DTYPE(wpl)(i,j,k)=old_ghost(l)
+                            wpl(i,j,k)=old_ghost(l)
                          ENDIF
                       ENDDO !j
                    ENDDO !k
@@ -675,15 +675,15 @@
                    DO k=1,Nm(3)
                       DO j=1,Nm(2)
                          l=l+1
-                         IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j,k)) &
-                         &   .AND.ABS(DTYPE(wpl)(i,j,k)).GT.1)) THEN
+                         IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j,k)) &
+                         &   .AND.ABS(wpl(i,j,k)).GT.1)) THEN
                             ALLOCATE(seed,STAT=info)
                             or_fail_alloc("seed")
                             CALL seed%add(i,j,k)
                             CALL ppm_rc_seeds(ipatch)%push(seed,info)
                             or_fail("could not add new seed to the collection")
                          ELSE
-                            DTYPE(wpl)(i,j,k)=old_ghost(l)
+                            wpl(i,j,k)=old_ghost(l)
                          ENDIF
                       ENDDO !j
                    ENDDO !k
@@ -696,23 +696,23 @@
                    DO k=1,Nm(3)
                       i=0
                       l=l+1
-                      DTYPE(wpl)(i,j,k)=old_ghost(l)
+                      wpl(i,j,k)=old_ghost(l)
                       DO i=1,Nm(1)
                          l=l+1
-                         IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j,k)) &
-                         &   .AND.ABS(DTYPE(wpl)(i,j,k)).GT.1)) THEN
+                         IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j,k)) &
+                         &   .AND.ABS(wpl(i,j,k)).GT.1)) THEN
                             ALLOCATE(seed,STAT=info)
                             or_fail_alloc("seed")
                             CALL seed%add(i,j,k)
                             CALL ppm_rc_seeds(ipatch)%push(seed,info)
                             or_fail("could not add new seed to the collection")
                          ELSE
-                            DTYPE(wpl)(i,j,k)=old_ghost(l)
+                            wpl(i,j,k)=old_ghost(l)
                          ENDIF
                       ENDDO !i
                       i=Nm(1)+1
                       l=l+1
-                      DTYPE(wpl)(i,j,k)=old_ghost(l)
+                      wpl(i,j,k)=old_ghost(l)
                    ENDDO !k
                    nsize=nsize+(Nm(1)+2)*Nm(3)
                 ENDIF
@@ -723,23 +723,23 @@
                    DO k=1,Nm(3)
                       i=0
                       l=l+1
-                      DTYPE(wpl)(i,j,k)=old_ghost(l)
+                      wpl(i,j,k)=old_ghost(l)
                       DO i=1,Nm(1)
                          l=l+1
-                         IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j,k)) &
-                         &   .AND.ABS(DTYPE(wpl)(i,j,k)).GT.1)) THEN
+                         IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j,k)) &
+                         &   .AND.ABS(wpl(i,j,k)).GT.1)) THEN
                             ALLOCATE(seed,STAT=info)
                             or_fail_alloc("seed")
                             CALL seed%add(i,j,k)
                             CALL ppm_rc_seeds(ipatch)%push(seed,info)
                             or_fail("could not add new seed to the collection")
                          ELSE
-                            DTYPE(wpl)(i,j,k)=old_ghost(l)
+                            wpl(i,j,k)=old_ghost(l)
                          ENDIF
                       ENDDO !i
                       i=Nm(1)+1
                       l=l+1
-                      DTYPE(wpl)(i,j,k)=old_ghost(l)
+                      wpl(i,j,k)=old_ghost(l)
                    ENDDO !k
                    nsize=nsize+(Nm(1)+2)*Nm(3)
                 ENDIF
@@ -750,33 +750,33 @@
                    j=0
                    DO i=0,Nm(1)+1
                       l=l+1
-                      DTYPE(wpl)(i,j,k)=old_ghost(l)
+                      wpl(i,j,k)=old_ghost(l)
                    ENDDO
                    DO j=1,Nm(2)
                       i=0
                       l=l+1
-                      DTYPE(wpl)(i,j,k)=old_ghost(l)
+                      wpl(i,j,k)=old_ghost(l)
                       DO i=1,Nm(1)
                          l=l+1
-                         IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j,k)) &
-                         &   .AND.ABS(DTYPE(wpl)(i,j,k)).GT.1)) THEN
+                         IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j,k)) &
+                         &   .AND.ABS(wpl(i,j,k)).GT.1)) THEN
                             ALLOCATE(seed,STAT=info)
                             or_fail_alloc("seed")
                             CALL seed%add(i,j,k)
                             CALL ppm_rc_seeds(ipatch)%push(seed,info)
                             or_fail("could not add new seed to the collection")
                          ELSE
-                            DTYPE(wpl)(i,j,k)=old_ghost(l)
+                            wpl(i,j,k)=old_ghost(l)
                          ENDIF
                       ENDDO !i
                       i=Nm(1)+1
                       l=l+1
-                      DTYPE(wpl)(i,j,k)=old_ghost(l)
+                      wpl(i,j,k)=old_ghost(l)
                    ENDDO !j
                    j=Nm(2)+1
                    DO i=0,Nm(1)+1
                       l=l+1
-                      DTYPE(wpl)(i,j,k)=old_ghost(l)
+                      wpl(i,j,k)=old_ghost(l)
                    ENDDO
                    nsize=nsize+(Nm(1)+2)*(Nm(2)+2)
                 ENDIF
@@ -787,33 +787,33 @@
                    j=0
                    DO i=0,Nm(1)+1
                       l=l+1
-                      DTYPE(wpl)(i,j,k)=old_ghost(l)
+                      wpl(i,j,k)=old_ghost(l)
                    ENDDO
                    DO j=1,Nm(2)
                       i=0
                       l=l+1
-                      DTYPE(wpl)(i,j,k)=old_ghost(l)
+                      wpl(i,j,k)=old_ghost(l)
                       DO i=1,Nm(1)
                          l=l+1
-                         IF ((ABS(old_ghost(l)).GT.ABS(DTYPE(wpl)(i,j,k)) &
-                         &   .AND.ABS(DTYPE(wpl)(i,j,k)).GT.1)) THEN
+                         IF ((ABS(old_ghost(l)).GT.ABS(wpl(i,j,k)) &
+                         &   .AND.ABS(wpl(i,j,k)).GT.1)) THEN
                             ALLOCATE(seed,STAT=info)
                             or_fail_alloc("seed")
                             CALL seed%add(i,j,k)
                             CALL ppm_rc_seeds(ipatch)%push(seed,info)
                             or_fail("could not add new seed to the collection")
                          ELSE
-                            DTYPE(wpl)(i,j,k)=old_ghost(l)
+                            wpl(i,j,k)=old_ghost(l)
                          ENDIF
                       ENDDO !i
                       i=Nm(1)+1
                       l=l+1
-                      DTYPE(wpl)(i,j,k)=old_ghost(l)
+                      wpl(i,j,k)=old_ghost(l)
                    ENDDO !j
                    j=Nm(2)+1
                    DO i=0,Nm(1)+1
                       l=l+1
-                      DTYPE(wpl)(i,j,k)=old_ghost(l)
+                      wpl(i,j,k)=old_ghost(l)
                    ENDDO
                    nsize=nsize+(Nm(1)+2)*(Nm(2)+2)
                 ENDIF
@@ -823,7 +823,7 @@
                 ipatch=ipatch+1
              ENDDO !WHILE (ASSOCIATED(sbpitr))
 
-             NULLIFY(DTYPE(wpl))
+             NULLIFY(wpl)
 
              l=MeshIn%subpatch%nb
              ldu(1)=SUM(ppm_rc_seeds(1:l)%nb-seednm(1:l))
@@ -880,16 +880,16 @@
           !stat collection
           trstat => tmp_region_stat%last()
 
-          NULLIFY(DTYPE(wpi))
+          NULLIFY(wpi)
 
           sbpitr => MeshIn%subpatch%begin()
           DO WHILE (ASSOCIATED(sbpitr))
              Nm => sbpitr%nnodes
 
-             CALL sbpitr%get_field(image,DTYPE(wpi),info)
+             CALL sbpitr%get_field(image,wpi,info)
              or_fail("Failed to get field i_wp data.")
 
-             CALL sbpitr%get_field(labels,DTYPE(wpl),info)
+             CALL sbpitr%get_field(labels,wpl,info)
              or_fail("Failed to get field i_wp data.")
 
              val=zerod
@@ -898,9 +898,9 @@
 #if   __DIME == __2D
              DO j=1,Nm(2)
                 DO i=1,Nm(1)
-                   IF (DTYPE(wpl)(i,j).EQ.0.OR.DTYPE(wpl)(i,j).EQ.FORBIDDEN) THEN
+                   IF (wpl(i,j).EQ.0.OR.wpl(i,j).EQ.FORBIDDEN) THEN
                       ll=ll+1_ppm_kind_int64
-                      dummy=REAL(DTYPE(wpi)(i,j),ppm_kind_double)
+                      dummy=REAL(wpi(i,j),ppm_kind_double)
                       val(2)=val(2)+dummy
                       val(3)=val(3)+dummy*dummy
                    ENDIF
@@ -910,9 +910,9 @@
              DO k=1,Nm(3)
                 DO j=1,Nm(2)
                    DO i=1,Nm(1)
-                      IF (DTYPE(wpl)(i,j,k).EQ.0.OR.DTYPE(wpl)(i,j,k).EQ.FORBIDDEN) THEN
+                      IF (wpl(i,j,k).EQ.0.OR.wpl(i,j,k).EQ.FORBIDDEN) THEN
                          ll=ll+1_ppm_kind_int64
-                         dummy=REAL(DTYPE(wpi)(i,j,k),ppm_kind_double)
+                         dummy=REAL(wpi(i,j,k),ppm_kind_double)
                          val(2)=val(2)+dummy
                          val(3)=val(3)+dummy*dummy
                       ENDIF
@@ -927,7 +927,7 @@
              sbpitr => MeshIn%subpatch%next()
           ENDDO !WHILE (ASSOCIATED(sbpitr))
 
-          NULLIFY(DTYPE(wpi),DTYPE(wpl))
+          NULLIFY(wpi,wpl)
 
           ALLOCATE(tmp_region_stat_compact(4,nrgs),STAT=info)
           or_fail_alloc("tmp_region_stat_compact")
@@ -1038,7 +1038,7 @@
           or_fail_alloc("MASKL")
 
           ! TODO
-          htable_size = (Nregions+32) !Size of hash table
+          htable_size = Nregions+32 !Size of hash table
 
           CALL htable%create(htable_size,info)
           or_fail("create htable")
@@ -1146,16 +1146,16 @@
           REAL(ppm_kind_double)                        :: t0
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wpl)
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wpp)
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpl
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpp
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wpl)
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wpp)
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpl
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpp
 #endif
           INTEGER, DIMENSION(:), ALLOCATABLE :: old_ghost
           INTEGER, DIMENSION(:),     POINTER :: seedn
           INTEGER, DIMENSION(:),     POINTER :: unique_new_regions
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpl
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: wplp
           INTEGER, DIMENSION(__DIME+1)              :: ld
           INTEGER, DIMENSION(__DIME)              :: ll
           INTEGER                            :: iopt,isize,nsize
@@ -1217,16 +1217,16 @@
           ALLOCATE(old_ghost(ll(1)),STAT=info)
           or_fail_alloc("old_ghost")
 
-          NULLIFY(wpl,DTYPE(wpl),DTYPE(wpp))
+          NULLIFY(wpl,wplp,wpp)
 
-          CALL PartIn%get(plabels,wpl,info,with_ghosts=.TRUE.)
+          CALL PartIn%get(plabels,wplp,info,with_ghosts=.TRUE.)
           or_fail("PartIn%get for <plabels> field is failed!")
 
           sbpitr => MeshIn%subpatch%begin()
           ipatch=1
           opart=0
           DO WHILE (ASSOCIATED(sbpitr))
-             CALL sbpitr%get_field(pind,DTYPE(wpp),info)
+             CALL sbpitr%get_field(pind,wpp,info)
              or_fail("Failed to get field wpp data.")
 
              iseed=partnm(ipatch)+1
@@ -1235,13 +1235,13 @@
              DO WHILE (ASSOCIATED(seed))
                 seedn => seed%first%getValue()
 #if   __DIME == __2D
-                ipart=DTYPE(wpp)(seedn(1),seedn(2))
+                ipart=wpp(seedn(1),seedn(2))
 #elif __DIME == __3D
-                ipart=DTYPE(wpp)(seedn(1),seedn(2),seedn(3))
+                ipart=wpp(seedn(1),seedn(2),seedn(3))
 #endif
 
                 opart=opart+1
-                old_ghost(opart)=SIGN(wpl(1,ipart),-1)
+                old_ghost(opart)=SIGN(wplp(1,ipart),-1)
                 !copy the ghost particles which have the negative labels
                 !SIGN operation is to correct the hot particles labels
 
@@ -1252,9 +1252,9 @@
           ENDDO !ASSOCIATED(sbpitr)
           !Copy the ghost particles in old_ghost array
 
-          NULLIFY(DTYPE(wpp))
+          NULLIFY(wpp)
 
-          CALL PartIn%set(plabels,wpl,info)
+          CALL PartIn%set(plabels,wplp,info)
           or_fail("PartIn%set for <plabels> field is failed!")
 
           ghostfirenewjob=.TRUE.
@@ -1272,7 +1272,7 @@
 
              ghostfirenewjob=.FALSE.
 
-             CALL PartIn%get(plabels,wpl,info)
+             CALL PartIn%get(plabels,wplp,info)
              or_fail("PartIn%get for <plabels> field is failed!")
 
              !TOCHECK
@@ -1281,10 +1281,10 @@
              sbpitr => MeshIn%subpatch%begin()
              ipatch=1
              DO WHILE (ASSOCIATED(sbpitr))
-                CALL sbpitr%get_field(labels,DTYPE(wpl),info)
+                CALL sbpitr%get_field(labels,wpl,info)
                 or_fail("Failed to get field wpl data.")
 
-                CALL sbpitr%get_field(pind,DTYPE(wpp),info)
+                CALL sbpitr%get_field(pind,wpp,info)
                 or_fail("Failed to get field wpp data.")
 
                 seed => InnerContourContainer(ipatch)%begin()
@@ -1294,9 +1294,9 @@
                    seedn => seed%first%getValue()
 
 #if   __DIME == __2D
-                   ipart=DTYPE(wpp)(seedn(1),seedn(2))
+                   ipart=wpp(seedn(1),seedn(2))
 #elif __DIME == __3D
-                   ipart=DTYPE(wpp)(seedn(1),seedn(2),seedn(3))
+                   ipart=wpp(seedn(1),seedn(2),seedn(3))
 #endif
 
                    IF (ipart.LE.0) THEN
@@ -1305,9 +1305,9 @@
                    ENDIF
 
 #if   __DIME == __2D
-                   wpl(1,ipart)=DTYPE(wpl)(seedn(1),seedn(2))
+                   wplp(1,ipart)=wpl(seedn(1),seedn(2))
 #elif __DIME == __3D
-                   wpl(1,ipart)=DTYPE(wpl)(seedn(1),seedn(2),seedn(3))
+                   wplp(1,ipart)=wpl(seedn(1),seedn(2),seedn(3))
 #endif
 
                    seed => InnerContourContainer(ipatch)%next()
@@ -1316,9 +1316,9 @@
                 ipatch=ipatch+1
              ENDDO
 
-             NULLIFY(DTYPE(wpl),DTYPE(wpp))
+             NULLIFY(wpl,wpp)
 
-             CALL PartIn%set(plabels,wpl,info)
+             CALL PartIn%set(plabels,wplp,info)
              or_fail("PartIn%set for <plabels> field is failed!")
 
              IF (ppm_nproc.GT.1) THEN
@@ -1336,7 +1336,7 @@
              !
              !-------------------------------------------------------------------------
 
-             CALL PartIn%get(plabels,wpl,info,with_ghosts=.TRUE.)
+             CALL PartIn%get(plabels,wplp,info,with_ghosts=.TRUE.)
              or_fail("PartIn%get for <plabels> field is failed!")
 
              ghost_on_fire=0
@@ -1345,7 +1345,7 @@
              ipatch=1
              opart=0
              DO WHILE (ASSOCIATED(sbpitr))
-                CALL sbpitr%get_field(pind,DTYPE(wpp),info)
+                CALL sbpitr%get_field(pind,wpp,info)
                 or_fail("Failed to get field wpp data.")
 
                 !Loop only through the ghost particles
@@ -1354,26 +1354,26 @@
                 DO WHILE (ASSOCIATED(seed))
                    seedn => seed%first%getValue()
 #if   __DIME == __2D
-                   ipart=DTYPE(wpp)(seedn(1),seedn(2))
+                   ipart=wpp(seedn(1),seedn(2))
 #elif __DIME == __3D
-                   ipart=DTYPE(wpp)(seedn(1),seedn(2),seedn(3))
+                   ipart=wpp(seedn(1),seedn(2),seedn(3))
 #endif
                    opart=opart+1
                    !labels are negative!
-                   IF (old_ghost(opart).NE.wpl(1,ipart)) THEN
+                   IF (old_ghost(opart).NE.wplp(1,ipart)) THEN
                       ALLOCATE(seed,STAT=info)
                       or_fail_alloc("seed")
 
 #if   __DIME == __2D
-                      CALL seed%add(seedn(1),seedn(2),-wpl(1,ipart))
+                      CALL seed%add(seedn(1),seedn(2),-wplp(1,ipart))
 #elif __DIME == __3D
-                      CALL seed%add(seedn(1),seedn(2),seedn(3),-wpl(1,ipart))
+                      CALL seed%add(seedn(1),seedn(2),seedn(3),-wplp(1,ipart))
 #endif
 
                       CALL ppm_rc_seeds(ipatch)%push(seed,info)
                       or_fail("could not add new seed to the collection")
 
-                      old_ghost(opart)=wpl(1,ipart)
+                      old_ghost(opart)=wplp(1,ipart)
 
                       IF (ghost_on_fire.EQ.0) THEN
                          ghost_on_fire=1
@@ -1402,9 +1402,9 @@
 #endif
              ENDIF
 
-             NULLIFY(DTYPE(wpp))
+             NULLIFY(wpp)
 
-             CALL PartIn%set(plabels,wpl,info)
+             CALL PartIn%set(plabels,wplp,info)
              or_fail("PartIn%set for <plabels> field is failed!")
 
 #ifdef __MPI
@@ -1546,19 +1546,11 @@
              Nregions = 0
           ENDIF
 
-          !-------------------------------------------------------------------------
-          !  grow the size of hash table if necessary
-          !-------------------------------------------------------------------------
-          nsize=SIZE(e_data%gCount)
-
-          IF (Nregions+nsize.GT.htable%nrow) THEN
-             CALL htable%grow(info)
-             or_fail_alloc("Failed to grow the htable")
-          ENDIF
-
           !NOW every processor should have regions global value available
           CALL e_data%UpdateStatistics(info,sendrecv=.FALSE.)
           or_fail("e_data%UpdateStatistics")
+
+          nsize=SIZE(e_data%gCount)
 
           isize=COUNT(e_data%gCount.LT.oned)
           IF (Nregions.GT.isize) THEN
@@ -1614,10 +1606,10 @@
           sbpitr => MeshIn%subpatch%begin()
           ipatch=1
           DO WHILE (ASSOCIATED(sbpitr))
-             CALL sbpitr%get_field(labels,DTYPE(wpl),info)
+             CALL sbpitr%get_field(labels,wpl,info)
              or_fail("Failed to get field wpl data.")
 
-             CALL sbpitr%get_field(pind,DTYPE(wpp),info)
+             CALL sbpitr%get_field(pind,wpp,info)
              or_fail("Failed to get field wpp data.")
 
              seed => ppm_rc_seeds_to_remove(ipatch)%begin()
@@ -1632,28 +1624,28 @@
                 seedn => seedlnk%getValue()
 
 #if   __DIME == __2D
-                IF (DTYPE(wpl)(seedn(1),seedn(2)).GE.0) THEN
+                IF (wpl(seedn(1),seedn(2)).GE.0) THEN
                    seedlnk => seedlnk%nextLink()
                    CYCLE
                 ENDIF
 
-                vLabel=ABS(DTYPE(wpl)(seedn(1),seedn(2)))
+                vLabel=ABS(wpl(seedn(1),seedn(2)))
 #elif __DIME == __3D
-                IF (DTYPE(wpl)(seedn(1),seedn(2),seedn(3)).GE.0) THEN
+                IF (wpl(seedn(1),seedn(2),seedn(3)).GE.0) THEN
                    seedlnk => seedlnk%nextLink()
                    CYCLE
                 ENDIF
 
-                vLabel=ABS(DTYPE(wpl)(seedn(1),seedn(2),seedn(3)))
+                vLabel=ABS(wpl(seedn(1),seedn(2),seedn(3)))
 #endif
 
                 IsEnclosedByLabelFGConnectivity=.TRUE.
                 DO i=1,FG_ConnectivityType%NumberOfNeighbors
                    ll=seedn+FG_ConnectivityType%NeighborsPoints(:,i)
 #if   __DIME == __2D
-                   IF (ABS(DTYPE(wpl)(ll(1),ll(2))).NE.vLabel) THEN
+                   IF (ABS(wpl(ll(1),ll(2))).NE.vLabel) THEN
 #elif __DIME == __3D
-                   IF (ABS(DTYPE(wpl)(ll(1),ll(2),ll(3))).NE.vLabel) THEN
+                   IF (ABS(wpl(ll(1),ll(2),ll(3))).NE.vLabel) THEN
 #endif
                       IsEnclosedByLabelFGConnectivity=.FALSE.
                       EXIT
@@ -1661,13 +1653,13 @@
                 ENDDO !i=1,FG_ConnectivityType%NumberOfNeighbors
                 IF (IsEnclosedByLabelFGConnectivity) THEN
 #if   __DIME == __2D
-                   DTYPE(wpl)(seedn(1),seedn(2))=vLabel
-                   ipart=DTYPE(wpp)(seedn(1),seedn(2))
-                   DTYPE(wpp)(seedn(1),seedn(2))=0
+                   wpl(seedn(1),seedn(2))=vLabel
+                   ipart=wpp(seedn(1),seedn(2))
+                   wpp(seedn(1),seedn(2))=0
 #elif __DIME == __3D
-                   DTYPE(wpl)(seedn(1),seedn(2),seedn(3))=vLabel
-                   ipart=DTYPE(wpp)(seedn(1),seedn(2),seedn(3))
-                   DTYPE(wpp)(seedn(1),seedn(2),seedn(3))=0
+                   wpl(seedn(1),seedn(2),seedn(3))=vLabel
+                   ipart=wpp(seedn(1),seedn(2),seedn(3))
+                   wpp(seedn(1),seedn(2),seedn(3))=0
 #endif
                    IF (ipart.GT.0.AND.ipart.LE.Npart) THEN
                       del_parts=del_parts+1
@@ -1684,7 +1676,7 @@
              sbpitr => MeshIn%subpatch%next()
              ipatch=ipatch+1
           ENDDO
-          NULLIFY(DTYPE(wpl),DTYPE(wpp))
+          NULLIFY(wpl,wpp)
 
           !---------------------------------------------------------------------
           !  Return

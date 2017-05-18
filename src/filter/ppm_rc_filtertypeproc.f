@@ -1365,7 +1365,7 @@
         !
         SUBROUTINE DTYPE(FilterDataArray)(this,wpin,wpout,nnodes,direction,info)
         !!! Apply the Recursive Filter to an array of data.
-        !!! This method is called for each line of the volume.
+        !!! This routine does not work for in-place data buffer
           IMPLICIT NONE
 
           !-------------------------------------------------------------------------
@@ -1481,8 +1481,8 @@
           CASE (2)
           !!! Y direction
 
-             !At each pixel, I should keep three values of the first, second
-             !and third row
+             !At each pixel, I should keep four values of the first, second
+             !third and the fourth row to avoid cash missses
              ALLOCATE(tmp2_r(Nm1,5),STAT=info)
              or_fail_alloc("tmp2_r")
 
@@ -2226,7 +2226,7 @@
 
              CALL this%ComputeRemainingCoefficients(symmetric)
           CASE (1)
-             !Approximation of convolution with the first derivative of a  Gaussian
+             !Approximation of convolution with the first derivative of a Gaussian
              CALL this%ComputeNCoefficients(A1(2),B1(2),W1,L1,A2(2),B2(2), &
              &    W2,L2,this%N0,this%N1,this%N2,this%N3,SN,DN,EN)
 
@@ -2299,6 +2299,253 @@
             RETURN
           END SUBROUTINE check
         END SUBROUTINE RecursiveGaussianImageFilter_SetUp
+
+
+        SUBROUTINE GenerateDiscreteGaussianCoefficients(direction,Mask,Sigma,MaximumKernelWidth,KernelWidth,info,MaximumError)
+          !!! Compute filter for Gaussian kernel
+          !!!
+          !!!
+          !!!
+          !!! References:
+          !!! The function is adapted and amended from ITK software implementation
+          !!!
+          !!! The Gaussian kernel contained in this operator was described
+          !!! by Tony Lindeberg (Discrete Scale-Space Theory and the Scale-Space
+          !!! Primal Sketch.  Dissertation. Royal Institute of Technology, Stockholm,
+          !!! Sweden. May 1991.).
+          IMPLICIT NONE
+
+          !-------------------------------------------------------------------------
+          !  Arguments
+          !-------------------------------------------------------------------------
+          INTEGER,                             INTENT(IN   ) :: direction
+
+          REAL(MK), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: Mask
+          REAL(MK),                            INTENT(IN   ) :: Sigma
+
+          INTEGER,                             INTENT(IN   ) :: MaximumKernelWidth
+          INTEGER,                             INTENT(  OUT) :: KernelWidth
+          !!! The final size of the Kernel which is equal to MaximumKernelWidth
+          !!! This is chnaging when there is MaximumError
+          INTEGER,                             INTENT(  OUT) :: info
+
+          REAL(MK), OPTIONAL,                  INTENT(IN   ) :: MaximumError
+          !!! The "maximum error" allowed in the discrete Gaussian function.
+          !!! "Maximum errror" is defined as the difference between the area
+          !!! under the discrete Gaussian curve and the area under the continuous
+          !!! Gaussian. Maximum error affects the Gaussian operator size. Care should
+          !!! be taken not to make this value too small relative to the standard
+          !!! deviation, lest the operator size become unreasonably large.
+          !-------------------------------------------------------------------------
+          !  Local variables
+          !-------------------------------------------------------------------------
+
+          REAL(ppm_kind_double), DIMENSION(:), ALLOCATABLE :: Maskd
+          REAL(ppm_kind_double)                            :: et,cap
+          REAL(ppm_kind_double)                            :: Sigmad
+          REAL(ppm_kind_double)                            :: msumd
+          REAL(MK)                                         :: dd
+          REAL(MK)                                         :: coef,coef1
+          REAL(MK)                                         :: msum
+
+          INTEGER :: i
+
+          start_subroutine("GenerateDiscreteGaussianCoefficients")
+
+          IF (MaximumKernelWidth.LT.1) THEN
+             fail("MaximumKernelWidth can not be less than 1",ppm_error=ppm_error_fatal)
+          ENDIF
+
+          IF (PRESENT(MaximumError)) THEN
+             IF (MaximumKernelWidth.LT.2) THEN
+                fail("MaximumKernelWidth can not be less than 2 when using MaximumError to adjustthe Kernel size", &
+                & ppm_error=ppm_error_fatal)
+             ENDIF
+
+             Sigmad=REAL(Sigma,ppm_kind_double)
+
+             et=EXP(-Sigmad*Sigmad)
+             cap=oned-REAL(MaximumError,ppm_kind_double)
+
+             ALLOCATE(Maskd(0:MaximumKernelWidth),STAT=info)
+             or_fail_alloc("Failed to allocate Maskd")
+
+             Maskd(0)=et*ModifiedBesselI0(Sigmad)
+             Maskd(1)=et*ModifiedBesselI1(Sigmad)
+             msumd=Maskd(0)+Maskd(1)
+             i=1
+             DO WHILE (msumd.LT.cap)
+                i=i+1
+                Maskd(i)=et*ModifiedBesselI(i,Sigmad)
+                msumd=msumd+Maskd(i)*twod
+                IF (Maskd(i).LE.zerod) EXIT
+                IF (i.EQ.MaximumKernelWidth) THEN
+                   IF (rank.EQ.0) THEN
+                      stdout("Kernel size has exceeded the specified maximum width of ",MaximumKernelWidth, &
+                      & " and has been truncated to ",MaximumKernelWidth," elements.")
+                   ENDIF
+                   EXIT
+                ENDIF
+             ENDDO
+             ! Normalize the coefficients so that their sum is one.
+             Maskd=Maskd/msumd
+             KernelWidth=i
+
+             IF (ALLOCATED(Mask)) THEN
+                IF (SIZE(Mask).NE.KernelWidth*2+1) THEN
+                   DEALLOCATE(Mask,STAT=info)
+                   or_fail_dealloc("Mask")
+
+                   ALLOCATE(Mask(-KernelWidth:KernelWidth),STAT=info)
+                   or_fail_alloc("Failed to allocate Mask")
+                ENDIF
+             ELSE
+                ALLOCATE(Mask(-KernelWidth:KernelWidth),STAT=info)
+                or_fail_alloc("Failed to allocate Mask")
+             ENDIF
+
+             Mask(0)=REAL(Maskd(0),MK)
+             DO i=1,KernelWidth
+                Mask( i)=REAL(Maskd(i),MK)
+                Mask(-i)=Mask(i)
+             ENDDO
+
+             DEALLOCATE(Maskd,STAT=info)
+             or_fail_dealloc("Failed to Deallocate Mask")
+          ELSE
+             KernelWidth=MaximumKernelWidth
+
+             IF (ALLOCATED(Mask)) THEN
+                IF (SIZE(Mask).NE.KernelWidth*2+1) THEN
+                   DEALLOCATE(Mask,STAT=info)
+                   or_fail_dealloc("Mask")
+
+                   ALLOCATE(Mask(-KernelWidth:KernelWidth),STAT=info)
+                   or_fail_alloc("Failed to allocate Mask")
+                ENDIF
+             ELSE
+                ALLOCATE(Mask(-KernelWidth:KernelWidth),STAT=info)
+                or_fail_alloc("Failed to allocate Mask")
+             ENDIF
+
+             dd=pixel(1)/pixel(direction)*pixel(1)/pixel(direction)
+
+             !Gaussians = 1/(sqrt(2*pi)*sigma).*exp(-x.^2/(2*sigma.^2))
+             coef =one/(SQRT(two*pi)*Sigma)
+             coef1=one/(two*Sigma*Sigma)/dd
+             FORALL (i=-KernelWidth:KernelWidth) Mask(-i)= coef * EXP(-REAL(i*i,MK)*coef1)
+             msum=SUM(Mask)
+             Mask=Mask/msum
+          ENDIF
+
+          end_subroutine()
+
+        CONTAINS
+          FUNCTION ModifiedBesselI0(Sigma_) RESULT(accumulator)
+            IMPLICIT NONE
+            REAL(ppm_kind_double), INTENT(IN   ) :: Sigma_
+            REAL(ppm_kind_double)                :: accumulator
+            !-------------------------------------------------------------------------
+            !  Local variables
+            !-------------------------------------------------------------------------
+            REAL(ppm_kind_double), PARAMETER :: a1= 3.5156229_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: a2= 3.0899424_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: a3= 1.2067492_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: a4= 1.2659732_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: a5= 0.0360768_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: a6= 0.0045813_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b1= 0.39894228_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b2= 0.01328592_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b3= 0.00225319_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b4=-0.00157565_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b5= 0.00916281_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b6=-0.02057706_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b7=-0.02635537_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b8=-0.01647633_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b9= 0.00392377_ppm_kind_double
+            REAL(ppm_kind_double)            :: m
+
+            IF (Sigma_*Sigma_.LT.3.75_ppm_kind_double) THEN
+               m=Sigma_*Sigma_*Sigma_*Sigma_/14.0625_ppm_kind_double
+               accumulator=oned+m*(a1+m*(a2+m*(a3+m*(a4+m*(a5+m*a6)))))
+            ELSE
+               m=3.75_ppm_kind_double/Sigma_/Sigma_
+               accumulator=(EXP(Sigma_*Sigma_)/Sigma_)*(b1+m*(b2+m*(b3+m*(b4+m*(b5+m*(b6+m*(b7+m*(b8+m*b9))))))))
+            ENDIF
+            RETURN
+          END FUNCTION ModifiedBesselI0
+
+          FUNCTION ModifiedBesselI1(Sigma_) RESULT(accumulator)
+            IMPLICIT NONE
+            REAL(ppm_kind_double), INTENT(IN   ) :: Sigma_
+            REAL(ppm_kind_double)                :: accumulator
+            !-------------------------------------------------------------------------
+            !  Local variables
+            !-------------------------------------------------------------------------
+            REAL(ppm_kind_double), PARAMETER :: a1= 0.87890594_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: a2= 0.51498869_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: a3= 0.15084934_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: a4= 0.02658733_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: a5= 0.00301532_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: a6= 0.00032411_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b1= 0.39894228_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b2=-0.03988024_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b3=-0.00362018_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b4= 0.00163801_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b5=-0.01031555_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b6= 0.02282967_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b7=-0.02895312_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b8= 0.01787654_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b9= 0.00420059_ppm_kind_double
+            REAL(ppm_kind_double)            :: m
+
+            IF (Sigma_*Sigma_.LT.3.75_ppm_kind_double) THEN
+               m=Sigma_*Sigma_*Sigma_*Sigma_/14.0625_ppm_kind_double
+               accumulator=Sigma_*Sigma_*(halfd+m*(a1+m*(a2+m*(a3+m*(a4+m*(a5+m*a6))))))
+            ELSE
+               m=3.75_ppm_kind_double/Sigma_/Sigma_
+               accumulator=(EXP(Sigma_*Sigma_)/Sigma_)*(b1+m*(b2+m*(b3+m*(b4+m*(b5+m*b6+m*(b7+m*(b8-m*b9)))))))
+            ENDIF
+            RETURN
+          END FUNCTION ModifiedBesselI1
+
+          FUNCTION ModifiedBesselI(n,Sigma_) RESULT(accumulator)
+            IMPLICIT NONE
+
+            INTEGER,               INTENT(IN   ) :: n
+
+            REAL(ppm_kind_double), INTENT(IN   ) :: Sigma_
+            REAL(ppm_kind_double)                :: accumulator
+            !-------------------------------------------------------------------------
+            !  Local variables
+            !-------------------------------------------------------------------------
+            REAL(ppm_kind_double), PARAMETER :: a=1.0E10_ppm_kind_double
+            REAL(ppm_kind_double), PARAMETER :: b=1.0E-10_ppm_kind_double
+            REAL(ppm_kind_double)            :: qim,qi,qip,toy
+
+            INTEGER :: l
+
+            toy=twod/Sigma_/Sigma_
+            qip=zerod
+            qi=oned
+            accumulator=zerod
+
+            DO l=2*(n+INT(SQRT(40._MK*REAL(n,MK)))),2,-1
+               qim=qip+REAL(l,ppm_kind_double)*toy*qi
+               qip=qi
+               qi=qim
+               IF (ABS(qi).GT.a) THEN
+                  accumulator=accumulator*b
+                  qi=qi*b
+                  qip=qip*b
+               ENDIF
+               IF (l.EQ.n) accumulator=qip
+            ENDDO
+            accumulator=accumulator*ModifiedBesselI0(Sigma_)/qi
+            RETURN
+          END FUNCTION ModifiedBesselI
+        END SUBROUTINE GenerateDiscreteGaussianCoefficients
+
 #endif
 
 

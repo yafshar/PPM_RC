@@ -74,6 +74,9 @@
         INTEGER,  DIMENSION(:,:), ALLOCATABLE :: daughterst
         INTEGER,  DIMENSION(:),   ALLOCATABLE :: acceptedt
         INTEGER,  DIMENSION(:),   ALLOCATABLE :: missedparticles
+        INTEGER,  DIMENSION(:),   POINTER     :: bufs
+
+        LOGICAL, DIMENSION(:), ALLOCATABLE :: bufl
 
 #include "./energy/ppm_rc_energytypedef.f"
 
@@ -115,6 +118,7 @@
         PUBLIC :: ppm_rc_energy_compute_3d
 
         PUBLIC :: ppm_rc_energy_parameter_redefine
+        PUBLIC :: ppm_rc_energy_parameter_redefine_mcmc
 
       CONTAINS
 

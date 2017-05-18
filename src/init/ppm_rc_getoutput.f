@@ -7,7 +7,7 @@
 #ifdef __Linux
           USE ppm_rc_module_util, ONLY : ppm_rc_mem_usage
 #endif
-          USE ppm_rc_module_fire, ONLY : DTYPE(ppm_rc_floodFill)
+          USE ppm_rc_module_fire, ONLY : ppm_rc_floodFill
           USE ppm_rc_module_linkedlist, ONLY : ppm_rc_list,ppm_rc_link
           USE ppm_rc_module_write, ONLY : DTYPE(ppm_rc_write_image), &
           &   DTYPE(ppm_rc_write_image_label)
@@ -36,6 +36,7 @@
           TYPE(OtsuThresholdImageFilter) :: vOtsuThsFilter
 
           CLASS(ImageSource),     POINTER :: elem
+
           CLASS(ppm_t_subpatch_), POINTER :: sbpitr
 
           CLASS(ppm_t_field_), POINTER :: image_gf
@@ -44,25 +45,22 @@
           TYPE(ppm_rc_list), POINTER ::  seed
           TYPE(ppm_rc_list), POINTER :: rseed
           TYPE(ppm_rc_link), POINTER :: seedlnk
-! ! ! !           TYPE(ppm_rc_list), POINTER :: rseed1
-! ! ! !           TYPE(ppm_rc_list), POINTER :: rseed2
-! ! ! !           TYPE(ppm_rc_list), POINTER :: rseed3
-! ! ! !           TYPE(ppm_rc_list), POINTER :: rseed4
 
 #if   __DIME == __2D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER     :: DTYPE(wpi)
-          REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:),   POINTER     :: DTYPE(tmp)
+          REAL(MK),              CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpr
+          REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:),   POINTER :: wprs
 #elif __DIME == __3D
-          REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER     :: DTYPE(wpi)
-          REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:,:), POINTER     :: DTYPE(tmp)
-          REAL(MK)                                            :: sz
+          REAL(MK),              CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpr
+          REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wprs
+          REAL(MK)                                                     :: sz
 #endif
-          REAL(MK)                                            :: s,sm,sp,sx,sy
+          REAL(MK)                                                     :: s,sm,sp,sx,sy
+          REAL(MK),                          DIMENSION(__DIME)         :: elem_size
 
 #if   __DIME == __2D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wpl)
+          INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpi
 #elif __DIME == __3D
-          INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wpl)
+          INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpi
 #endif
           INTEGER,             DIMENSION(:),     POINTER :: seedn
           INTEGER,             DIMENSION(:),     POINTER :: Nm
@@ -71,15 +69,14 @@
           INTEGER,             DIMENSION(:),     POINTER :: lo_a
           INTEGER,             DIMENSION(:),     POINTER :: istart
           INTEGER,             DIMENSION(:),     POINTER :: iend
-          INTEGER,             DIMENSION(__DIME)              :: bx,nx
-          INTEGER,             DIMENSION(__DIME)              :: ld,ll,lt
-          INTEGER,             DIMENSION(__DIME)              :: ldl,ldu
-          INTEGER,             DIMENSION(__DIME)              :: ls,le
+          INTEGER,             DIMENSION(__DIME)         :: bx,nx
+          INTEGER,             DIMENSION(__DIME)         :: ld,ll,lt
+          INTEGER,             DIMENSION(__DIME)         :: ls,le
           INTEGER                                        :: i,j,ii,jj
 #if   __DIME == __3D
           INTEGER                                        :: k,kk
 #endif
-          INTEGER                                        :: ipatch,iopt
+          INTEGER                                        :: ipatch
 #ifdef __Linux
           INTEGER                                        :: memory
 #endif
@@ -103,7 +100,8 @@
           FGValue=elem%m_ForegroundValue
 
           SELECT CASE (vInitKind)
-          CASE (2) ! rect
+          CASE (e_fromfile) ! From a file
+          CASE (e_rect) ! rect
           !2 - rect     initializes with one or several rectangular regions.
              ALLOCATE(rseed,STAT=info)
              or_fail_alloc("rseed")
@@ -174,7 +172,7 @@
              nx(1:__DIME)=Nm(1:__DIME)/elem%m_Spacing(1:__DIME)
              !Max number of cells in each direction
 
-             NULLIFY(DTYPE(wpl))
+             NULLIFY(wpi)
              ipatch=0
              sbpitr => MeshIn%subpatch%begin()
              DO WHILE (ASSOCIATED(sbpitr))
@@ -187,10 +185,10 @@
 
                 ipatch=ipatch+1
 
-                CALL sbpitr%get_field(FieldOut,DTYPE(wpl),info)
+                CALL sbpitr%get_field(FieldOut,wpi,info)
                 or_fail("Failed to get field wpl data.")
 
-                DTYPE(wpl)=BGValue
+                wpi=BGValue
                 !initial FieldOut value to the Background Value
 
 #if   __DIME == __3D
@@ -240,8 +238,7 @@
                          seed => ppm_rc_seeds(ipatch)%last()
                          IF (ASSOCIATED(seed)) THEN
                             seedn => seed%first%getValue()
-                            CALL DTYPE(ppm_rc_floodFill)(DTYPE(wpl),Nmm,seedn(1:__DIME), &
-                            &    BGValue,FGValue,1,info)
+                            CALL ppm_rc_floodFill(wpi,Nmm,seedn(1:__DIME),BGValue,FGValue,1,info)
                          ENDIF
 #if   __DIME == __2D
                          EXIT loop_j
@@ -334,9 +331,9 @@
                             ENDIF !lbox
 
 #if   __DIME == __2D
-                            DTYPE(wpl)(ll(1),ll(2))=FGValue
+                            wpi(ll(1),ll(2))=FGValue
 #elif __DIME == __3D
-                            DTYPE(wpl)(ll(1),ll(2),ll(3))=FGValue
+                            wpi(ll(1),ll(2),ll(3))=FGValue
 #endif
                          ENDIF !ALL(ll.GE.1.AND.ll.LE.Nmm)
 
@@ -348,8 +345,7 @@
                          seed => ppm_rc_seeds(ipatch)%last()
                          IF (ASSOCIATED(seed)) THEN
                             seedn => seed%first%getValue()
-                            CALL DTYPE(ppm_rc_floodFill)(DTYPE(wpl),Nmm,seedn(1:__DIME), &
-                            &    BGValue,FGValue,1,info)
+                            CALL ppm_rc_floodFill(wpi,Nmm,seedn(1:__DIME),BGValue,FGValue,1,info)
                          ENDIF
                       ENDIF
                    ENDDO loop_i
@@ -361,9 +357,9 @@
                 sbpitr => MeshIn%subpatch%next()
              ENDDO !ASSOCIATED(sbpitr)
 
-             NULLIFY(DTYPE(wpl))
+             NULLIFY(wpi)
 
-          CASE (3) ! spheres
+          CASE (e_sphere) ! spheres
           !3 - sphere   initializes with one or several spherical regions.
              ALLOCATE(rseed,STAT=info)
              or_fail_alloc("rseed")
@@ -418,7 +414,7 @@
              nx(1:__DIME)=Nm(1:__DIME)/elem%m_Spacing(1:__DIME)
              !Max number of cells in each direction
 
-             NULLIFY(DTYPE(wpl))
+             NULLIFY(wpi)
              ipatch=0
              sbpitr => MeshIn%subpatch%begin()
              DO WHILE (ASSOCIATED(sbpitr))
@@ -431,10 +427,10 @@
 
                 ipatch=ipatch+1
 
-                CALL sbpitr%get_field(FieldOut,DTYPE(wpl),info)
+                CALL sbpitr%get_field(FieldOut,wpi,info)
                 or_fail("Failed to get field wpl data.")
 
-                DTYPE(wpl)=BGValue
+                wpi=BGValue
 
 #if   __DIME == __3D
                 !distance from the border
@@ -484,8 +480,7 @@
                          seed => ppm_rc_seeds(ipatch)%last()
                          IF (ASSOCIATED(seed)) THEN
                             seedn => seed%first%getValue()
-                            CALL DTYPE(ppm_rc_floodFill)(DTYPE(wpl),Nmm,seedn(1:__DIME), &
-                            &    BGValue,FGValue,1,info)
+                            CALL ppm_rc_floodFill(wpi,Nmm,seedn(1:__DIME),BGValue,FGValue,1,info)
                          ENDIF
 #if   __DIME == __2D
                          EXIT loop_y
@@ -546,9 +541,9 @@
                             ENDIF !lbox
 
 #if   __DIME == __2D
-                            DTYPE(wpl)(ll(1),ll(2))=FGValue
+                            wpi(ll(1),ll(2))=FGValue
 #elif __DIME == __3D
-                            DTYPE(wpl)(ll(1),ll(2),ll(3))=FGValue
+                            wpi(ll(1),ll(2),ll(3))=FGValue
 #endif
                          ENDIF !ALL(ll.GE.1.AND.ll.LE.Nmm)
 
@@ -558,8 +553,7 @@
                       seed => ppm_rc_seeds(ipatch)%last()
                       IF (ASSOCIATED(seed)) THEN
                          seedn => seed%first%getValue()
-                         CALL DTYPE(ppm_rc_floodFill)(DTYPE(wpl),Nmm,seedn(1:__DIME), &
-                         &    BGValue,FGValue,1,info)
+                         CALL ppm_rc_floodFill(wpi,Nmm,seedn(1:__DIME),BGValue,FGValue,1,info)
                       ENDIF
 
                    ENDDO loop_x
@@ -571,227 +565,333 @@
                 sbpitr => MeshIn%subpatch%next()
              ENDDO !ASSOCIATED(sbpitr)
 
-             NULLIFY(DTYPE(wpl))
+             NULLIFY(wpi)
 
-          CASE (4)
+          CASE (e_otsu)
              !4 - otsu  performs an otsu thresholding on the read image label
              !which is FieldOut
-             CALL vOtsuThsFilter%DTYPE(GenerateData)(FieldOut,       &
-             &    MeshIn,histSize,info,lowerBound=INT(m_lowerBound), &
-             &    upperBound=INT(m_upperBound),MaskValue=FGValue)
-
-          CASE (6)
-          !6 - localmax initializes a region at local intensity maxima
-          !after blurring with a Gaussian filter
-             !---------------------------------------------------------------------
-             !  blur the image using Gaussian filter
-             !---------------------------------------------------------------------
-             SELECT CASE (lNormalize)
-             CASE (.FALSE.)
-                fail("!!!This initialization mode will use the normalized image!!!", &
+             IF (LGT(TRIM(initimage),"")) THEN
+                CALL vOtsuThsFilter%DTYPE(GenerateData)(FieldOut,       &
+                &    MeshIn,histSize,info,lowerBound=INT(m_lowerBound), &
+                &    upperBound=INT(m_upperBound),MaskValue=FGValue)
+             ELSE
+                fail("!!!This initialization mode needs a label input image for otsu thresholding!!!", &
                 & ppm_error=ppm_error_fatal)
+             ENDIF
 
-             END SELECT
+          CASE (e_localmax)
+          !6 - localmax initializes a region at local intensity maxima
+             IF (ALL(elem%m_Size.EQ.0)) THEN
+                !We are getting the localmaxima as an input, so we do not blur
+                IF (ppm_nproc.GT.1) THEN
+                   ghostsize=1
+                   !-------------------------------------------------------------------------
+                   !  Get field ghosts for image
+                   !-------------------------------------------------------------------------
+                   CALL MeshIn%map_ghost_get(info,ghostsize=ghostsize)
+                   or_fail("MeshIn%map_ghost_get")
 
-             !---------------------------------------------------------------------
-             !  blur the image using Gaussian filter
-             !---------------------------------------------------------------------
-             ! copy the image:
-             ALLOCATE(ppm_t_field::image_gf,STAT=info)
-             or_fail_alloc('Failed to allocate image_gf.')
+                   CALL FieldIn%map_ghost_push(MeshIn,info)
+                   or_fail("FieldIn%map_ghost_push")
+                   CALL MeshIn%map_isend(info)
+                   or_fail("MeshIn%map_isend")
+                   CALL FieldIn%map_ghost_pop(MeshIn,info)
+                   or_fail("FieldIn%map_ghost_pop")
+                ENDIF !ppm_nproc.GT.1
 
-             CALL image_gf%create(1,info,dtype=ppm_type_real_single,name="blured_pixel_intensity")
-             or_fail("Create field failed!" )
 
-             CALL DTYPE(ppm_rc_GaussianImageFilter)(REAL(elem%m_Size,MK),FieldIn,MeshIn,info, &
-             &    image_gf,KernelFactor=1.95_MK)
+                NULLIFY(wprs)
 
-!              CALL DTYPE(ppm_rc_write_image)(image_gf,MeshIn,"Gaussian",info)
+                sbpitr => MeshIn%subpatch%begin()
+                ipatch=1
+                DO WHILE (ASSOCIATED(sbpitr))
+                   Nm => sbpitr%nnodes
+                   !-------------------------------------------------------------------------
+                   !  Find all local maxima in the intensity field which
+                   !  are regions with intensity > intensity_ths.
+                   !  Put spheres at the position of the seeds (label image).
+                   !-------------------------------------------------------------------------
+                   SELECT CASE (FieldIn%data_type)
+                   CASE (ppm_type_real_single)
+                      CALL sbpitr%get_field(FieldIn,wprs,info)
+                      or_fail("Failed to get field data tmp.")
+                   CASE DEFAULT
+                      fail("!!!This type is not implemented yet for this initialization!!!", &
+                      & ppm_error=ppm_error_fatal)
+                   END SELECT
 
-             IF (ppm_nproc.GT.1) THEN
-                ghostsize=1
-                !-------------------------------------------------------------------------
-                !  Get field ghosts for image
-                !-------------------------------------------------------------------------
-                CALL MeshIn%map_ghost_get(info,ghostsize=ghostsize)
-                or_fail("MeshIn%map_ghost_get")
-
-                CALL image_gf%map_ghost_push(MeshIn,info)
-                or_fail("image_gf%map_ghost_push")
-                CALL MeshIn%map_isend(info)
-                or_fail("MeshIn%map_isend")
-                CALL image_gf%map_ghost_pop(MeshIn,info)
-                or_fail("image_gf%map_ghost_pop")
-             ENDIF !ppm_nproc.GT.1
-
-             sbpitr => MeshIn%subpatch%begin()
-             ipatch=1
-             DO WHILE (ASSOCIATED(sbpitr))
-                Nm => sbpitr%nnodes
-
-                !-------------------------------------------------------------------------
-                !  Find all local maxima in the intensity field which
-                !  are regions with intensity > intensity_ths.
-                !  Put spheres at the position of the seeds (label image).
-                !-------------------------------------------------------------------------
-                CALL sbpitr%get_field(image_gf,DTYPE(tmp),info)
-                or_fail("Failed to get field data tmp.")
-
-#if   __DIME == __3D
-                !padding the left xy image face
-                IF (sbpitr%istart(3).EQ.1) THEN
-                   IF (inighostsize(3).GT.0) THEN
-                      DO j=0,Nm(2)+1
-                         DO i=0,Nm(1)+1
-                            DTYPE(tmp)(i,j,0)=DTYPE(tmp)(i,j,1)
-                         ENDDO !i=0,Nm(1)+1
-                      ENDDO !j=0,Nm(2)+1
-                   ENDIF !(inighostsize(3).GT.0)
-                ENDIF !(sbpitr%istart(3).EQ.1)
-                !padding the right xy image face
-                IF (sbpitr%iend(3).EQ.Ngrid(3)) THEN
-                   IF (inighostsize(3).GT.0) THEN
-                      k=Nm(3)+1
-                      DO j=0,Nm(2)+1
-                         DO i=0,Nm(1)+1
-                            DTYPE(tmp)(i,j,k)=DTYPE(tmp)(i,j,Nm(3))
-                         ENDDO !i=0,Nm(1)+1
-                      ENDDO !j=0,Nm(2)+1
-                   ENDIF !(inighostsize(3).GT.0)
-                ENDIF !(sbpitr%iend(3).EQ.Ngrid(3))
-#endif
-
-                !padding the left xz image face
-                IF (sbpitr%istart(2).EQ.1) THEN
-                   IF (inighostsize(2).GT.0) THEN
-#if   __DIME == __2D
-                      DO i=0,Nm(1)+1
-                         DTYPE(tmp)(i,0)=DTYPE(tmp)(i,1)
-                      ENDDO !i=0,Nm(1)+1
-#elif __DIME == __3D
-                      DO k=0,Nm(3)+1
-                         DO i=0,Nm(1)+1
-                            DTYPE(tmp)(i,0,k)=DTYPE(tmp)(i,1,k)
-                         ENDDO !i=0,Nm(1)+1
-                      ENDDO !k=0,Nm(3)+1
-#endif
-                   ENDIF !(inighostsize(2).GT.0)
-                ENDIF !(sbpitr%istart(2).EQ.1)
-                !padding the right xz image face
-                IF (sbpitr%iend(2).EQ.Ngrid(2)) THEN
-                   IF (inighostsize(2).GT.0) THEN
-                      j=Nm(2)+1
-#if   __DIME == __2D
-                      DO i=0,Nm(1)+1
-                         DTYPE(tmp)(i,j)= DTYPE(tmp)(i,Nm(2))
-                      ENDDO !i=0,Nm(1)+1
-#elif __DIME == __3D
-                      DO k=0,Nm(3)+1
-                         DO i=0,Nm(1)+1
-                            DTYPE(tmp)(i,j,k)=DTYPE(tmp)(i,Nm(2),k)
-                         ENDDO !i=0,Nm(1)+1
-                      ENDDO !k=0,Nm(3)+1
-#endif
-                   ENDIF !(inighostsize(2).GT.0)
-                ENDIF !(sbpitr%iend(2).EQ.Ngrid(2))
-
-                !padding the left yz image face
-                IF (sbpitr%istart(1).EQ.1) THEN
-                   IF (inighostsize(1).GT.0) THEN
-#if   __DIME == __2D
-                      DO j=0,Nm(2)+1
-                         DTYPE(tmp)(0,j)=DTYPE(tmp)(1,j)
-                      ENDDO !j=0,Nm(2)+1
-#elif __DIME == __3D
-                      DO k=0,Nm(3)+1
-                         DO j=0,Nm(2)+1
-                            DTYPE(tmp)(0,j,k)=DTYPE(tmp)(1,j,k)
-                         ENDDO !j=0,Nm(2)+1
-                      ENDDO !k=0,Nm(3)+1
-#endif
-                   ENDIF !(inighostsize(1).GT.0)
-                ENDIF !(sbpitr%istart(1).EQ.1)
-                !padding the right yz image face
-                IF (sbpitr%iend(1).EQ.Ngrid(1)) THEN
-                   IF (inighostsize(1).GT.0) THEN
-                      i=Nm(1)+1
-#if   __DIME == __2D
-                      DO j=0,Nm(2)+1
-                         DTYPE(tmp)(i,j)=DTYPE(tmp)(Nm(1),j)
-                      ENDDO !j=0,Nm(2)+1
-#elif __DIME == __3D
-                      DO k=0,Nm(3)+1
-                         DO j=0,Nm(2)+1
-                            DTYPE(tmp)(i,j,k)=DTYPE(tmp)(Nm(1),j,k)
-                         ENDDO !j=0,Nm(2)+1
-                      ENDDO !k=0,Nm(3)+1
-#endif
-                   ENDIF !(inighostsize(1).GT.0)
-                ENDIF !(sbpitr%iend(1).EQ.Ngrid(1))
+                   ls=MERGE(2,1,sbpitr%istart.EQ.1)
+                   le=MERGE(Nm-1,Nm,sbpitr%iend.EQ.Ngrid)
 
 #if   __DIME == __2D
-                DO j=1,Nm(2)
-                   DO i=1,Nm(1)
-                      IF (DTYPE(tmp)(i,j).GT.intensity_ths) THEN
-                         IF (DTYPE(tmp)(i,j).GE.DTYPE(tmp)(i-1,j).AND. &
-                         &   DTYPE(tmp)(i,j).GE.DTYPE(tmp)(i+1,j).AND. &
-                         &   DTYPE(tmp)(i,j).GE.DTYPE(tmp)(i,j-1).AND. &
-                         &   DTYPE(tmp)(i,j).GE.DTYPE(tmp)(i,j+1)) THEN
-                            ALLOCATE(seed,STAT=info)
-                            or_fail_alloc("seed")
-                            CALL seed%add(i,j)
-                            CALL ppm_rc_seeds(ipatch)%push(seed,info)
-                            or_fail("could not add new seed to the collection")
-                         ENDIF
-                      ENDIF
-                   ENDDO !i
-                ENDDO !j
-#elif __DIME == __3D
-                DO k=1,Nm(3)
-                   DO j=1,Nm(2)
-                      DO i=1,Nm(1)
-                         IF (DTYPE(tmp)(i,j,k).GT.intensity_ths) THEN
-                            IF (DTYPE(tmp)(i,j,k).GE.DTYPE(tmp)(i-1,j,k).AND. &
-                            &   DTYPE(tmp)(i,j,k).GE.DTYPE(tmp)(i+1,j,k).AND. &
-                            &   DTYPE(tmp)(i,j,k).GE.DTYPE(tmp)(i,j-1,k).AND. &
-                            &   DTYPE(tmp)(i,j,k).GE.DTYPE(tmp)(i,j+1,k).AND. &
-                            &   DTYPE(tmp)(i,j,k).GE.DTYPE(tmp)(i,j,k-1).AND. &
-                            &   DTYPE(tmp)(i,j,k).GE.DTYPE(tmp)(i,j,k+1)) THEN
+                   DO j=ls(2),le(2)
+                      DO i=ls(1),le(1)
+                         IF (wprs(i,j).GT.intensity_ths) THEN
+                            IF (wprs(i,j).GE.wprs(i-1,j).AND. &
+                            &   wprs(i,j).GE.wprs(i+1,j).AND. &
+                            &   wprs(i,j).GE.wprs(i,j-1).AND. &
+                            &   wprs(i,j).GE.wprs(i,j+1)) THEN
                                ALLOCATE(seed,STAT=info)
                                or_fail_alloc("seed")
-                               CALL seed%add(i,j,k)
+                               CALL seed%add(i,j)
                                CALL ppm_rc_seeds(ipatch)%push(seed,info)
                                or_fail("could not add new seed to the collection")
                             ENDIF
                          ENDIF
                       ENDDO !i
                    ENDDO !j
-                ENDDO !k
+#elif __DIME == __3D
+                   DO k=ls(3),le(3)
+                      DO j=ls(2),le(2)
+                         DO i=ls(1),le(1)
+                            IF (wprs(i,j,k).GT.intensity_ths) THEN
+                               IF (wprs(i,j,k).GE.wprs(i-1,j,k).AND. &
+                               &   wprs(i,j,k).GE.wprs(i+1,j,k).AND. &
+                               &   wprs(i,j,k).GE.wprs(i,j-1,k).AND. &
+                               &   wprs(i,j,k).GE.wprs(i,j+1,k).AND. &
+                               &   wprs(i,j,k).GE.wprs(i,j,k-1).AND. &
+                               &   wprs(i,j,k).GE.wprs(i,j,k+1)) THEN
+                                  ALLOCATE(seed,STAT=info)
+                                  or_fail_alloc("seed")
+                                  CALL seed%add(i,j,k)
+                                  CALL ppm_rc_seeds(ipatch)%push(seed,info)
+                                  or_fail("could not add new seed to the collection")
+                               ENDIF
+                            ENDIF
+                         ENDDO !i
+                      ENDDO !j
+                   ENDDO !k
 #endif
 
-                sbpitr => MeshIn%subpatch%next()
-                ipatch = ipatch+1
-             ENDDO
+                   sbpitr => MeshIn%subpatch%next()
+                   ipatch = ipatch+1
+                ENDDO
 
 #ifdef __Linux
-             IF (debug.GT.1) THEN
-                CALL ppm_rc_mem_usage(memory,info)
-                stdout("mem_usage with local creation=",memory)
-             ENDIF
+                IF (debug.GT.1) THEN
+                   CALL ppm_rc_mem_usage(memory,info)
+                   stdout("mem_usage with local creation=",memory)
+                ENDIF
+#endif
+             ELSE
+                !after blurring with a Gaussian filter
+
+                !---------------------------------------------------------------------
+                !  blur the image using Gaussian filter
+                !---------------------------------------------------------------------
+                SELECT CASE (lNormalize)
+                CASE (.FALSE.)
+                   fail("!!!This initialization mode will use the normalized image!!!", &
+                   & ppm_error=ppm_error_fatal)
+
+                END SELECT
+
+                !---------------------------------------------------------------------
+                !  blur the image using Gaussian filter
+                !---------------------------------------------------------------------
+                ! copy the image:
+                ALLOCATE(ppm_t_field::image_gf,STAT=info)
+                or_fail_alloc('Failed to allocate image_gf.')
+
+                CALL image_gf%create(1,info,dtype=ppm_type_real_single,name="blured_pixel_intensity")
+                or_fail("Create field failed!" )
+
+                elem_size=REAL(elem%m_Size,MK)
+                CALL DTYPE(ppm_rc_GaussianImageFilter)(elem_size,FieldIn,MeshIn,info, &
+                &    image_gf,KernelFactor=1.95_MK)
+
+!                 CALL DTYPE(ppm_rc_write_image)(image_gf,MeshIn,"Gaussian",info)
+
+                IF (ppm_nproc.GT.1) THEN
+                   ghostsize=1
+                   !-------------------------------------------------------------------------
+                   !  Get field ghosts for image
+                   !-------------------------------------------------------------------------
+                   CALL MeshIn%map_ghost_get(info,ghostsize=ghostsize)
+                   or_fail("MeshIn%map_ghost_get")
+
+                   CALL image_gf%map_ghost_push(MeshIn,info)
+                   or_fail("image_gf%map_ghost_push")
+                   CALL MeshIn%map_isend(info)
+                   or_fail("MeshIn%map_isend")
+                   CALL image_gf%map_ghost_pop(MeshIn,info)
+                   or_fail("image_gf%map_ghost_pop")
+                ENDIF !ppm_nproc.GT.1
+
+
+                NULLIFY(wprs)
+
+                sbpitr => MeshIn%subpatch%begin()
+                ipatch=1
+                DO WHILE (ASSOCIATED(sbpitr))
+                   Nm => sbpitr%nnodes
+
+                   !-------------------------------------------------------------------------
+                   !  Find all local maxima in the intensity field which
+                   !  are regions with intensity > intensity_ths.
+                   !  Put spheres at the position of the seeds (label image).
+                   !-------------------------------------------------------------------------
+                   CALL sbpitr%get_field(image_gf,wprs,info)
+                   or_fail("Failed to get field data tmp.")
+
+#if   __DIME == __3D
+                   !padding the left xy image face
+                   IF (sbpitr%istart(3).EQ.1) THEN
+                      IF (inighostsize(3).GT.0) THEN
+                         DO j=0,Nm(2)+1
+                            DO i=0,Nm(1)+1
+                               wprs(i,j,0)=wprs(i,j,1)
+                            ENDDO !i=0,Nm(1)+1
+                         ENDDO !j=0,Nm(2)+1
+                      ENDIF !(inighostsize(3).GT.0)
+                   ENDIF !(sbpitr%istart(3).EQ.1)
+                   !padding the right xy image face
+                   IF (sbpitr%iend(3).EQ.Ngrid(3)) THEN
+                      IF (inighostsize(3).GT.0) THEN
+                         k=Nm(3)+1
+                         DO j=0,Nm(2)+1
+                            DO i=0,Nm(1)+1
+                               wprs(i,j,k)=wprs(i,j,Nm(3))
+                            ENDDO !i=0,Nm(1)+1
+                         ENDDO !j=0,Nm(2)+1
+                      ENDIF !(inighostsize(3).GT.0)
+                   ENDIF !(sbpitr%iend(3).EQ.Ngrid(3))
 #endif
 
-             CALL image_gf%destroy(info)
-             or_fail("Destroy image_gf field failed!")
+                   !padding the left xz image face
+                   IF (sbpitr%istart(2).EQ.1) THEN
+                      IF (inighostsize(2).GT.0) THEN
+#if   __DIME == __2D
+                         DO i=0,Nm(1)+1
+                            wprs(i,0)=wprs(i,1)
+                         ENDDO !i=0,Nm(1)+1
+#elif __DIME == __3D
+                         DO k=0,Nm(3)+1
+                            DO i=0,Nm(1)+1
+                               wprs(i,0,k)=wprs(i,1,k)
+                            ENDDO !i=0,Nm(1)+1
+                         ENDDO !k=0,Nm(3)+1
+#endif
+                      ENDIF !(inighostsize(2).GT.0)
+                   ENDIF !(sbpitr%istart(2).EQ.1)
+                   !padding the right xz image face
+                   IF (sbpitr%iend(2).EQ.Ngrid(2)) THEN
+                      IF (inighostsize(2).GT.0) THEN
+                         j=Nm(2)+1
+#if   __DIME == __2D
+                         DO i=0,Nm(1)+1
+                            wprs(i,j)= wprs(i,Nm(2))
+                         ENDDO !i=0,Nm(1)+1
+#elif __DIME == __3D
+                         DO k=0,Nm(3)+1
+                            DO i=0,Nm(1)+1
+                               wprs(i,j,k)=wprs(i,Nm(2),k)
+                            ENDDO !i=0,Nm(1)+1
+                         ENDDO !k=0,Nm(3)+1
+#endif
+                      ENDIF !(inighostsize(2).GT.0)
+                   ENDIF !(sbpitr%iend(2).EQ.Ngrid(2))
 
-             ! deallocate the pointer:
-             dealloc_pointer("image_gf")
+                   !padding the left yz image face
+                   IF (sbpitr%istart(1).EQ.1) THEN
+                      IF (inighostsize(1).GT.0) THEN
+#if   __DIME == __2D
+                         DO j=0,Nm(2)+1
+                            wprs(0,j)=wprs(1,j)
+                         ENDDO !j=0,Nm(2)+1
+#elif __DIME == __3D
+                         DO k=0,Nm(3)+1
+                            DO j=0,Nm(2)+1
+                               wprs(0,j,k)=wprs(1,j,k)
+                            ENDDO !j=0,Nm(2)+1
+                         ENDDO !k=0,Nm(3)+1
+#endif
+                      ENDIF !(inighostsize(1).GT.0)
+                   ENDIF !(sbpitr%istart(1).EQ.1)
+                   !padding the right yz image face
+                   IF (sbpitr%iend(1).EQ.Ngrid(1)) THEN
+                      IF (inighostsize(1).GT.0) THEN
+                         i=Nm(1)+1
+#if   __DIME == __2D
+                         DO j=0,Nm(2)+1
+                            wprs(i,j)=wprs(Nm(1),j)
+                         ENDDO !j=0,Nm(2)+1
+#elif __DIME == __3D
+                         DO k=0,Nm(3)+1
+                            DO j=0,Nm(2)+1
+                               wprs(i,j,k)=wprs(Nm(1),j,k)
+                            ENDDO !j=0,Nm(2)+1
+                         ENDDO !k=0,Nm(3)+1
+#endif
+                      ENDIF !(inighostsize(1).GT.0)
+                   ENDIF !(sbpitr%iend(1).EQ.Ngrid(1))
+
+#if   __DIME == __2D
+                   DO j=1,Nm(2)
+                      DO i=1,Nm(1)
+                         IF (wprs(i,j).GT.intensity_ths) THEN
+                            IF (wprs(i,j).GE.wprs(i-1,j).AND. &
+                            &   wprs(i,j).GE.wprs(i+1,j).AND. &
+                            &   wprs(i,j).GE.wprs(i,j-1).AND. &
+                            &   wprs(i,j).GE.wprs(i,j+1)) THEN
+                               ALLOCATE(seed,STAT=info)
+                               or_fail_alloc("seed")
+                               CALL seed%add(i,j)
+                               CALL ppm_rc_seeds(ipatch)%push(seed,info)
+                               or_fail("could not add new seed to the collection")
+                            ENDIF
+                         ENDIF
+                      ENDDO !i
+                   ENDDO !j
+#elif __DIME == __3D
+                   DO k=1,Nm(3)
+                      DO j=1,Nm(2)
+                         DO i=1,Nm(1)
+                            IF (wprs(i,j,k).GT.intensity_ths) THEN
+                               IF (wprs(i,j,k).GE.wprs(i-1,j,k).AND. &
+                               &   wprs(i,j,k).GE.wprs(i+1,j,k).AND. &
+                               &   wprs(i,j,k).GE.wprs(i,j-1,k).AND. &
+                               &   wprs(i,j,k).GE.wprs(i,j+1,k).AND. &
+                               &   wprs(i,j,k).GE.wprs(i,j,k-1).AND. &
+                               &   wprs(i,j,k).GE.wprs(i,j,k+1)) THEN
+                                  ALLOCATE(seed,STAT=info)
+                                  or_fail_alloc("seed")
+                                  CALL seed%add(i,j,k)
+                                  CALL ppm_rc_seeds(ipatch)%push(seed,info)
+                                  or_fail("could not add new seed to the collection")
+                               ENDIF
+                            ENDIF
+                         ENDDO !i
+                      ENDDO !j
+                   ENDDO !k
+#endif
+
+                   sbpitr => MeshIn%subpatch%next()
+                   ipatch = ipatch+1
+                ENDDO
+
+                NULLIFY(wprs)
 
 #ifdef __Linux
-             IF (debug.GT.1) THEN
-                CALL ppm_rc_mem_usage(memory,info)
-                stdout("mem_usage at image_gf destroy=",memory)
-             ENDIF
+                IF (debug.GT.1) THEN
+                   CALL ppm_rc_mem_usage(memory,info)
+                   stdout("mem_usage with local creation=",memory)
+                ENDIF
 #endif
+
+                CALL image_gf%destroy(info)
+                or_fail("Destroy image_gf field failed!")
+
+                ! deallocate the pointer:
+                dealloc_pointer("image_gf")
+
+#ifdef __Linux
+                IF (debug.GT.1) THEN
+                   CALL ppm_rc_mem_usage(memory,info)
+                   stdout("mem_usage at image_gf destroy=",memory)
+                ENDIF
+#endif
+             ENDIF !(ALL(elem%m_Size.EQ.0))
 
              !TODO
              !TOCHECK
@@ -804,6 +904,8 @@
 
              ii=MIN(elem%m_Size(1),5)
              jj=MIN(elem%m_Size(2),5)
+             IF (ii.LE.1) ii=2
+             IF (jj.LE.1) jj=2
 
              sx=REAL(ii*ii)
              sy=REAL(jj*jj)
@@ -818,6 +920,8 @@
              ENDDO !j
 #elif __DIME == __3D
              kk=MIN(elem%m_Size(3),5)
+             IF (kk.LE.1) kk=2
+
              sz=REAL(kk*kk)
              DO k=-kk,kk
                 DO j=-jj,jj
@@ -831,7 +935,7 @@
              ENDDO ! k
 #endif
 
-             NULLIFY(DTYPE(wpl),DTYPE(wpi))
+             NULLIFY(wpi,wpr)
 
              sbpitr => MeshIn%subpatch%begin()
              ipatch=1
@@ -840,22 +944,22 @@
                 hi_a => sbpitr%hi_a
                 lo_a => sbpitr%lo_a
 
-!                 CALL sbpitr%get_field(image,DTYPE(wpi),info)
+!                 CALL sbpitr%get_field(image,wpr,info)
 !                 or_fail("Failed to get field wpi data.")
 
-                CALL sbpitr%get_field(FieldOut,DTYPE(wpl),info)
+                CALL sbpitr%get_field(FieldOut,wpi,info)
                 or_fail("Failed to get field wpl data.")
 
-                DTYPE(wpl)=BGValue
+                wpi=BGValue
 
                 seed => ppm_rc_seeds(ipatch)%begin()
                 DO WHILE (ASSOCIATED(seed))
                    seedn => seed%first%getValue()
 
 ! #if   __DIME == __2D
-!                    IF (DTYPE(wpl)(seedn(1),seedn(2)).EQ.BGValue) THEN
+!                    IF (wpi(seedn(1),seedn(2)).EQ.BGValue) THEN
 ! #elif __DIME == __3D
-!                    IF (DTYPE(wpl)(seedn(1),seedn(2),seedn(3)).EQ.BGValue) THEN
+!                    IF (wpi(seedn(1),seedn(2),seedn(3)).EQ.BGValue) THEN
 ! #endif
                       seedlnk => rseed%first
                       DO WHILE (ASSOCIATED(seedlnk))
@@ -865,18 +969,18 @@
 
                          IF (ALL(ll.GE.lo_a.AND.ll.LE.hi_a)) THEN
 #if   __DIME == __2D
-                            DTYPE(wpl)(ll(1),ll(2))=FGValue
+                            wpi(ll(1),ll(2))=FGValue
 #elif __DIME == __3D
-                            DTYPE(wpl)(ll(1),ll(2),ll(3))=FGValue
+                            wpi(ll(1),ll(2),ll(3))=FGValue
 #endif
                          ENDIF !ALL(ll.GE.1.AND.ll.LE.Nmm)
 
                          seedlnk => seedlnk%nextLink()
                       ENDDO !ASSOCIATED(seedlnk)
 
-!                       CALL DTYPE(ppm_rc_floodFill)(DTYPE(wpl),Nm,seedn(1:__DIME), &
+!                       CALL ppm_rc_floodFill(wpi,Nm,seedn(1:__DIME), &
 !                       &    BGValue,FGValue,0,info)
-!                       CALL DTYPE(ppm_rc_floodFill)(DTYPE(wpl),DTYPE(wpi),Nm,   &
+!                       CALL ppm_rc_floodFill(wpi,wpr,Nm,   &
 !                       &    seedn(1:__DIME),BGValue,FGValue, &
 !                       &    Tolerance_,Tolerance_,0,info)
 !                       or_fail("ppm_rc_floodFill")
@@ -891,15 +995,17 @@
                 ipatch = ipatch+1
              ENDDO
 
-             NULLIFY(DTYPE(wpl))
+             NULLIFY(wpi,wpr)
 
           END SELECT !vInitKind
 
           SELECT CASE (vInitKind)
-          CASE (4)
-          !4 - otsu
-          !For an otsu thresholding we do not need to put the ghost back
-          !on the real components
+          CASE (e_fromfile,e_otsu)
+          ! 1- From File and 4 - otsu
+          ! If we read the init label from a file, we have everything.
+          !
+          ! Also for an otsu thresholding we do not need to put the ghost back
+          ! on the real components
 
              sbpitr => MeshIn%subpatch%begin()
              DO WHILE (ASSOCIATED(sbpitr))
@@ -907,70 +1013,70 @@
                 hi_a => sbpitr%hi_a
                 lo_a => sbpitr%lo_a
 
-                CALL sbpitr%get_field(FieldOut,DTYPE(wpl),info)
+                CALL sbpitr%get_field(FieldOut,wpi,info)
                 or_fail("Failed to get field i_tmp data.")
 
 #if   __DIME == __2D
                 IF (sbpitr%istart(1).EQ.1) THEN
                    DO j=lo_a(2),hi_a(2)
-                      DTYPE(wpl)(1,j)=FORBIDDEN
+                      wpi(1,j)=FORBIDDEN
                    ENDDO
                 ENDIF
                 IF (sbpitr%istart(2).EQ.1) THEN
                    DO i=lo_a(1),hi_a(1)
-                      DTYPE(wpl)(i,1)=FORBIDDEN
+                      wpi(i,1)=FORBIDDEN
                    ENDDO
                 ENDIF
                 IF (sbpitr%iend(1).EQ.Ngrid(1)) THEN
                    DO j=lo_a(2),hi_a(2)
-                      DTYPE(wpl)(Nm(1),j)=FORBIDDEN
+                      wpi(Nm(1),j)=FORBIDDEN
                    ENDDO
                 ENDIF
                 IF (sbpitr%iend(2).EQ.Ngrid(2)) THEN
                    DO i=lo_a(1),hi_a(1)
-                      DTYPE(wpl)(i,Nm(2))=FORBIDDEN
+                      wpi(i,Nm(2))=FORBIDDEN
                    ENDDO
                 ENDIF
 #elif __DIME == __3D
                 IF (sbpitr%istart(1).EQ.1) THEN
                    DO k=lo_a(3),hi_a(3)
                       DO j=lo_a(2),hi_a(2)
-                         DTYPE(wpl)(1,j,k)=FORBIDDEN
+                         wpi(1,j,k)=FORBIDDEN
                       ENDDO
                    ENDDO
                 ENDIF
                 IF (sbpitr%istart(2).EQ.1) THEN
                    DO k=lo_a(3),hi_a(3)
                       DO i=lo_a(1),hi_a(1)
-                         DTYPE(wpl)(i,1,k)=FORBIDDEN
+                         wpi(i,1,k)=FORBIDDEN
                       ENDDO
                    ENDDO
                 ENDIF
                 IF (sbpitr%istart(3).EQ.1) THEN
                    DO j=lo_a(2),hi_a(2)
                       DO i=lo_a(1),hi_a(1)
-                         DTYPE(wpl)(i,j,1)=FORBIDDEN
+                         wpi(i,j,1)=FORBIDDEN
                       ENDDO
                    ENDDO
                 ENDIF
                 IF (sbpitr%iend(1).EQ.Ngrid(1)) THEN
                    DO k=lo_a(3),hi_a(3)
                       DO j=lo_a(2),hi_a(2)
-                         DTYPE(wpl)(Nm(1),j,k)=FORBIDDEN
+                         wpi(Nm(1),j,k)=FORBIDDEN
                       ENDDO
                    ENDDO
                 ENDIF
                 IF (sbpitr%iend(2).EQ.Ngrid(2)) THEN
                    DO k=lo_a(3),hi_a(3)
                       DO i=lo_a(1),hi_a(1)
-                         DTYPE(wpl)(i,Nm(2),k)=FORBIDDEN
+                         wpi(i,Nm(2),k)=FORBIDDEN
                       ENDDO
                    ENDDO
                 ENDIF
                 IF (sbpitr%iend(3).EQ.Ngrid(3)) THEN
                    DO j=lo_a(2),hi_a(2)
                       DO i=lo_a(1),hi_a(1)
-                         DTYPE(wpl)(i,j,Nm(3))=FORBIDDEN
+                         wpi(i,j,Nm(3))=FORBIDDEN
                       ENDDO
                    ENDDO
                 ENDIF
@@ -1010,44 +1116,44 @@
                 hi_a => sbpitr%hi_a
                 lo_a => sbpitr%lo_a
 
-                CALL sbpitr%get_field(FieldOut,DTYPE(wpl),info)
+                CALL sbpitr%get_field(FieldOut,wpi,info)
                 or_fail("Failed to get field i_tmp data.")
 
 #if   __DIME == __2D
                 DO j=1,Nm(2)
                    DO i=1,Nm(1)
-                      IF (DTYPE(wpl)(i,j).GT.FGValue) THEN
-                         DTYPE(wpl)(i,j)=FGValue
+                      IF (wpi(i,j).GT.FGValue) THEN
+                         wpi(i,j)=FGValue
                       ENDIF
                    ENDDO !i=1,Nm(1)
                 ENDDO !j=1,Nm(2)
 
                 IF (sbpitr%istart(1).EQ.1) THEN
                    DO j=lo_a(2),hi_a(2)
-                      DTYPE(wpl)(1,j)=FORBIDDEN
+                      wpi(1,j)=FORBIDDEN
                    ENDDO
                 ENDIF
                 IF (sbpitr%istart(2).EQ.1) THEN
                    DO i=lo_a(1),hi_a(1)
-                      DTYPE(wpl)(i,1)=FORBIDDEN
+                      wpi(i,1)=FORBIDDEN
                    ENDDO
                 ENDIF
                 IF (sbpitr%iend(1).EQ.Ngrid(1)) THEN
                    DO j=lo_a(2),hi_a(2)
-                      DTYPE(wpl)(Nm(1),j)=FORBIDDEN
+                      wpi(Nm(1),j)=FORBIDDEN
                    ENDDO
                 ENDIF
                 IF (sbpitr%iend(2).EQ.Ngrid(2)) THEN
                    DO i=lo_a(1),hi_a(1)
-                      DTYPE(wpl)(i,Nm(2))=FORBIDDEN
+                      wpi(i,Nm(2))=FORBIDDEN
                    ENDDO
                 ENDIF
 #elif __DIME == __3D
                 DO k=1,Nm(3)
                    DO j=1,Nm(2)
                       DO i=1,Nm(1)
-                         IF (DTYPE(wpl)(i,j,k).GT.FGValue) THEN
-                            DTYPE(wpl)(i,j,k)=FGValue
+                         IF (wpi(i,j,k).GT.FGValue) THEN
+                            wpi(i,j,k)=FGValue
                          ENDIF
                       ENDDO !i=1,Nm(1)
                    ENDDO !j=1,Nm(2)
@@ -1056,42 +1162,42 @@
                 IF (sbpitr%istart(1).EQ.1) THEN
                    DO k=lo_a(3),hi_a(3)
                       DO j=lo_a(2),hi_a(2)
-                         DTYPE(wpl)(1,j,k)=FORBIDDEN
+                         wpi(1,j,k)=FORBIDDEN
                       ENDDO
                    ENDDO
                 ENDIF
                 IF (sbpitr%istart(2).EQ.1) THEN
                    DO k=lo_a(3),hi_a(3)
                       DO i=lo_a(1),hi_a(1)
-                         DTYPE(wpl)(i,1,k)=FORBIDDEN
+                         wpi(i,1,k)=FORBIDDEN
                       ENDDO
                    ENDDO
                 ENDIF
                 IF (sbpitr%istart(3).EQ.1) THEN
                    DO j=lo_a(2),hi_a(2)
                       DO i=lo_a(1),hi_a(1)
-                         DTYPE(wpl)(i,j,1)=FORBIDDEN
+                         wpi(i,j,1)=FORBIDDEN
                       ENDDO
                    ENDDO
                 ENDIF
                 IF (sbpitr%iend(1).EQ.Ngrid(1)) THEN
                    DO k=lo_a(3),hi_a(3)
                       DO j=lo_a(2),hi_a(2)
-                         DTYPE(wpl)(Nm(1),j,k)=FORBIDDEN
+                         wpi(Nm(1),j,k)=FORBIDDEN
                       ENDDO
                    ENDDO
                 ENDIF
                 IF (sbpitr%iend(2).EQ.Ngrid(2)) THEN
                    DO k=lo_a(3),hi_a(3)
                       DO i=lo_a(1),hi_a(1)
-                         DTYPE(wpl)(i,Nm(2),k)=FORBIDDEN
+                         wpi(i,Nm(2),k)=FORBIDDEN
                       ENDDO
                    ENDDO
                 ENDIF
                 IF (sbpitr%iend(3).EQ.Ngrid(3)) THEN
                    DO j=lo_a(2),hi_a(2)
                       DO i=lo_a(1),hi_a(1)
-                         DTYPE(wpl)(i,j,Nm(3))=FORBIDDEN
+                         wpi(i,j,Nm(3))=FORBIDDEN
                       ENDDO
                    ENDDO
                 ENDIF
@@ -1100,32 +1206,7 @@
                 sbpitr => MeshIn%subpatch%next()
              ENDDO
 
-          END SELECT
-
-          IF (ppm_nproc.GT.1) THEN
-             !-------------------------------------------------------------------------
-             !  Put the seed balls on fire.
-             !-------------------------------------------------------------------------
-             CALL MeshIn%map_ghost_get(info,ghostsize=inighostsize)
-             or_fail("MeshIn%map_ghost_get")
-
-             CALL FieldOut%map_ghost_push(MeshIn,info)
-             or_fail("FieldOut%map_ghost_push")
-             CALL MeshIn%map_isend(info,sendrecv=.TRUE.)
-             or_fail("MeshIn%map_isend")
-          ENDIF
-
-          IF (debug.GT.1) THEN
-             CALL DTYPE(ppm_rc_write_image_label)(FieldOut,MeshIn,"afterput",info,idn=FORBIDDEN)
-             or_fail("ppm_rc_write_image_label")
-          ENDIF
-
-          IF (ppm_nproc.GT.1) THEN
-             CALL MeshIn%map_isend(info,sendrecv=.FALSE.)
-             or_fail("MeshIn%map_isend")
-             CALL FieldOut%map_ghost_pop(MeshIn,info)
-             or_fail("FieldOut%map_ghost_pop")
-          ENDIF
+          END SELECT !vInitKind
 
           end_subroutine()
 

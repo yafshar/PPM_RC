@@ -67,13 +67,17 @@
       USE ppm_rc_module_rnd, ONLY : ppm_rc_DestroyImageDiscrDistr, &
       &   ppm_rc_DestroyParticlesDiscrDistr
       USE ppm_rc_module_mcmc, ONLY : MCMClengthProposalMask,            &
-      &   MCMCAllParticlesFwdProposals,MCMCchildren,MCMCparents,        &
+      &   MCMCRegularParticles,MCMCFloatingParticlesInCell,             &
+      &   MCMCRegularParticlesInCell,      &
       &   MCMC_CandidateMove,MCMC_CandidateMove_Index,MCMC_PartnerMove, &
       &   MCMC_qb_B,MCMC_q_A,MCMC_q_B,MCMC_q_A_B,MCMC_q_B_A,            &
       &   MCMC_qb_A,MCMC_qb_A_B,MCMC_qb_B_A,MCMC_LabelsBeforeJump_A,    &
       &   MCMC_LabelsBeforeJump_B,MCMC_Particle_Ab_IsFloating,          &
       &   MCMC_Particle_Bb_IsFloating,MCMC_Particle_A_IsFloating,       &
-      &   MCMC_PartnerMove_Index
+      &   MCMC_PartnerMove_Index,MCMCcellsize,MCMCcellNm,               &
+      &   MCMCRegularParticlesProposalNormalizer,MCMCboundarycellIndex, &
+      &   MCMCRegularParticlesProposalNormalizerlocal,                  &
+      &   MCMCinteriorcellIndex,MCMCinteriorcellDisp
       IMPLICIT NONE
 
       !-------------------------------------------------------------------------
@@ -193,10 +197,6 @@
          DEALLOCATE(processeda,STAT=info)
          or_fail_dealloc("processeda")
       ENDIF
-      IF (ALLOCATED(energya)) THEN
-         DEALLOCATE(energya,STAT=info)
-         or_fail_dealloc("energya")
-      ENDIF
 
       IF (ASSOCIATED(e_data)) THEN
          CALL e_data%destroy(info)
@@ -269,6 +269,10 @@
          DEALLOCATE(ghostsize_equil,STAT=info)
          or_fail_dealloc("ghostsize_equil")
       ENDIF
+      IF (ALLOCATED(ghostsize_mcmc)) THEN
+         DEALLOCATE(ghostsize_mcmc,STAT=info)
+         or_fail_dealloc("ghostsize_mcmc")
+      ENDIF
       IF (ALLOCATED(ghostsize_run)) THEN
          DEALLOCATE(ghostsize_run,STAT=info)
          or_fail_dealloc("ghostsize_run")
@@ -284,10 +288,6 @@
       IF (ALLOCATED(procflag)) THEN
          DEALLOCATE(procflag,STAT=info)
          or_fail_dealloc("procflag")
-      ENDIF
-      IF (ALLOCATED(ineighproc)) THEN
-         DEALLOCATE(ineighproc,STAT=info)
-         or_fail_dealloc("ineighproc")
       ENDIF
 
       !-------------------------------------------------------------------------
@@ -333,23 +333,6 @@
                CALL m_Seeds(ipatch)%destroy(info)
                or_fail("m_Seeds(ipatch)%destroy")
             ENDIF
-            IF (ALLOCATED(MCMCParticleInContainerHistory)) THEN
-               CALL MCMCParticleInContainerHistory(ipatch)%destroy(info)
-               or_fail("MCMCParticleInContainerHistory(ipatch)%destroy")
-            ENDIF
-            IF (ALLOCATED(MCMCFloatingParticleInContainerHistory)) THEN
-               CALL MCMCFloatingParticleInContainerHistory(ipatch)%destroy(info)
-               or_fail("MCMCFloatingParticleInContainerHistory(ipatch)%destroy")
-            ENDIF
-            IF (ALLOCATED(MCMCLabelImageHistory)) THEN
-               CALL MCMCLabelImageHistory(ipatch)%destroy(info)
-               or_fail("MCMCLabelImageHistory(ipatch)%destroy")
-            ENDIF
-            IF (ALLOCATED(MCMCAppliedParticleOrigLabels)) THEN
-               !!! This is a list structure not a collection
-               !!! ppm_rc_list
-               CALL MCMCAppliedParticleOrigLabels(ipatch)%destroy()
-            ENDIF
             sbpitr => mesh%subpatch%next()
             ipatch=ipatch+1
          ENDDO
@@ -383,22 +366,6 @@
          DEALLOCATE(ppm_rc_seeds_to_remove,STAT=info)
          or_fail_dealloc("ppm_rc_seeds_to_remove")
       ENDIF
-      IF (ALLOCATED(MCMCParticleInContainerHistory)) THEN
-         DEALLOCATE(MCMCParticleInContainerHistory,STAT=info)
-         or_fail_dealloc("MCMCParticleInContainerHistory")
-      ENDIF
-      IF (ALLOCATED(MCMCFloatingParticleInContainerHistory)) THEN
-         DEALLOCATE(MCMCFloatingParticleInContainerHistory,STAT=info)
-         or_fail_dealloc("MCMCFloatingParticleInContainerHistory")
-      ENDIF
-      IF (ALLOCATED(MCMCLabelImageHistory)) THEN
-         DEALLOCATE(MCMCLabelImageHistory,STAT=info)
-         or_fail_dealloc("MCMCLabelImageHistory")
-      ENDIF
-      IF (ALLOCATED(MCMCAppliedParticleOrigLabels)) THEN
-         DEALLOCATE(MCMCAppliedParticleOrigLabels,STAT=info)
-         or_fail_dealloc("MCMCAppliedParticleOrigLabels")
-      ENDIF
       !---------------------------------------------------------------------
       ! Destroy MCMC memory
       !---------------------------------------------------------------------
@@ -408,10 +375,6 @@
             DEALLOCATE(MCMClengthProposalMask,STAT=info)
             or_fail_dealloc("MCMClengthProposalMask")
          ENDIF
-         IF (ALLOCATED(MCMCAllParticlesFwdProposals)) THEN
-            DEALLOCATE(MCMCAllParticlesFwdProposals,STAT=info)
-            or_fail_dealloc("MCMCAllParticlesFwdProposals")
-         ENDIF
 
          info=ppm_rc_DestroyImageDiscrDistr()
          or_fail("ppm_rc_DestroyImageDiscrDistr")
@@ -419,22 +382,67 @@
          info=ppm_rc_DestroyParticlesDiscrDistr()
          or_fail("ppm_rc_DestroyParticlesDiscrDistr")
 
-         IF (ALLOCATED(MCMCparents)) THEN
-            DO i=0,SIZE(MCMCparents)-1
-               CALL MCMCparents(i)%destroy(info)
-               or_fail("MCMCparents(i)%destroy")
+         IF (ALLOCATED(MCMCRegularParticles)) THEN
+            DO i=1,SIZE(MCMCRegularParticles)
+               CALL MCMCRegularParticles(i)%destroy(info)
+               or_fail("MCMCRegularParticles(i)%destroy")
             ENDDO
-            DEALLOCATE(MCMCparents,STAT=info)
-            or_fail_dealloc("MCMCparents(i)%destroy")
+            DEALLOCATE(MCMCRegularParticles,STAT=info)
+            or_fail_dealloc("MCMCRegularParticles")
          ENDIF
-         IF (ALLOCATED(MCMCchildren)) THEN
-            DO i=0,SIZE(MCMCchildren)-1
-               CALL MCMCchildren(i)%destroy(info)
-               or_fail("MCMCchildren(i)%destroy")
+         IF (ALLOCATED(MCMCRegularParticlesInCell)) THEN
+            DO i=1,SIZE(MCMCRegularParticlesInCell)
+               CALL MCMCRegularParticlesInCell(i)%destroy(info)
+               or_fail("MCMCRegularParticlesInCell(i)%destroy")
             ENDDO
-            DEALLOCATE(MCMCchildren,STAT=info)
-            or_fail_dealloc("MCMCchildren(i)%destroy")
+            DEALLOCATE(MCMCRegularParticlesInCell,STAT=info)
+            or_fail_dealloc("MCMCRegularParticlesInCell")
          ENDIF
+
+         IF (ALLOCATED(MCMCFloatingParticlesInCell)) THEN
+            DO i=1,SIZE(MCMCFloatingParticlesInCell)
+               CALL MCMCFloatingParticlesInCell(i)%destroy(info)
+               or_fail("MCMCFloatingParticlesInCell(i)%destroy")
+            ENDDO
+            DEALLOCATE(MCMCFloatingParticlesInCell,STAT=info)
+            or_fail_dealloc("MCMCFloatingParticlesInCell")
+         ENDIF
+
+         IF (ALLOCATED(MCMCRegularParticlesProposalNormalizer)) THEN
+            DEALLOCATE(MCMCRegularParticlesProposalNormalizer,STAT=info)
+            or_fail_dealloc("MCMCRegularParticlesProposalNormalizer")
+         ENDIF
+
+         IF (ALLOCATED(MCMCRegularParticlesProposalNormalizerlocal)) THEN
+            DEALLOCATE(MCMCRegularParticlesProposalNormalizerlocal,STAT=info)
+            or_fail_dealloc("MCMCRegularParticlesProposalNormalizerlocal")
+         ENDIF
+
+         IF (ALLOCATED(MCMCcellsize)) THEN
+            DEALLOCATE(MCMCcellsize,STAT=info)
+            or_fail_dealloc("MCMCcellsize")
+         ENDIF
+
+         IF (ALLOCATED(MCMCcellNm)) THEN
+            DEALLOCATE(MCMCcellNm,STAT=info)
+            or_fail_dealloc("MCMCcellNm")
+         ENDIF
+
+         IF (ALLOCATED(MCMCboundarycellIndex)) THEN
+            DEALLOCATE(MCMCboundarycellIndex,STAT=info)
+            or_fail_dealloc("MCMCboundarycellIndex")
+         ENDIF
+
+         IF (ALLOCATED(MCMCinteriorcellIndex)) THEN
+            DEALLOCATE(MCMCinteriorcellIndex,STAT=info)
+            or_fail_dealloc("MCMCinteriorcellIndex")
+         ENDIF
+
+         IF (ALLOCATED(MCMCinteriorcellDisp)) THEN
+            DEALLOCATE(MCMCinteriorcellDisp,STAT=info)
+            or_fail_dealloc("MCMCinteriorcellDisp")
+         ENDIF
+
          IF (ALLOCATED(MCMC_CandidateMove)) THEN
             DEALLOCATE(MCMC_CandidateMove,STAT=info)
             or_fail_dealloc("MCMCCandidateMove")
@@ -525,10 +533,26 @@
          dealloc_pointer("mesh")
       ENDIF
 
+      IF (rank.EQ.0) THEN
+         stdout_f('(A)',"********************************************************")
+         CALL ppm_log(caller,cbuf,info)
+         stdout_f('(A)',"***  Please do cite:                                 ***")
+         CALL ppm_log(caller,cbuf,info)
+         stdout_f('(A)',"***  Y. Afshar and I. F. Sbalzarini,                 ***")
+         CALL ppm_log(caller,cbuf,info)
+         stdout_f('(A)',"***  `PLoS ONE` 11(4):e0152528, (2016)               ***")
+         CALL ppm_log(caller,cbuf,info)
+         stdout_f('(A)',"***  publishing research data obtained using PPM_RC  ***")
+         CALL ppm_log(caller,cbuf,info)
+         stdout_f('(A)',"********************************************************")
+         CALL ppm_log(caller,cbuf,info)
+      ENDIF
+
       !-------------------------------------------------------------------------
       !  Finalize PPM
       !-------------------------------------------------------------------------
       CALL ppm_finalize(info)
+
 
       SELECT CASE (errstat)
       CASE (0)

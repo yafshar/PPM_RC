@@ -163,8 +163,9 @@
            !-------------------------------------------------------------------------
            !  Scale and shift the FieldIn2
            !-------------------------------------------------------------------------
-           Normalfac=lmax-lmin
-           coef=one/Normalfac
+           ImageNormalfac=lmax-lmin
+           MinShiftVal=lmin
+           coef=one/ImageNormalfac
 
            Tolerance_=Tolerance*coef
            !correct the tolerance, when we are normalizing the image
@@ -481,8 +482,9 @@
         !-------------------------------------------------------------------------
         !  Scale and shift the FieldIn2
         !-------------------------------------------------------------------------
-        Normalfac=lmax-lmin
-        coef=one/Normalfac
+        ImageNormalfac=lmax-lmin
+        MinShiftVal=lmin
+        coef=one/ImageNormalfac
 
         Tolerance_=Tolerance*coef
         !correct the tolerance, when we are normalizing the image
@@ -502,7 +504,6 @@
            DO j=1,Nm(2)
               DO i=1,Nm(1)
                  DTYPE(wp)(i,j)=(DTYPE(wp)(i,j)-lmin)*coef
-!                  subimageintensity=subimageintensity+DTYPE(wp)(i,j)
               ENDDO
            ENDDO
 #elif __DIME == __3D
@@ -510,20 +511,10 @@
               DO j=1,Nm(2)
                  DO i=1,Nm(1)
                     DTYPE(wp)(i,j,k)=(DTYPE(wp)(i,j,k)-lmin)*coef
-!                     subimageintensity=subimageintensity+DTYPE(wp)(i,j,k)
                  ENDDO
               ENDDO
            ENDDO
 #endif
-
-! #ifdef __MPI
-!            CALL MPI_Iallreduce(subimageintensity,imageintensity,1, &
-!            &    MPI_DOUBLE_PRECISION,MPI_SUM,comm,request(1),info)
-!            or_fail_MPI("MPI_Iallreduce failed")
-!
-!            CALL MPI_Wait(request(1),MPI_STATUS_IGNORE,info)
-!            or_fail_MPI("MPI_Wait")
-! #endif
 
            sbpitr => MeshIn%subpatch%next()
         ENDDO

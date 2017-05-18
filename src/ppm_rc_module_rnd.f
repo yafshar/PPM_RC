@@ -46,6 +46,9 @@
       !
       !  Remarks      : In order to get different number one needs to initialize
       !                 using saru_random_init or mt_random_init
+      !                 We are creating two PRNG streams on each processor
+      !                 One stream will be used for producing real and integer variate random numbers
+      !                 Second stream ppm_rc_Saru_PRNG will be seeded on each step for shuffling the arrays
       !
       !  References   :
       !
@@ -55,38 +58,61 @@
         !----------------------------------------------------------------------
         !  Modules
         !----------------------------------------------------------------------
-        USE ppm_rc_module_global, ONLY : ppm_kind_double,ppm_char,rank,comm, &
-        &   ppm_err_mpi_fail,ppm_error_error,ppm_err_sub_failed,ppm_error,   &
-        &   substart,substop
+        USE ppm_rc_module_global, ONLY : ppm_kind_double,ppm_char,rank,    &
+        &   ppm_err_mpi_fail,ppm_error_error,ppm_err_sub_failed,ppm_error, &
+        &   substart,substop,ppm_kind_int64,usrseed
 #ifdef __F2003
         USE ISO_C_BINDING
         IMPLICIT NONE
 
         PRIVATE
-
-        INTEGER :: iseed=0
-
-        LOGICAL :: init=.FALSE.
-
         !----------------------------------------------------------------------
         !  Some work memory on the heap
         !----------------------------------------------------------------------
         !----------------------------------------------------------------------
         !  Define module interfaces
         !----------------------------------------------------------------------
-        INTERFACE SaruInitialize
-          FUNCTION SaruInitialize1(iseed) BIND(C,NAME='SaruInitialize1')
-            IMPORT         :: C_INT
-            INTEGER(C_INT) :: iseed
-            INTEGER(C_INT) :: SaruInitialize1
-          END FUNCTION
-          FUNCTION SaruInitialize2() BIND(C,NAME='SaruInitialize2')
-            IMPORT         :: C_INT
-            INTEGER(C_INT) :: SaruInitialize2
+        INTERFACE ppm_rc_Saru_SEEDPRNG
+          FUNCTION Saru_SEEDPRNG(iseed1,iseed2) BIND(C,NAME='Saru_SEEDPRNG')
+            IMPORT          :: C_LONG,C_INT
+            INTEGER(C_INT)  :: iseed1
+            INTEGER(C_INT)  :: iseed2
+            INTEGER(C_LONG) :: Saru_SEEDPRNG
           END FUNCTION
         END INTERFACE
 
-        INTERFACE ppm_rc_SaruGetIntegerVariate
+        INTERFACE ppm_rc_Saru_SEED
+          FUNCTION Saru_SEED1(iseed1) BIND(C,NAME='Saru_SEED1')
+            IMPORT         :: C_INT
+            INTEGER(C_INT) :: iseed1
+            INTEGER(C_INT) :: Saru_SEED1
+          END FUNCTION
+          FUNCTION Saru_SEED2(iseed1,iseed2) BIND(C,NAME='Saru_SEED2')
+            IMPORT         :: C_INT
+            INTEGER(C_INT) :: iseed1
+            INTEGER(C_INT) :: iseed2
+            INTEGER(C_INT) :: Saru_SEED2
+          END FUNCTION
+          FUNCTION Saru_SEED3(iseed1,iseed2,iseed3) BIND(C,NAME='Saru_SEED3')
+            IMPORT         :: C_INT
+            INTEGER(C_INT) :: iseed1
+            INTEGER(C_INT) :: iseed2
+            INTEGER(C_INT) :: iseed3
+            INTEGER(C_INT) :: Saru_SEED3
+          END FUNCTION
+        END INTERFACE
+
+        INTERFACE ppm_rc_SaruInitialize
+          FUNCTION SaruInitialize(iseed) BIND(C,NAME='SaruInitialize')
+            IMPORT          :: C_LONG,C_INT
+            INTEGER(C_LONG) :: iseed
+            INTEGER(C_INT)  :: SaruInitialize
+          END FUNCTION
+        END INTERFACE
+
+        ! Output a 32 bit integer pseudo-random value
+        ! with variate in [1, n] for n < 2^31-1
+        INTERFACE ppm_rc_Saru_IPRNG
           FUNCTION SaruGetIntegerVariate1(high) BIND(C,NAME='SaruGetIntegerVariate1')
             IMPORT         :: C_INT
             INTEGER(C_INT) :: high
@@ -98,7 +124,8 @@
           END FUNCTION
         END INTERFACE
 
-        INTERFACE ppm_rc_SaruGetRealVariate
+        ! Output a single precision [0..1) floating point
+        INTERFACE ppm_rc_Saru_RPRNG
           FUNCTION SaruGetRealVariateS1() BIND(C,NAME='SaruGetRealVariateS1')
             IMPORT        :: C_FLOAT
             REAL(C_FLOAT) :: SaruGetRealVariateS1
@@ -111,7 +138,8 @@
           END FUNCTION
         END INTERFACE
 
-        INTERFACE ppm_rc_SaruGetRealVariateD
+        ! Output a double precision [0..1) floating point
+        INTERFACE ppm_rc_Saru_RPRNGD
           FUNCTION SaruGetRealVariateD1() BIND(C,NAME='SaruGetRealVariateD1')
             IMPORT         :: C_DOUBLE
             REAL(C_DOUBLE) :: SaruGetRealVariateD1
@@ -123,6 +151,25 @@
             REAL(C_DOUBLE) :: SaruGetRealVariateD2
           END FUNCTION
         END INTERFACE
+
+        ! Single precision [0..1) floating point
+        INTERFACE ppm_rc_Saru_PRNG
+          FUNCTION Saru_PRNG() BIND(C,NAME='Saru_PRNG')
+            IMPORT        :: C_FLOAT
+            REAL(C_FLOAT) :: Saru_PRNG
+          END FUNCTION
+        END INTERFACE
+
+        ! Double precision [0..1) floating point
+        INTERFACE ppm_rc_Saru_PRNGD
+          FUNCTION Saru_PRNGD() BIND(C,NAME='Saru_PRNGD')
+            IMPORT         :: C_DOUBLE
+            REAL(C_DOUBLE) :: Saru_PRNGD
+          END FUNCTION
+        END INTERFACE
+
+
+
 
         ! Constructs a discrete_distribution from a normalized image data
         ! the values of the image data represent weights for the possible values of the distribution
@@ -207,9 +254,9 @@
 
         INTERFACE MTInitialize
           FUNCTION MTInitialize(iseed) BIND(C,NAME='MTInitialize')
-            IMPORT         :: C_INT
-            INTEGER(C_INT) :: iseed
-            INTEGER(C_INT) :: MTInitialize
+            IMPORT          :: C_INT,C_LONG
+            INTEGER(C_LONG) :: iseed
+            INTEGER(C_INT)  :: MTInitialize
           END FUNCTION
         END INTERFACE
 
@@ -217,9 +264,19 @@
         ! Public
         !----------------------------------------------------------------------
         PUBLIC :: ppm_rc_saru_random_init
-        PUBLIC :: ppm_rc_SaruGetIntegerVariate
-        PUBLIC :: ppm_rc_SaruGetRealVariate
-        PUBLIC :: ppm_rc_SaruGetRealVariateD
+
+        PUBLIC :: ppm_rc_Saru_SEED
+        ! Output a single precision [0..1) floating point after seeding the PRNG at each step
+        PUBLIC :: ppm_rc_Saru_PRNG
+        PUBLIC :: ppm_rc_Saru_PRNGD
+
+        ! Output a 32 bit integer pseudo-random value
+        ! with variate in [1, n] for n < 2^31-1
+        PUBLIC :: ppm_rc_Saru_IPRNG
+
+        ! Output a single precision [0..1) floating point
+        PUBLIC :: ppm_rc_Saru_RPRNG
+        PUBLIC :: ppm_rc_Saru_RPRNGD
 
         PUBLIC :: ppm_rc_mt_random_init
         PUBLIC :: ppm_rc_GenerateImageDiscrDistr
@@ -245,7 +302,7 @@
 
           REAL(ppm_kind_double) :: t0
 
-          INTEGER :: ih,ic,im
+          INTEGER(ppm_kind_int64) :: iseed
 
           CHARACTER(LEN=ppm_char) :: caller='ppm_rc_saru_random_init'
 
@@ -254,26 +311,15 @@
           !-------------------------------------------------------------------------
           CALL substart(caller,t0,info)
 
-          SELECT CASE (init)
-          CASE (.FALSE.)
-             init=.TRUE.
+          ! Every processor creates a unique seed based on user seed and processor rank.
+          ! Seeding a random number generator is a highly nontrivial task, since one
+          ! has to eliminate all structures of the input seeds.
+          ! The ppm_rc_Saru_SEEDPRNG mixing does not create any correlation and iseed
+          ! is used to seed Saru for creating a new independent stream
+          iseed=ppm_rc_Saru_SEEDPRNG(rank,usrseed)
 
-             SELECT CASE (iseed)
-             CASE (0)
-                ! Random number seed must be between 0 and 31328
-                ! As a rule of thumb
-                CALL SYSTEM_CLOCK(ih,ic,im)
-                iseed=MOD(ih+rank*rank,31328)
-             END SELECT
-
-             info=SaruInitialize(iseed)
-             or_fail("Failed to Initialize SaruIntegerVariate!")
-
-          CASE DEFAULT
-             info=SaruInitialize()
-             or_fail("Failed to Initialize SaruRealVariate!")
-
-          END SELECT
+          info=SaruInitialize(iseed)
+          or_fail("Failed to Initialize Saru PRNG!")
         !-------------------------------------------------------------------------
         !  Return
         !-------------------------------------------------------------------------
@@ -290,14 +336,13 @@
           !----------------------------------------------------------------------
           !  Modules
           !----------------------------------------------------------------------
-          USE ppm_module_mpi
           IMPLICIT NONE
 
           INTEGER, INTENT(  OUT) :: info
 
           REAL(ppm_kind_double) :: t0
 
-          INTEGER :: ih,ic,im
+          INTEGER(ppm_kind_int64) :: iseed
 
           CHARACTER(LEN=ppm_char) :: caller='ppm_rc_mt_random_init'
 
@@ -306,16 +351,15 @@
           !-------------------------------------------------------------------------
           CALL substart(caller,t0,info)
 
-          SELECT CASE (iseed)
-          CASE (0)
-             ! First random number seed must be between 0 and 30081
-             ! As a rule of thumb
-             CALL SYSTEM_CLOCK(ih,ic,im)
-             iseed=MOD(ih+rank*rank,30081)
-          END SELECT
+          ! Every processor creates a unique seed based on user seed and processor rank.
+          ! Seeding a random number generator is a highly nontrivial task, since one
+          ! has to eliminate all structures of the input seeds.
+          ! The ppm_rc_Saru_SEEDPRNG mixing does not create any correlation and iseed is used
+          ! to seed MTRNG (the test harness ensures that the behavior of this seeding is indeed chaotic)
+          iseed=ppm_rc_Saru_SEEDPRNG(rank,usrseed)
 
           info=MTInitialize(iseed)
-          or_fail("Failed to Initialize MTInitialize!")
+          or_fail("Failed to Initialize Mersenne Twister PRNG!")
 
         !-------------------------------------------------------------------------
         !  Return

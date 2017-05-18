@@ -78,18 +78,24 @@
         CLASS(ppm_t_subpatch_), POINTER :: sbpitr
 
 #if   __DIME == __2D
-        REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wp_rs)
-        REAL(MK),              CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wp_r)
+        REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:),   POINTER :: wprs
+        REAL(MK),              CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpr
+        REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:),     POINTER :: wprsp
+        REAL(MK),              CONTIGUOUS, DIMENSION(:),     POINTER :: wprp
 #elif __DIME == __3D
-        REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wp_rs)
-        REAL(MK),              CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wp_r)
+        REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wprs
+        REAL(MK),              CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpr
+        REAL(ppm_kind_single),             DIMENSION(:,:),   POINTER :: wprsp
+        REAL(MK),                          DIMENSION(:,:),   POINTER :: wprp
 #endif
         REAL(ppm_kind_double)                                        :: t0
 
 #if   __DIME == __2D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wp_i)
+        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpi
+        INTEGER, CONTIGUOUS, DIMENSION(:),     POINTER :: wpip
 #elif __DIME == __3D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wp_i)
+        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpi
+        INTEGER,             DIMENSION(:,:),   POINTER :: wpip
 #endif
         INTEGER,             DIMENSION(:),     POINTER :: Nm
 #if   __DIME == __2D
@@ -138,23 +144,23 @@
         ! First we find out which image slice to read
         ! We use the istart array for that
         !---------------------------------------------------------------------
-        NULLIFY(DTYPE(wp_i),DTYPE(wp_r),DTYPE(wp_rs))
+        NULLIFY(wpi,wpr,wprs)
         sbpitr => MeshIn%subpatch%begin()
         DO WHILE (ASSOCIATED(sbpitr))
            Nm => sbpitr%nnodes
 
            SELECT CASE (FieldIn%data_type)
            CASE (ppm_type_real_single)
-              CALL sbpitr%get_field(FieldIn,DTYPE(wp_rs),info)
-              or_fail("Failed to get field wp_rs.")
+              CALL sbpitr%get_field(FieldIn,wprs,info)
+              or_fail("Failed to get field wprs.")
 
            CASE (ppm_type_real)
-              CALL sbpitr%get_field(FieldIn,DTYPE(wp_r),info)
-              or_fail("Failed to get field wp_r.")
+              CALL sbpitr%get_field(FieldIn,wpr,info)
+              or_fail("Failed to get field wpr.")
 
            CASE (ppm_type_int)
-              CALL sbpitr%get_field(FieldIn,DTYPE(wp_i),info)
-              or_fail("Failed to get field wp_i.")
+              CALL sbpitr%get_field(FieldIn,wpi,info)
+              or_fail("Failed to get field wpi.")
 
            END SELECT !(FieldIn%data_type)
 
@@ -172,84 +178,196 @@
 #endif
 
            z=0
-
            SELECT CASE (samplesPerPixel)
            CASE (1)
+#if   __DIME == __2D
               !loop through slices
               DO istrip=sbpitr%istart(__DIME),sbpitr%iend(__DIME)
                  z=z+1
-
-#if   __DIME == __2D
                  !convert the row number to C style
                  rownm=istrip-1
 
                  SELECT CASE (FieldIn%data_type)
                  CASE (ppm_type_real_single)
-                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_rs)(1:Nm(1),z),rownm,bitsPerSample,0,Nm(1))
+                    wprsp => wprs(1:Nm(1),z)
+
+                    info=ppm_rc_read_tiff_scanline(wprsp,rownm,bitsPerSample,0,Nm(1))
 
                  CASE (ppm_type_real)
-                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_r)(1:Nm(1),z),rownm,bitsPerSample,0,Nm(1))
+                    wprp => wpr(1:Nm(1),z)
+
+                    info=ppm_rc_read_tiff_scanline(wprp,rownm,bitsPerSample,0,Nm(1))
 
                  CASE (ppm_type_int)
-                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_i)(1:Nm(1),z),rownm,bitsPerSample,0,Nm(1))
+                    wpip => wpi(1:Nm(1),z)
+
+                    info=ppm_rc_read_tiff_scanline(wpip,rownm,bitsPerSample,0,Nm(1))
 
                  END SELECT !(FieldIn%data_type)
                  or_fail('Error in ppm_rc_read_tiff_scanline !!!')
-#elif __DIME == __3D
-                 SELECT CASE (ninputimage)
-                 CASE (1)
-                    page=istrip-1
-
-                 CASE (2:9)
-                    WRITE(filename,'(A,A1,I1.1,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
-                    info=ppm_rc_open_tiff(filename)
-                    or_fail('Error opening tiff file.')
-
-                 CASE (10:99)
-                    WRITE(filename,'(A,A1,I2.2,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
-                    info=ppm_rc_open_tiff(filename)
-                    or_fail('Error opening tiff file.')
-
-                 CASE (100:999)
-                    WRITE(filename,'(A,A1,I3.3,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
-                    info=ppm_rc_open_tiff(filename)
-                    or_fail('Error opening tiff file.')
-
-                 CASE (1000:9999)
-                    WRITE(filename,'(A,A1,I4.4,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
-                    info=ppm_rc_open_tiff(filename)
-                    or_fail('Error opening tiff file.')
-
-                 CASE (10000:99999)
-                    WRITE(filename,'(A,A1,I5.5,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
-                    info=ppm_rc_open_tiff(filename)
-                    or_fail('Error opening tiff file.')
-
-                 END SELECT
-
-                 SELECT CASE (FieldIn%data_type)
-                 CASE (ppm_type_real_single)
-                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_rs)(1:Nm(1),1:Nm(2),z),0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
-
-                 CASE (ppm_type_real)
-                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_r)(1:Nm(1),1:Nm(2),z),0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
-
-                 CASE (ppm_type_int)
-                    info=ppm_rc_read_tiff_scanline(DTYPE(wp_i)(1:Nm(1),1:Nm(2),z),0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
-
-                 END SELECT !(FieldIn%data_type)
-                 or_fail('Error in ppm_rc_read_tiff_scanline !!!')
-
-                 SELECT CASE (ninputimage)
-                 CASE (1)
-                 CASE DEFAULT
-                    info=ppm_rc_close_tiff()
-                    or_fail('Error closing tiff file.')
-
-                 END SELECT !(ninputimage)
-#endif
               ENDDO !istrip=sbpitr%istart(__DIME),sbpitr%iend(__DIME)
+#elif __DIME == __3D
+              SELECT CASE (inputformat)
+              CASE (1)
+                 !loop through slices
+                 DO istrip=sbpitr%istart(__DIME),sbpitr%iend(__DIME)
+                    z=z+1
+                    SELECT CASE (ninputimage)
+                    CASE (1)
+                       page=istrip-1
 
+                    CASE (2:9)
+                       WRITE(filename,'(A,A1,I1.1,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
+                       info=ppm_rc_open_tiff(filename)
+                       or_fail('Error opening tiff file.')
+
+                    CASE (10:99)
+                       WRITE(filename,'(A,A1,I2.2,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
+                       info=ppm_rc_open_tiff(filename)
+                       or_fail('Error opening tiff file.')
+
+                    CASE (100:999)
+                       WRITE(filename,'(A,A1,I3.3,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
+                       info=ppm_rc_open_tiff(filename)
+                       or_fail('Error opening tiff file.')
+
+                    CASE (1000:9999)
+                       WRITE(filename,'(A,A1,I4.4,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
+                       info=ppm_rc_open_tiff(filename)
+                       or_fail('Error opening tiff file.')
+
+                    CASE (10000:99999)
+                       WRITE(filename,'(A,A1,I5.5,A4,A1)') TRIM(InputFileName),'_',istrip,'.tif',CHAR(0)
+                       info=ppm_rc_open_tiff(filename)
+                       or_fail('Error opening tiff file.')
+
+                    END SELECT
+
+                    SELECT CASE (FieldIn%data_type)
+                    CASE (ppm_type_real_single)
+                       wprsp => wprs(1:Nm(1),1:Nm(2),z)
+
+                       info=ppm_rc_read_tiff_scanline(wprsp,0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
+
+                    CASE (ppm_type_real)
+                       wprp => wpr(1:Nm(1),1:Nm(2),z)
+
+                       info=ppm_rc_read_tiff_scanline(wprp,0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
+
+                    CASE (ppm_type_int)
+                       wpip => wpi(1:Nm(1),1:Nm(2),z)
+
+                       info=ppm_rc_read_tiff_scanline(wpip,0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
+
+                    END SELECT !(FieldIn%data_type)
+                    or_fail('Error in ppm_rc_read_tiff_scanline !!!')
+
+                    SELECT CASE (ninputimage)
+                    CASE (1)
+                    CASE DEFAULT
+                       info=ppm_rc_close_tiff()
+                       or_fail('Error closing tiff file.')
+
+                    END SELECT !(ninputimage)
+                 ENDDO !istrip=sbpitr%istart(__DIME),sbpitr%iend(__DIME)
+              CASE (2)
+                 !loop through slices
+                 DO istrip=sbpitr%istart(__DIME),sbpitr%iend(__DIME)
+                    z=z+1
+
+                    SELECT CASE (ninputimage)
+                    CASE (2:9)
+                       WRITE(filename,'(A,I1.1,A4,A1)') TRIM(InputFileName),istrip,'.tif',CHAR(0)
+                       info=ppm_rc_open_tiff(filename)
+                       or_fail('Error opening tiff file.')
+
+                    CASE (10:99)
+                       WRITE(filename,'(A,I2.2,A4,A1)') TRIM(InputFileName),istrip,'.tif',CHAR(0)
+                       info=ppm_rc_open_tiff(filename)
+                       or_fail('Error opening tiff file.')
+
+                    CASE (100:999)
+                       WRITE(filename,'(A,I3.3,A4,A1)') TRIM(InputFileName),istrip,'.tif',CHAR(0)
+                       info=ppm_rc_open_tiff(filename)
+                       or_fail('Error opening tiff file.')
+
+                    CASE (1000:9999)
+                       WRITE(filename,'(A,I4.4,A4,A1)') TRIM(InputFileName),istrip,'.tif',CHAR(0)
+                       info=ppm_rc_open_tiff(filename)
+                       or_fail('Error opening tiff file.')
+
+                    CASE (10000:99999)
+                       WRITE(filename,'(A,I5.5,A4,A1)') TRIM(InputFileName),istrip,'.tif',CHAR(0)
+                       info=ppm_rc_open_tiff(filename)
+                       or_fail('Error opening tiff file.')
+
+                    END SELECT
+
+                    SELECT CASE (FieldIn%data_type)
+                    CASE (ppm_type_real_single)
+                       wprsp => wprs(1:Nm(1),1:Nm(2),z)
+
+                       info=ppm_rc_read_tiff_scanline(wprsp,0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
+
+                    CASE (ppm_type_real)
+                       wprp => wpr(1:Nm(1),1:Nm(2),z)
+
+                       info=ppm_rc_read_tiff_scanline(wprp,0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
+
+                    CASE (ppm_type_int)
+                       wpip => wpi(1:Nm(1),1:Nm(2),z)
+
+                       info=ppm_rc_read_tiff_scanline(wpip,0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
+
+                    END SELECT !(FieldIn%data_type)
+                    or_fail('Error in ppm_rc_read_tiff_scanline !!!')
+
+                    SELECT CASE (ninputimage)
+                    CASE (1)
+                    CASE DEFAULT
+                       info=ppm_rc_close_tiff()
+                       or_fail('Error closing tiff file.')
+
+                    END SELECT !(ninputimage)
+                 ENDDO !istrip=sbpitr%istart(__DIME),sbpitr%iend(__DIME)
+              CASE (3)
+                 !loop through slices
+                 DO istrip=sbpitr%istart(__DIME),sbpitr%iend(__DIME)
+                    z=z+1
+
+                    WRITE(filename,'(A,I0,A4,A1)') TRIM(InputFileName),istrip,'.tif',CHAR(0)
+                    info=ppm_rc_open_tiff(filename)
+                    or_fail('Error opening tiff file.')
+
+                    SELECT CASE (FieldIn%data_type)
+                    CASE (ppm_type_real_single)
+                       wprsp => wprs(1:Nm(1),1:Nm(2),z)
+
+                       info=ppm_rc_read_tiff_scanline(wprsp,0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
+
+                    CASE (ppm_type_real)
+                       wprp => wpr(1:Nm(1),1:Nm(2),z)
+
+                       info=ppm_rc_read_tiff_scanline(wprp,0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
+
+                    CASE (ppm_type_int)
+                       wpip => wpi(1:Nm(1),1:Nm(2),z)
+
+                       info=ppm_rc_read_tiff_scanline(wpip,0,bitsPerSample,0,Nm(1),Nm(2),page,npages)
+
+                    END SELECT !(FieldIn%data_type)
+                    or_fail('Error in ppm_rc_read_tiff_scanline !!!')
+
+                    SELECT CASE (ninputimage)
+                    CASE (1)
+                    CASE DEFAULT
+                       info=ppm_rc_close_tiff()
+                       or_fail('Error closing tiff file.')
+
+                    END SELECT !(ninputimage)
+                 ENDDO !istrip=sbpitr%istart(__DIME),sbpitr%iend(__DIME)
+              END SELECT
+#endif
            END SELECT !(samplesPerPixel)
 
            sbpitr => MeshIn%subpatch%next()
@@ -261,7 +379,7 @@
            or_fail('Error closing tiff file.')
 
         END SELECT !(ninputimage)
-        NULLIFY(DTYPE(wp_i),DTYPE(wp_r),DTYPE(wp_rs))
+        NULLIFY(wpi,wpr,wprs)
 
         !-------------------------------------------------------------------------
         !  Return

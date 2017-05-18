@@ -78,7 +78,7 @@
         !-------------------------------------------------------------------------
         !  Local variables
         !-------------------------------------------------------------------------
-        CLASS(ppm_t_subpatch_),    POINTER :: sbpitr
+        CLASS(ppm_t_subpatch_), POINTER :: sbpitr
 
         CLASS(ppm_t_part_prop_s_), POINTER :: prop
 
@@ -483,7 +483,7 @@
                  ! Copy the ghost for comparison with the new values and impose the changes
                  ! to inside domain
                  !-------------------------------------------------------------------------
-                 CALL DTYPE(ppm_rc_ghost_copy)(sbpitr,old_ghost,info)
+                 CALL DTYPE(ppm_rc_ghost_copy)(sbpitr,old_ghost,1,info)
                  or_fail("ppm_rc_ghost_copy")
 
                  CALL mesh%map_isend(info,sendrecv=.FALSE.)
@@ -538,7 +538,7 @@
                  ! Copy the ghost for comparison with the new values and impose the changes
                  ! to inside domain
                  !-------------------------------------------------------------------------
-                 CALL DTYPE(ppm_rc_ghost_copy)(sbpitr,old_ghost(1:ghost_size),info)
+                 CALL DTYPE(ppm_rc_ghost_copy)(sbpitr,old_ghost,1,info)
                  or_fail("ppm_rc_ghost_copy")
 
                  CALL mesh%map_isend(info,sendrecv=.FALSE.)
@@ -837,7 +837,7 @@
               ! Copy the ghost for comparison with the new values and impose the changes
               ! to inside domain
               !-------------------------------------------------------------------------
-              CALL DTYPE(ppm_rc_ghost_copy)(sbpitr,old_ghost(1:ghost_size),info)
+              CALL DTYPE(ppm_rc_ghost_copy)(sbpitr,old_ghost,1,info)
               or_fail("ppm_rc_ghost_copy")
 
               CALL mesh%map_isend(info,sendrecv=.FALSE.)

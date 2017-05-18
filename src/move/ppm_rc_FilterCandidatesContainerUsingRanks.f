@@ -135,12 +135,16 @@
 
         ipatch=mesh%subpatch%nb
         nsize=SUM(Candidates(1:ipatch)%nb)
-        nsize_=CEILING(nsize*AcceptedPointsFactor)
+        IF (nsize.GT.0) THEN
+           nsize_=CEILING(nsize*AcceptedPointsFactor)
 
-        !Sort the candidates according to their energy gradients, in
-        !an ascending order
-        CALL ppm_util_qsort(energya(Candidates_list),energyrank,info)
-        or_fail("ppm_util_qsort")
+           ! Sort the candidates according to their energy gradients, in
+           ! an ascending order
+           CALL ppm_util_qsort(energya(Candidates_list),energyrank,info)
+           or_fail("ppm_util_qsort")
+        ELSE
+           nsize_=0
+        ENDIF
 
 #ifdef __MPI
         IF (ppm_nproc.GT.1.AND..NOT.ConvergenceMASK(2)) THEN

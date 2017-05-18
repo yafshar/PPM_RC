@@ -95,8 +95,8 @@
         !-------------------------------------------------------------------------
         !  Check maximum number of iterations
         !-------------------------------------------------------------------------
-        IF (maxiter.LT.1) THEN
-           stdout("CTRL NOTICE: Maximum number of iterations must be > 0.")
+        IF (maxiter.LT.0) THEN
+           stdout("CTRL NOTICE: Maximum number of iterations must be >= 0.")
            info = ppm_error_fatal
         ENDIF
 

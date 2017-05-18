@@ -1,3 +1,4 @@
+#if   __DIME == __3D
         FUNCTION nextLink(this)
           CLASS(ppm_rc_link)         :: this
 
@@ -51,7 +52,7 @@
         END FUNCTION getValue_
 
         FUNCTION getValueMCMCParticle_2d(this,value1,value2,MCMCParticle_)
-          USE ppm_rc_module_util, ONLY : MCMCParticle,HashIndexFunctor_2d
+          USE ppm_rc_module_global, ONLY : MCMCParticle
           IMPLICIT NONE
           CLASS(ppm_rc_link)                   :: this
 
@@ -68,7 +69,7 @@
         END FUNCTION getValueMCMCParticle_2d
 
         FUNCTION getValueMCMCParticle_3d(this,value1,value2,value3,MCMCParticle_)
-          USE ppm_rc_module_util, ONLY : MCMCParticle,HashIndexFunctor_3d
+          USE ppm_rc_module_global, ONLY : MCMCParticle
           IMPLICIT NONE
           CLASS(ppm_rc_link)                   :: this
 
@@ -86,7 +87,7 @@
         END FUNCTION getValueMCMCParticle_3d
 
         FUNCTION getValueMCMCHistoryParticle_2d(this,value1,value2,MCMCHistoryParticle_)
-          USE ppm_rc_module_util, ONLY : MCMCHistoryParticle,HashIndexFunctor_2d
+          USE ppm_rc_module_global, ONLY : MCMCHistoryParticle
           IMPLICIT NONE
           CLASS(ppm_rc_link)                       :: this
 
@@ -105,7 +106,7 @@
         END FUNCTION getValueMCMCHistoryParticle_2d
 
         FUNCTION getValueMCMCHistoryParticle_3d(this,value1,value2,value3,MCMCHistoryParticle_)
-          USE ppm_rc_module_util, ONLY : MCMCHistoryParticle,HashIndexFunctor_3d
+          USE ppm_rc_module_global, ONLY : MCMCHistoryParticle
           IMPLICIT NONE
           CLASS(ppm_rc_link)                       :: this
 
@@ -133,7 +134,6 @@
         END FUNCTION getValue__
 
         FUNCTION getXYValue_(this)
-          USE ppm_rc_module_util, ONLY : HashIndexFunctor_2d
           IMPLICIT NONE
           CLASS(ppm_rc_link_)   :: this
           INTEGER, DIMENSION(2) :: getXYValue_
@@ -141,48 +141,19 @@
         END FUNCTION getXYValue_
 
         FUNCTION getXYZValue_(this)
-          USE ppm_rc_module_util, ONLY : HashIndexFunctor_3d
           IMPLICIT NONE
           CLASS(ppm_rc_link_)   :: this
           INTEGER, DIMENSION(3) :: getXYZValue_
           CALL HashIndexFunctor_3d(this%value,getXYZValue_)
         END FUNCTION getXYZValue_
 
-        FUNCTION getValue_2_2d(this,key1,key2) RESULT(value)
-          USE ppm_rc_module_util, ONLY : HashIndexFunctor_2d
+        FUNCTION getValue_2(this,Iteration) RESULT(Label)
           IMPLICIT NONE
-          CLASS(ppm_rc_link_2)   :: this
-          INTEGER, INTENT(  OUT) :: key1
-          INTEGER, INTENT(  OUT) :: key2
-          INTEGER                :: value
-          CALL HashIndexFunctor_2d(this%key,key1,key2)
-          value=this%value
-        END FUNCTION getValue_2_2d
-
-        FUNCTION getValue_2_3d(this,key1,key2,key3) RESULT(value)
-          USE ppm_rc_module_util, ONLY : HashIndexFunctor_3d
-          IMPLICIT NONE
-          CLASS(ppm_rc_link_2)   :: this
-          INTEGER, INTENT(  OUT) :: key1
-          INTEGER, INTENT(  OUT) :: key2
-          INTEGER, INTENT(  OUT) :: key3
-          INTEGER                :: value
-          CALL HashIndexFunctor_3d(this%key,key1,key2,key3)
-          value=this%value
-        END FUNCTION getValue_2_3d
-
-        FUNCTION getValue_2(this,key) RESULT(value)
-          USE ppm_rc_module_util, ONLY : HashIndexFunctor_2d,HashIndexFunctor_3d
-          IMPLICIT NONE
-          CLASS(ppm_rc_link_2)                 :: this
-          INTEGER, DIMENSION(:), INTENT(  OUT) :: key
-          INTEGER                              :: value
-          IF (SIZE(key).EQ.2) THEN
-             CALL HashIndexFunctor_2d(this%key,key(1),key(2))
-          ELSE
-             CALL HashIndexFunctor_3d(this%key,key(1),key(2),key(3))
-          ENDIF
-          value=this%value
+          CLASS(ppm_rc_link_2)                   :: this
+          INTEGER(ppm_kind_int64), INTENT(  OUT) :: Iteration
+          INTEGER                                :: Label
+          Iteration=this%Iteration
+          Label    =this%Label
         END FUNCTION getValue_2
 
 
@@ -364,7 +335,7 @@
         END FUNCTION constructor8
 
         FUNCTION constructorMCMCParticle_2d(value1,value2,MCMCParticle_,next)
-          USE ppm_rc_module_util, ONLY : MCMCParticle,IndexHashFunctor_2d
+          USE ppm_rc_module_global, ONLY : MCMCParticle
           IMPLICIT NONE
           INTEGER,            INTENT(IN   ) :: value1
           INTEGER,            INTENT(IN   ) :: value2
@@ -384,7 +355,7 @@
         END FUNCTION constructorMCMCParticle_2d
 
         FUNCTION constructorMCMCParticle_3d(value1,value2,value3,MCMCParticle_,next)
-          USE ppm_rc_module_util, ONLY : MCMCParticle,IndexHashFunctor_3d
+          USE ppm_rc_module_global, ONLY : MCMCParticle
           IMPLICIT NONE
           INTEGER,            INTENT(IN   ) :: value1
           INTEGER,            INTENT(IN   ) :: value2
@@ -405,7 +376,7 @@
         END FUNCTION constructorMCMCParticle_3d
 
         FUNCTION constructorMCMCHistoryParticle_2d(value1,value2,MCMCHistoryParticle_,next)
-          USE ppm_rc_module_util, ONLY : MCMCHistoryParticle,IndexHashFunctor_2d
+          USE ppm_rc_module_global, ONLY : MCMCHistoryParticle
           IMPLICIT NONE
           INTEGER,                   INTENT(IN   ) :: value1
           INTEGER,                   INTENT(IN   ) :: value2
@@ -427,7 +398,7 @@
         END FUNCTION constructorMCMCHistoryParticle_2d
 
         FUNCTION constructorMCMCHistoryParticle_3d(value1,value2,value3,MCMCHistoryParticle_,next)
-          USE ppm_rc_module_util, ONLY : MCMCHistoryParticle,IndexHashFunctor_3d
+          USE ppm_rc_module_global, ONLY : MCMCHistoryParticle
           IMPLICIT NONE
           INTEGER,                   INTENT(IN   ) :: value1
           INTEGER,                   INTENT(IN   ) :: value2
@@ -463,7 +434,6 @@
 
         END FUNCTION constructor_
         FUNCTION constructor_2d(value1,value2,next)
-          USE ppm_rc_module_util, ONLY : IndexHashFunctor_2d
           IMPLICIT NONE
           INTEGER,            INTENT(IN   ) :: value1
           INTEGER,            INTENT(IN   ) :: value2
@@ -477,7 +447,6 @@
           constructor_2d%next => next
         END FUNCTION constructor_2d
         FUNCTION constructor_3d(value1,value2,value3,next)
-          USE ppm_rc_module_util, ONLY : IndexHashFunctor_3d
           IMPLICIT NONE
           INTEGER,            INTENT(IN   ) :: value1
           INTEGER,            INTENT(IN   ) :: value2
@@ -492,34 +461,17 @@
           constructor_3d%next => next
         END FUNCTION constructor_3d
 
-        FUNCTION constructor_2_2d(key1,key2,value,next)
-          USE ppm_rc_module_util, ONLY : IndexHashFunctor64_2d
+        FUNCTION constructor_2(Iteration,Label,next)
           IMPLICIT NONE
-          INTEGER,             INTENT(IN   ) :: key1
-          INTEGER,             INTENT(IN   ) :: key2
-          INTEGER,             INTENT(IN   ) :: value
-          TYPE(ppm_rc_link_2), POINTER       :: next
-          TYPE(ppm_rc_link_2), POINTER       :: constructor_2_2d
-          ALLOCATE(constructor_2_2d)
-          constructor_2_2d%key=IndexHashFunctor64_2d(key1,key2)
-          constructor_2_2d%value=value
-          constructor_2_2d%next => next
-        END FUNCTION constructor_2_2d
-
-        FUNCTION constructor_2_3d(key1,key2,key3,value,next)
-          USE ppm_rc_module_util, ONLY : IndexHashFunctor64_3d
-          IMPLICIT NONE
-          INTEGER,             INTENT(IN   ) :: key1
-          INTEGER,             INTENT(IN   ) :: key2
-          INTEGER,             INTENT(IN   ) :: key3
-          INTEGER,             INTENT(IN   ) :: value
-          TYPE(ppm_rc_link_2), POINTER       :: next
-          TYPE(ppm_rc_link_2), POINTER       :: constructor_2_3d
-          ALLOCATE(constructor_2_3d)
-          constructor_2_3d%key=IndexHashFunctor64_3d(key1,key2,key3)
-          constructor_2_3d%value=value
-          constructor_2_3d%next => next
-        END FUNCTION constructor_2_3d
+          INTEGER(ppm_kind_int64), INTENT(IN   ) :: Iteration
+          INTEGER,                 INTENT(IN   ) :: Label
+          TYPE(ppm_rc_link_2),     POINTER       :: next
+          TYPE(ppm_rc_link_2),     POINTER       :: constructor_2
+          ALLOCATE(constructor_2)
+          constructor_2%Iteration=Iteration
+          constructor_2%Label    =Label
+          constructor_2%next     => next
+        END FUNCTION constructor_2
 
         SUBROUTINE addValue(this,value)
           !!! Add a value to a link (by creating a link) and the link to the list
@@ -530,14 +482,14 @@
           TYPE(ppm_rc_link), POINTER :: lastLink
           TYPE(ppm_rc_link), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) then
-             this%first => ppm_rc_link(value, this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link(value,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link(value, this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValue
         SUBROUTINE addValue1(this,value1)
@@ -549,14 +501,14 @@
           TYPE(ppm_rc_link), POINTER :: lastLink
           TYPE(ppm_rc_link), POINTER :: newLink
 
-          IF (.NOT.ASSOCIATED(this%first)) then
-             this%first => ppm_rc_link(value1,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link(value1,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link(value1,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValue1
         SUBROUTINE addValue2(this,value1,value2)
@@ -569,14 +521,14 @@
           TYPE(ppm_rc_link), POINTER :: lastLink
           TYPE(ppm_rc_link), POINTER :: newLink
 
-          IF (.NOT.ASSOCIATED(this%first)) then
-             this%first => ppm_rc_link(value1,value2,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link(value1,value2,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link(value1,value2,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValue2
         SUBROUTINE addValue3(this,value1,value2,value3)
@@ -590,14 +542,14 @@
           TYPE(ppm_rc_link), POINTER :: lastLink
           TYPE(ppm_rc_link), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) then
-             this%first => ppm_rc_link(value1,value2,value3,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link(value1,value2,value3,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link(value1,value2,value3,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValue3
         SUBROUTINE addValue4(this,value1,value2,value3,value4)
@@ -612,14 +564,14 @@
           TYPE(ppm_rc_link), POINTER :: lastLink
           TYPE(ppm_rc_link), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) then
-             this%first => ppm_rc_link(value1,value2,value3,value4,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link(value1,value2,value3,value4,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link(value1,value2,value3,value4,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValue4
         SUBROUTINE addValue5(this,value1,value2,value3,value4,value5)
@@ -635,14 +587,14 @@
           TYPE(ppm_rc_link), POINTER :: lastLink
           TYPE(ppm_rc_link), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) then
-             this%first => ppm_rc_link(value1,value2,value3,value4,value5,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link(value1,value2,value3,value4,value5,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link(value1,value2,value3,value4,value5,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValue5
         SUBROUTINE addValue6(this,value1,value2,value3,value4,value5,value6)
@@ -659,14 +611,14 @@
           TYPE(ppm_rc_link), POINTER :: lastLink
           TYPE(ppm_rc_link), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) then
-             this%first => ppm_rc_link(value1,value2,value3,value4,value5,value6,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link(value1,value2,value3,value4,value5,value6,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link(value1,value2,value3,value4,value5,value6,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValue6
         SUBROUTINE addValue7(this,value1,value2,value3,value4,value5,value6,value7)
@@ -684,14 +636,14 @@
           TYPE(ppm_rc_link), POINTER :: lastLink
           TYPE(ppm_rc_link), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) then
-             this%first => ppm_rc_link(value1,value2,value3,value4,value5,value6,value7,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link(value1,value2,value3,value4,value5,value6,value7,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link(value1,value2,value3,value4,value5,value6,value7,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValue7
         SUBROUTINE addValue8(this,value1,value2,value3,value4,value5,value6,value7,value8)
@@ -710,20 +662,20 @@
           TYPE(ppm_rc_link), POINTER :: lastLink
           TYPE(ppm_rc_link), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) then
-             this%first => ppm_rc_link(value1,value2,value3,value4,value5,value6,value7,value8,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link(value1,value2,value3,value4,value5,value6,value7,value8,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link(value1,value2,value3,value4,value5,value6,value7,value8,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValue8
 
         SUBROUTINE addValueMCMCParticle_2d(this,value1,value2,MCMCParticle_)
           !!! Add a value to a link (by creating a link) and the link to the list
-          USE ppm_rc_module_util, ONLY : MCMCParticle
+          USE ppm_rc_module_global, ONLY : MCMCParticle
           IMPLICIT NONE
           CLASS(ppm_rc_list)                :: this
 
@@ -734,20 +686,20 @@
           TYPE(ppm_rc_link), POINTER :: lastLink
           TYPE(ppm_rc_link), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) then
-             this%first => ppm_rc_link(value1,value2,MCMCParticle_,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link(value1,value2,MCMCParticle_,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link(value1,value2,MCMCParticle_,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValueMCMCParticle_2d
 
         SUBROUTINE addValueMCMCParticle_3d(this,value1,value2,value3,MCMCParticle_)
           !!! Add a value to a link (by creating a link) and the link to the list
-          USE ppm_rc_module_util, ONLY : MCMCParticle
+          USE ppm_rc_module_global, ONLY : MCMCParticle
           IMPLICIT NONE
           CLASS(ppm_rc_list)                :: this
 
@@ -759,20 +711,20 @@
           TYPE(ppm_rc_link), POINTER :: lastLink
           TYPE(ppm_rc_link), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) then
-             this%first => ppm_rc_link(value1,value2,value3,MCMCParticle_,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link(value1,value2,value3,MCMCParticle_,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link(value1,value2,value3,MCMCParticle_,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValueMCMCParticle_3d
 
         SUBROUTINE addValueMCMCHistoryParticle_2d(this,value1,value2,MCMCHistoryParticle_)
           !!! Add a value to a link (by creating a link) and the link to the list
-          USE ppm_rc_module_util, ONLY : MCMCHistoryParticle
+          USE ppm_rc_module_global, ONLY : MCMCHistoryParticle
           IMPLICIT NONE
           CLASS(ppm_rc_list)                       :: this
 
@@ -783,20 +735,20 @@
           TYPE(ppm_rc_link), POINTER :: lastLink
           TYPE(ppm_rc_link), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) then
-             this%first => ppm_rc_link(value1,value2,MCMCHistoryParticle_,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link(value1,value2,MCMCHistoryParticle_,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link(value1,value2,MCMCHistoryParticle_,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValueMCMCHistoryParticle_2d
 
         SUBROUTINE addValueMCMCHistoryParticle_3d(this,value1,value2,value3,MCMCHistoryParticle_)
           !!! Add a value to a link (by creating a link) and the link to the list
-          USE ppm_rc_module_util, ONLY : MCMCHistoryParticle
+          USE ppm_rc_module_global, ONLY : MCMCHistoryParticle
           IMPLICIT NONE
           CLASS(ppm_rc_list)                       :: this
 
@@ -808,14 +760,14 @@
           TYPE(ppm_rc_link), POINTER :: lastLink
           TYPE(ppm_rc_link), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) then
-             this%first => ppm_rc_link(value1,value2,value3,MCMCHistoryParticle_,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link(value1,value2,value3,MCMCHistoryParticle_,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link(value1,value2,value3,MCMCHistoryParticle_,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValueMCMCHistoryParticle_3d
 
@@ -828,14 +780,14 @@
           TYPE(ppm_rc_link_), POINTER :: lastLink
           TYPE(ppm_rc_link_), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) THEN
-             this%first => ppm_rc_link_(value, this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              newLink  => ppm_rc_link_(value,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link_(value, this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValue_
 
@@ -848,15 +800,7 @@
           TYPE(ppm_rc_link_), POINTER :: lastLink
           TYPE(ppm_rc_link_), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) THEN
-             SELECT CASE (SIZE(value))
-             CASE (2)
-                this%first => ppm_rc_link_(value(1),value(2),this%first)
-             CASE (3)
-                this%first => ppm_rc_link_(value(1),value(2),value(3),this%first)
-             END SELECT
-             this%last => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink => this%last%nextLink()
              SELECT CASE (SIZE(value))
              CASE (2)
@@ -866,6 +810,14 @@
              END SELECT
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             SELECT CASE (SIZE(value))
+             CASE (2)
+                this%first => ppm_rc_link_(value(1),value(2),this%first)
+             CASE (3)
+                this%first => ppm_rc_link_(value(1),value(2),value(3),this%first)
+             END SELECT
+             this%last => this%first
           ENDIF
         END SUBROUTINE addValue__
 
@@ -879,14 +831,14 @@
           TYPE(ppm_rc_link_), POINTER :: lastLink
           TYPE(ppm_rc_link_), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) THEN
-             this%first => ppm_rc_link_(value1,value2,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink  => this%last%nextLink()
              newLink   => ppm_rc_link_(value1,value2,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link_(value1,value2,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValue_2d
 
@@ -901,81 +853,34 @@
           TYPE(ppm_rc_link_), POINTER :: lastLink
           TYPE(ppm_rc_link_), POINTER :: newLink
 
-          IF (.NOT. ASSOCIATED(this%first)) THEN
-             this%first => ppm_rc_link_(value1,value2,value3,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink  => this%last%nextLink()
              newLink   => ppm_rc_link_(value1,value2,value3,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
+          ELSE
+             this%first => ppm_rc_link_(value1,value2,value3,this%first)
+             this%last  => this%first
           ENDIF
         END SUBROUTINE addValue_3d
 
-        SUBROUTINE addValue_2_2d(this,key1,key2,value)
+        SUBROUTINE addValue_2(this,Iteration,Label)
           !!! Add a value to a link (by creating a link) and the link to the list
-          CLASS(ppm_rc_list_2)   :: this
-          INTEGER, INTENT(IN   ) :: key1
-          INTEGER, INTENT(IN   ) :: key2
-          INTEGER, INTENT(IN   ) :: value
+          CLASS(ppm_rc_list_2)                   :: this
+          INTEGER(ppm_kind_int64), INTENT(IN   ) :: Iteration
+          INTEGER,                 INTENT(IN   ) :: Label
           TYPE(ppm_rc_link_2), POINTER :: lastLink
           TYPE(ppm_rc_link_2), POINTER :: newLink
-          IF (.NOT.ASSOCIATED(this%first)) THEN
-             this%first => ppm_rc_link_2(key1,key2,value,this%first)
-             this%last  => this%first
-          ELSE
+          IF (ASSOCIATED(this%first)) THEN
              lastLink  => this%last%nextLink()
-             newLink   => ppm_rc_link_2(key1,key2,value,lastLink)
+             newLink   => ppm_rc_link_2(Iteration,Label,lastLink)
              CALL this%last%setNextLink(newLink)
              this%last => newLink
-          ENDIF
-        END SUBROUTINE addValue_2_2d
-
-        SUBROUTINE addValue_2_3d(this,key1,key2,key3,value)
-          !!! Add a value to a link (by creating a link) and the link to the list
-          CLASS(ppm_rc_list_2)   :: this
-          INTEGER, INTENT(IN   ) :: key1
-          INTEGER, INTENT(IN   ) :: key2
-          INTEGER, INTENT(IN   ) :: key3
-          INTEGER, INTENT(IN   ) :: value
-          TYPE(ppm_rc_link_2), POINTER :: lastLink
-          TYPE(ppm_rc_link_2), POINTER :: newLink
-          IF (.NOT.ASSOCIATED(this%first)) THEN
-             this%first => ppm_rc_link_2(key1,key2,key3,value,this%first)
-             this%last  => this%first
           ELSE
-             lastLink  => this%last%nextLink()
-             newLink   => ppm_rc_link_2(key1,key2,key3,value,lastLink)
-             CALL this%last%setNextLink(newLink)
-             this%last => newLink
-          ENDIF
-        END SUBROUTINE addValue_2_3d
-
-        SUBROUTINE addValue_2_(this,key,value)
-          !!! Add a value to a link (by creating a link) and the link to the list
-          CLASS(ppm_rc_list_2)                 :: this
-          INTEGER, DIMENSION(:), INTENT(IN   ) :: key
-          INTEGER,               INTENT(IN   ) :: value
-          TYPE(ppm_rc_link_2), POINTER :: lastLink
-          TYPE(ppm_rc_link_2), POINTER :: newLink
-          IF (.NOT.ASSOCIATED(this%first)) THEN
-             IF (SIZE(key).EQ.2) THEN
-                this%first => ppm_rc_link_2(key(1),key(2),value,this%first)
-             ELSE
-                this%first => ppm_rc_link_2(key(1),key(2),key(3),value,this%first)
-             ENDIF
+             this%first => ppm_rc_link_2(Iteration,Label,this%first)
              this%last  => this%first
-          ELSE
-             lastLink  => this%last%nextLink()
-             IF (SIZE(key).EQ.2) THEN
-                newLink => ppm_rc_link_2(key(1),key(2),value,lastLink)
-             ELSE
-                newLink => ppm_rc_link_2(key(1),key(2),key(3),value,lastLink)
-             ENDIF
-             CALL this%last%setNextLink(newLink)
-             this%last => newLink
           ENDIF
-        END SUBROUTINE addValue_2_
+        END SUBROUTINE addValue_2
 
         SUBROUTINE removeLink(this,link)
           !!! Remove a link from the list (slow...)
@@ -1299,17 +1204,17 @@
           !!! swap a link with the root
           CLASS(ppm_rc_list_2)         :: this
           TYPE(ppm_rc_link_2), POINTER :: curr
-          INTEGER(ppm_kind_int64) :: tmpkey
-          INTEGER                 :: tmpvalue
+          INTEGER(ppm_kind_int64) :: tmpIteration
+          INTEGER                 :: tmpLabel
           LOGICAL, SAVE :: new=.TRUE.
           IF (new) THEN
              new=.FALSE.
-             tmpkey           = this%first%key
-             tmpvalue         = this%first%value
-             this%first%key   = curr%key
-             this%first%value = curr%value
-             curr%key         = tmpkey
-             curr%value       = tmpvalue
+             tmpIteration         = this%first%Iteration
+             tmpLabel             = this%first%Label
+             this%first%Iteration = curr%Iteration
+             this%first%Label     = curr%Label
+             curr%Iteration       = tmpIteration
+             curr%Label           = tmpLabel
           ENDIF
         END SUBROUTINE swap1_2
 
@@ -1349,14 +1254,14 @@
           CLASS(ppm_rc_list_2)         :: this
           TYPE(ppm_rc_link_2), POINTER :: curr1
           TYPE(ppm_rc_link_2), POINTER :: curr2
-          INTEGER(ppm_kind_int64) :: tmpkey
-          INTEGER                 :: tmpvalue
-          tmpkey      =curr1%key
-          tmpvalue    = curr1%value
-          curr1%key   = curr2%key
-          curr1%value = curr2%value
-          curr2%key   = tmpkey
-          curr2%value = tmpvalue
+          INTEGER(ppm_kind_int64) :: tmpIteration
+          INTEGER                 :: tmpLabel
+          tmpIteration    = curr1%Iteration
+          tmpLabel        = curr1%Label
+          curr1%Iteration = curr2%Iteration
+          curr1%Label     = curr2%Label
+          curr2%Iteration = tmpIteration
+          curr2%Label     = tmpLabel
         END SUBROUTINE swap2_2
 
         !BEGIN
@@ -2417,7 +2322,9 @@
             !-------------------------------------------------------------------------
             TYPE(ppm_rc_t_ptr_list_2), DIMENSION(:), POINTER :: vec_temp
             INTEGER :: i
+
             start_subroutine("ppm_rc_c_list_grow_size")
+
             IF (this%vec_size.LE.0.OR..NOT.ASSOCIATED(this%vec)) THEN
                 !if the array is empty, allocate with a reasonable size
                 this%vec_size = 10
@@ -2542,3 +2449,184 @@
             ENDIF
             RETURN
         END FUNCTION ppm_rc_c_list_2_at
+#endif
+
+      PURE FUNCTION DTYPE(IndexHashFunctor32)(index_) RESULT(key)
+        !!!
+        IMPLICIT NONE
+        !-------------------------------------------------------------------------
+        !  Includes
+        !-------------------------------------------------------------------------
+        !-------------------------------------------------------------------------
+        !  Arguments
+        !-------------------------------------------------------------------------
+        INTEGER, DIMENSION(:), INTENT(IN   ) :: index_
+        INTEGER                              :: key
+        !-------------------------------------------------------------------------
+        !  Local variables
+        !-------------------------------------------------------------------------
+#if   __DIME == __2D
+        key=IOR(ISHFT(index_(2),16),index_(1))
+#elif __DIME == __3D
+        key=IOR(ISHFT(IAND(index_(3),1023),22),IOR(ISHFT(IAND(index_(2),2047),11),IAND(index_(1),2047)))
+#endif
+        !-------------------------------------------------------------------------
+        !  Return
+        !-------------------------------------------------------------------------
+        RETURN
+      END FUNCTION DTYPE(IndexHashFunctor32)
+
+#if   __DIME == __2D
+      ELEMENTAL FUNCTION DTYPE(IndexHashFunctor32_)(index_1,index_2) RESULT(key)
+#elif __DIME == __3D
+      ELEMENTAL FUNCTION DTYPE(IndexHashFunctor32_)(index_1,index_2,index_3) RESULT(key)
+#endif
+        !!!
+        IMPLICIT NONE
+        !-------------------------------------------------------------------------
+        !  Includes
+        !-------------------------------------------------------------------------
+        !-------------------------------------------------------------------------
+        !  Arguments
+        !-------------------------------------------------------------------------
+        INTEGER, INTENT(IN   ) :: index_1
+        INTEGER, INTENT(IN   ) :: index_2
+#if   __DIME == __3D
+        INTEGER, INTENT(IN   ) :: index_3
+#endif
+        INTEGER                :: key
+        !-------------------------------------------------------------------------
+        !  Local variables
+        !-------------------------------------------------------------------------
+#if   __DIME == __2D
+        key=IOR(ISHFT(index_2,16),IAND(index_1,65535))
+#elif __DIME == __3D
+        key=IOR(ISHFT(IAND(index_3,1023),22),IOR(ISHFT(IAND(index_2,2047),11),IAND(index_1,2047)))
+#endif
+        !-------------------------------------------------------------------------
+        !  Return
+        !-------------------------------------------------------------------------
+        RETURN
+      END FUNCTION DTYPE(IndexHashFunctor32_)
+
+      SUBROUTINE DTYPE(HashIndexFunctor32)(key,index_)
+        !!!
+        IMPLICIT NONE
+        !-------------------------------------------------------------------------
+        !  Includes
+        !-------------------------------------------------------------------------
+        !-------------------------------------------------------------------------
+        !  Arguments
+        !-------------------------------------------------------------------------
+        INTEGER,               INTENT(IN   ) :: key
+        INTEGER, DIMENSION(:), INTENT(  OUT) :: index_
+        !-------------------------------------------------------------------------
+        !  Local variables
+        !-------------------------------------------------------------------------
+#if   __DIME == __2D
+        index_(1)=IBITS(key,0,16)
+        index_(2)=IBITS(key,16,16)
+#elif __DIME == __3D
+        index_(1)=IBITS(key,0,11)
+        index_(2)=IBITS(key,11,11)
+        index_(3)=IBITS(key,22,10)
+#endif
+        !-------------------------------------------------------------------------
+        !  Return
+        !-------------------------------------------------------------------------
+        RETURN
+      END SUBROUTINE DTYPE(HashIndexFunctor32)
+
+#if   __DIME == __2D
+      SUBROUTINE DTYPE(HashIndexFunctor32_)(key,index_1,index_2)
+#elif __DIME == __3D
+      SUBROUTINE DTYPE(HashIndexFunctor32_)(key,index_1,index_2,index_3)
+#endif
+        !!!
+        IMPLICIT NONE
+        !-------------------------------------------------------------------------
+        !  Includes
+        !-------------------------------------------------------------------------
+        !-------------------------------------------------------------------------
+        !  Arguments
+        !-------------------------------------------------------------------------
+        INTEGER, INTENT(IN   ) :: key
+        INTEGER, INTENT(  OUT) :: index_1
+        INTEGER, INTENT(  OUT) :: index_2
+#if   __DIME == __3D
+        INTEGER, INTENT(  OUT) :: index_3
+#endif
+        !-------------------------------------------------------------------------
+        !  Local variables
+        !-------------------------------------------------------------------------
+#if   __DIME == __2D
+        index_1=IBITS(key,0,16)
+        index_2=IBITS(key,16,16)
+#elif __DIME == __3D
+        index_1=IBITS(key,0,11)
+        index_2=IBITS(key,11,11)
+        index_3=IBITS(key,22,10)
+#endif
+        !-------------------------------------------------------------------------
+        !  Return
+        !-------------------------------------------------------------------------
+        RETURN
+      END SUBROUTINE DTYPE(HashIndexFunctor32_)
+
+      SUBROUTINE DTYPE(HashIndexFunctor64)(key,index_)
+        !!!
+        IMPLICIT NONE
+        !-------------------------------------------------------------------------
+        !  Includes
+        !-------------------------------------------------------------------------
+        !-------------------------------------------------------------------------
+        !  Arguments
+        !-------------------------------------------------------------------------
+        INTEGER(ppm_kind_int64), INTENT(IN   ) :: key
+        INTEGER, DIMENSION(:),   INTENT(  OUT) :: index_
+        !-------------------------------------------------------------------------
+        !  Local variables
+        !-------------------------------------------------------------------------
+        index_(1)=INT(IBITS(key, 0,16))
+        index_(2)=INT(IBITS(key,16,16))
+#if   __DIME == __3D
+        index_(3)=INT(IBITS(key,32,16))
+#endif
+        !-------------------------------------------------------------------------
+        !  Return
+        !-------------------------------------------------------------------------
+        RETURN
+      END SUBROUTINE DTYPE(HashIndexFunctor64)
+
+#if   __DIME == __2D
+      SUBROUTINE DTYPE(HashIndexFunctor64_)(key,index_1,index_2)
+#elif __DIME == __3D
+      SUBROUTINE DTYPE(HashIndexFunctor64_)(key,index_1,index_2,index_3)
+#endif
+        !!!
+        IMPLICIT NONE
+        !-------------------------------------------------------------------------
+        !  Includes
+        !-------------------------------------------------------------------------
+        !-------------------------------------------------------------------------
+        !  Arguments
+        !-------------------------------------------------------------------------
+        INTEGER(ppm_kind_int64), INTENT(IN   ) :: key
+        INTEGER,                 INTENT(  OUT) :: index_1
+        INTEGER,                 INTENT(  OUT) :: index_2
+#if   __DIME == __3D
+        INTEGER,                 INTENT(  OUT) :: index_3
+#endif
+        !-------------------------------------------------------------------------
+        !  Local variables
+        !-------------------------------------------------------------------------
+        index_1=INT(IBITS(key, 0,16))
+        index_2=INT(IBITS(key,16,16))
+#if   __DIME == __3D
+        index_3=INT(IBITS(key,32,16))
+#endif
+        !-------------------------------------------------------------------------
+        !  Return
+        !-------------------------------------------------------------------------
+        RETURN
+      END SUBROUTINE DTYPE(HashIndexFunctor64_)

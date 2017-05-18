@@ -69,13 +69,9 @@
         TYPE(RCInitClass), POINTER :: e_Init => NULL()
         !!! Initialization element
 
-        INTEGER :: vInitKind
-        !!! InitializationKindType
-
         !----------------------------------------------------------------------
         ! Public
         !----------------------------------------------------------------------
-        PUBLIC :: vInitKind
         PUBLIC :: e_Init
 
         !----------------------------------------------------------------------

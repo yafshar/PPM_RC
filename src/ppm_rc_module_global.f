@@ -96,8 +96,8 @@
 
         !-------------------------------------------------------------------------
         !  Precision
-        ! Note, To do single Precision segmentation, you need to change the
-        ! Part datatype in all the routines, currently it is the ppm_t_particles_d_
+        ! Note, We do single Precision segmentation
+        ! Part datatype in all the routines, currently it is the ppm_t_particles_s_
         !-------------------------------------------------------------------------
         INTEGER,                  PARAMETER :: MK        = ppm_kind_single
         INTEGER,                  PARAMETER :: FORBIDDEN = HUGE(0)-1
@@ -117,8 +117,8 @@
         ! Particles on each processor which could be 2^32 times by 2^-32
         ! will create one move anything less than this is obsured
 
-        REAL(MK),                 PARAMETER :: big=HUGE(1.0_MK)/REAL(HUGE(1),MK)
-        REAL(MK),                 PARAMETER :: bigs=SQRT(REAL(HUGE(1.0)/REAL(HUGE(1)),MK))
+        REAL(MK),                 PARAMETER :: big=REAL(REAL(HUGE(1.0_MK),ppm_kind_double)/REAL(FORBIDDEN,ppm_kind_double),MK)
+        REAL(MK),                 PARAMETER :: bigs=SQRT(big)
         REAL(ppm_kind_double),    PARAMETER :: bigsd=REAL(bigs,ppm_kind_double)
 
         REAL(MK),                 PARAMETER :: zero=0.0_MK
@@ -138,7 +138,7 @@
         REAL(MK),                 PARAMETER :: ten=10.0_MK
         REAL(ppm_kind_double),    PARAMETER :: tend=10.0_ppm_kind_double
 
-        INTEGER,                  PARAMETER :: bigi=HUGE(0)-2
+        INTEGER,                  PARAMETER :: bigi=FORBIDDEN-1
 
         PUBLIC :: pi,pid
         PUBLIC :: small,smalld,smallest,smallestd
@@ -152,16 +152,19 @@
         !----------------------------------------------------------------------
         !  InitializationKindType
         !----------------------------------------------------------------------
-        INTEGER,                  PARAMETER :: e_fromFile=1
+        INTEGER,                  PARAMETER :: e_fromfile=1
         INTEGER,                  PARAMETER :: e_rect    =2
         INTEGER,                  PARAMETER :: e_sphere  =3
         INTEGER,                  PARAMETER :: e_otsu    =4
         INTEGER,                  PARAMETER :: e_blob_det=5
         INTEGER,                  PARAMETER :: e_localmax=6
 
+        INTEGER                             :: vInitKind
+
         CHARACTER(LEN=ppm_char)             :: init_mode
 
-        PUBLIC :: e_fromFile,e_rect,e_sphere,e_otsu,e_blob_det,e_localmax,init_mode
+        PUBLIC :: e_fromfile,e_rect,e_sphere,e_otsu,e_blob_det,e_localmax
+        PUBLIC :: vInitKind,init_mode
 
         !----------------------------------------------------------------------
         !  Global TYPEs
@@ -222,10 +225,32 @@
         !----------------------------------------------------------------------
         !  MCMC
         !----------------------------------------------------------------------
+        INTEGER(ppm_kind_int64)             :: AcceptedMoves
+        INTEGER(ppm_kind_int64)             :: TotalMoves
+
+        PUBLIC :: AcceptedMoves
+        PUBLIC :: TotalMoves
+
+        TYPE MCMCParticle
+          INTEGER  :: candlabel
+          REAL(MK) :: proposal
+        END TYPE MCMCParticle
+
+        TYPE MCMCHistoryParticle
+          INTEGER  :: candlabel
+          INTEGER  :: orglabel
+          REAL(MK) :: proposal
+          LOGICAL  :: wasadded
+        END TYPE MCMCHistoryParticle
+
+        PUBLIC :: MCMCParticle
+        PUBLIC :: MCMCHistoryParticle
+
         LOGICAL                             :: UseMCMC
         !!! Algorithm is intended to use in MCMC mode for segmentation?
         LOGICAL                             :: MCMCcontinue
-        !!! Continue MCMC run (no relabeling)?
+        !!! Continue MCMC run (no relabeling)
+        !!! This is useful after segmentation
         LOGICAL                             :: MCMCuseBiasedProposal
         !!! Use biased proposal for MCMC sampling?
         LOGICAL                             :: MCMCusePairProposal
@@ -238,6 +263,12 @@
 
         PUBLIC :: UseMCMC,MCMCcontinue,MCMCuseBiasedProposal,MCMCusePairProposal
         PUBLIC :: MCMCstepsize,MCMCtemperature,MCMCburnInFactor
+        !----------------------------------------------------------------------
+        !  User seed for PRNG
+        !----------------------------------------------------------------------
+        INTEGER                             :: usrseed
+
+        PUBLIC :: usrseed
         !----------------------------------------------------------------------
         !  Domain decomposition
         !----------------------------------------------------------------------
@@ -253,6 +284,8 @@
         !!! size of the ghostlayers in pixels used during init process
         !!! This is used in create_particles and depends on the convolution
         !!! kernel
+        INTEGER,  DIMENSION(:), ALLOCATABLE :: ghostsize_mcmc
+        !!! size of the ghost layers in pixels
         INTEGER,  DIMENSION(:), ALLOCATABLE :: ghostsize_equil
         !!! size of the ghost layers in pixels
         INTEGER,  DIMENSION(:), ALLOCATABLE :: ghostsize_run
@@ -269,6 +302,7 @@
         INTEGER                             :: nneighproc
 
         INTEGER, DIMENSION(:),  ALLOCATABLE :: procflag
+        INTEGER                             :: proccolor
 
         LOGICAL, DIMENSION(2)               :: ConvergenceMASK
 
@@ -276,12 +310,14 @@
         PUBLIC :: min_phys,max_phys
         PUBLIC :: ioghostsize
         PUBLIC :: inighostsize
+        PUBLIC :: ghostsize_mcmc
         PUBLIC :: ghostsize_equil
         PUBLIC :: ghostsize_run
         PUBLIC :: ghostsize
         PUBLIC :: bcdef,decomp,assig
         PUBLIC :: ineighproc,nneighproc
-        PUBLIC :: procflag,ConvergenceMASK
+        PUBLIC :: ConvergenceMASK
+        PUBLIC :: procflag,proccolor
         !----------------------------------------------------------------------
         !  Particle positions and properties
         !----------------------------------------------------------------------
@@ -336,26 +372,37 @@
         !-----------------------------------------------------------------------
         REAL(MK)                            :: energy_coeff_data
         REAL(MK)                            :: energy_coeff_data_equil
+        REAL(MK)                            :: energy_coeff_data_mcmc
         REAL(MK)                            :: energy_coeff_length
         REAL(MK)                            :: energy_coeff_length_equil
+        REAL(MK)                            :: energy_coeff_length_mcmc
         REAL(MK)                            :: energy_coeff_balloon
         REAL(MK)                            :: energy_coeff_balloon_equil
+        REAL(MK)                            :: energy_coeff_balloon_mcmc
         REAL(MK)                            :: energy_coeff_outward_flow
         REAL(MK)                            :: energy_coeff_outward_flow_equil
+        REAL(MK)                            :: energy_coeff_outward_flow_mcmc
         REAL(MK)                            :: energy_region_merge_ths
         REAL(MK)                            :: energy_region_merge_ths_equil
+        REAL(MK)                            :: energy_region_merge_ths_mcmc
         REAL(MK)                            :: energy_local_window_radius
         REAL(MK)                            :: energy_local_window_radius_equil
+        REAL(MK)                            :: energy_local_window_radius_mcmc
         REAL(MK)                            :: energy_curvature_mask_radius
         REAL(MK)                            :: energy_curvature_mask_radius_equil
+        REAL(MK)                            :: energy_curvature_mask_radius_mcmc
         !!! hypersphere radius which is used in curvature regularization
 
         PUBLIC :: energy_coeff_data,energy_coeff_length,energy_coeff_balloon
         PUBLIC :: energy_coeff_data_equil,energy_coeff_length_equil,energy_coeff_balloon_equil
+        PUBLIC :: energy_coeff_data_mcmc,energy_coeff_length_mcmc,energy_coeff_balloon_mcmc
         PUBLIC :: energy_coeff_outward_flow,energy_region_merge_ths
         PUBLIC :: energy_coeff_outward_flow_equil,energy_region_merge_ths_equil
+        PUBLIC :: energy_coeff_outward_flow_mcmc,energy_region_merge_ths_mcmc
         PUBLIC :: energy_local_window_radius,energy_curvature_mask_radius
         PUBLIC :: energy_local_window_radius_equil,energy_curvature_mask_radius_equil
+        PUBLIC :: energy_local_window_radius_mcmc,energy_curvature_mask_radius_mcmc
+
         !-----------------------------------------------------------------------
         !  External and Internal energy names
         !-----------------------------------------------------------------------
@@ -437,13 +484,14 @@
 
 
         LOGICAL                             :: lNormalize
-        REAL(MK)                            :: Normalfac
+        REAL(MK)                            :: ImageNormalfac
+        REAL(MK)                            :: MinShiftVal
 
         INTEGER                             :: Tolerance
         REAL(MK)                            :: Tolerance_
         !!!
 
-        PUBLIC :: lNormalize,Normalfac
+        PUBLIC :: lNormalize,ImageNormalfac
         PUBLIC :: Tolerance,Tolerance_
 
         REAL(MK)                            :: Sigma
@@ -466,9 +514,16 @@
         !-----------------------------------------------------------------------
         INTEGER                             :: ninputimage
         INTEGER                             :: ninitimage
-        LOGICAL                             :: createoneimage
+        INTEGER                             :: inputformat
+        ! inputimage file format
+        ! inputformat=1 ----> filename_01.tif, filename_011.tif, ...
+        ! inputformat=2 ----> filename01.tif,  filename011.tif, ...
+        ! inputformat=3 ----> filename1.tif,   filename11.tif, ...
 
-        PUBLIC :: ninputimage,ninitimage,createoneimage
+        LOGICAL                             :: createoneimage
+        LOGICAL                             :: createuniquelabel
+
+        PUBLIC :: ninputimage,ninitimage,createoneimage,createuniquelabel
         !----------------------------------------------------------------------
         !  Global iteration number
         !----------------------------------------------------------------------
@@ -477,7 +532,12 @@
         !!! number of equilibration iterations
         INTEGER                             :: maxiter
         !!! maximum number of iterations to perform
-        PUBLIC :: istep,maxiter,nsteql
+
+        INTEGER                             :: MCMCmaxiter
+        INTEGER(ppm_kind_int64)             :: MCMCmaxsamples
+        !!! maximum number of samples to perform for MCMC sampling
+
+        PUBLIC :: istep,maxiter,nsteql,MCMCmaxiter,MCMCmaxsamples
         !----------------------------------------------------------------------
         !  I/O and control
         !----------------------------------------------------------------------
@@ -504,10 +564,11 @@
         PUBLIC :: inputimage,abortfile,outputfile,outputname
         PUBLIC :: diagfile,diagfmt,casename,initimage
 
+        INTEGER                             :: ppm_rc_debug
         INTEGER                             :: debug
         INTEGER                             :: ppm_log_unit
 
-        PUBLIC :: debug,ppm_log_unit
+        PUBLIC :: ppm_rc_debug,debug,ppm_log_unit
 
         !debug time
         REAL(ppm_kind_double)               :: tmove_Simple
@@ -535,9 +596,12 @@
         INTEGER                             :: ghost_size
         INTEGER                             :: rank
         INTEGER                             :: comm
-        INTEGER                             :: n_io_procs_read  ! Number of I/O processors
+        INTEGER                             :: n_io_procs    ! Number of I/O processors
+        INTEGER                             :: n_procs_read  ! Number of processors to read the data
+        INTEGER                             :: n_procs_write ! Number of processors to write the data
 
-        PUBLIC :: ppm_rc_dim,ghost_size,rank,comm,n_io_procs_read
+        PUBLIC :: ppm_rc_dim,ghost_size,rank,comm
+        PUBLIC :: n_io_procs,n_procs_read,n_procs_write
         !----------------------------------------------------------------------
         !  Load-balancing stuff
         !----------------------------------------------------------------------
@@ -585,10 +649,17 @@
 
            !-------------------------------------------------------------------------
            !  Number of I/O processors
-           ! The number of reading processors. The default number of processors to read the data is 1.
+           ! The number of reading & writing processors.
+           ! The default number of processors to read the data is 1.
            !-------------------------------------------------------------------------
-           CALL arg(n_io_procs_read,'n_io_procs_read',default=1, &
-           &    min=1,ctrl_name='n_io_procs_read',help="The number of reading processors")
+           CALL arg(n_io_procs,'n_io_procs',default=0, &
+           &    min=0,ctrl_name='n_io_procs',help="The number of reading processors")
+
+           CALL arg(n_procs_read,'n_procs_read',default=0, &
+           &    min=0,ctrl_name='n_procs_read',help="The number of reading processors")
+
+           CALL arg(n_procs_write,'n_procs_write',default=0, &
+           &    min=0,ctrl_name='n_procs_write',help="The number of writing processors")
 
            !-------------------------------------------------------------------
            !  Probe processor speeds at runtime?
@@ -598,9 +669,9 @@
            !-------------------------------------------------------------------
            !  Digital topology (control)
            !-------------------------------------------------------------------
-           CALL arg(AllowFusion,'allow_fusion',default=.TRUE.,   &
+           CALL arg(AllowFusion,'allow_fusion',default=.TRUE., &
            &    ctrl_name='allow_fusion',help="Fusion is allowed?")
-           CALL arg(AllowFusionZ,'allow_fusionz',default=.FALSE.,   &
+           CALL arg(AllowFusionZ,'allow_fusionz',default=.FALSE., &
            &    ctrl_name='allow_fusionz',help="Fusion in Z is allowed?")
            CALL arg(AllowFission,'allow_fission',default=.TRUE., &
            &    ctrl_name='allow_fission',help="Fission is allowed?")
@@ -638,9 +709,14 @@
 !            &    min=0.0_MK,max=1.0_MK,ctrl_name='mcmcfloatingparticlesproposalnormalizer', &
 !            &    help="MCMC off-boundary samples percentage.")
 
+           CALL arg(MCMCmaxsamples,'MCMCmaxsamples',default=1000000_ppm_kind_int64, &
+           &    ctrl_name='MCMCmaxsamples',help="MCMC max number of sampling")
+
+           CALL arg(MCMCmaxiter,'MCMCmaxiter',default=1000, &
+           &    ctrl_name='MCMCmaxiter',help="MCMC max iterations (Every iteration contains some sampling)")
 
 
-
+           CALL arg(usrseed,'usrseed',default=30081,ctrl_name='seed',help="User seed for PRNG")
 
 
 
@@ -659,6 +735,9 @@
            &    ctrl_name='createoneimage',help="Control FLAG to create one TIFF file from several inputs")
            CALL arg(ninitimage,'ninitimage',default=1, &
            &    ctrl_name='ninitimage',help="Number of init image files which is used for the 3D image initialization")
+           CALL arg(createuniquelabel,'createuniquelabel',default=.FALSE., &
+           &    ctrl_name='createuniquelabel',help="Control FLAG to READ input label file and create unique label output")
+
            !-------------------------------------------------------------------
            !  Frame number to read from 4D image
            !-------------------------------------------------------------------
@@ -684,7 +763,7 @@
            !-------------------------------------------------------------------------
            !  Debug value
            !-------------------------------------------------------------------------
-           CALL arg(debug,'debug',flag='-d',default=0,ctrl_name='debug',help="Debug level value")
+           CALL arg(ppm_rc_debug,'debug',flag='-d',default=0,ctrl_name='debug',help="Debug level value")
            !-------------------------------------------------------------------
            !  Get diagnostics file
            !-------------------------------------------------------------------
@@ -716,44 +795,58 @@
            !-------------------------------------------------------------------
            CALL arg(energy_coeff_data,'energy_coeff_data',default=1.0_MK, &
            &    ctrl_name='energy_coeff_data',help="coefficient for the energy")
-           CALL arg(energy_coeff_data_equil,'energy_coeff_data_equil',default=0.0_MK, &
+           CALL arg(energy_coeff_data_equil,'energy_coeff_data_equil',default=big, &
            &    ctrl_name='energy_coeff_data_equil',help="coefficient for the energy")
+           CALL arg(energy_coeff_data_mcmc,'energy_coeff_data_mcmc',default=big, &
+           &    ctrl_name='energy_coeff_data_mcmc',help="coefficient for the energy")
            !-------------------------------------------------------------------
            !  weight for the energy
            !-------------------------------------------------------------------
            CALL arg(energy_coeff_length,'energy_coeff_length',default=0.04_MK, &
            & ctrl_name='energy_coeff_length',help="coefficient for the energy")
-           CALL arg(energy_coeff_length_equil,'energy_coeff_length_equil',default=0.0_MK, &
+           CALL arg(energy_coeff_length_equil,'energy_coeff_length_equil',default=big, &
            & ctrl_name='energy_coeff_length_equil',help="coefficient for the energy")
+           CALL arg(energy_coeff_length_mcmc,'energy_coeff_length_mcmc',default=big, &
+           & ctrl_name='energy_coeff_length_mcmc',help="coefficient for the energy")
            !-------------------------------------------------------------------
            !  weight for the energy
            !-------------------------------------------------------------------
-           CALL arg(energy_coeff_balloon,'energy_coeff_balloon',default=0.0_MK, &
+           CALL arg(energy_coeff_balloon,'energy_coeff_balloon',default=big, &
            & ctrl_name='energy_coeff_balloon',help="coefficient for the energy")
-           CALL arg(energy_coeff_balloon_equil,'energy_coeff_balloon_equil',default=0.0_MK, &
+           CALL arg(energy_coeff_balloon_equil,'energy_coeff_balloon_equil',default=big, &
            & ctrl_name='energy_coeff_balloon_equil',help="coefficient for the energy")
+           CALL arg(energy_coeff_balloon_mcmc,'energy_coeff_balloon_mcmc',default=big, &
+           & ctrl_name='energy_coeff_balloon_mcmc',help="coefficient for the energy")
            !-------------------------------------------------------------------
            !  weight for the energy
            !-------------------------------------------------------------------
-           CALL arg(energy_coeff_outward_flow,'energy_coeff_outward_flow',default=0.0_MK, &
+           CALL arg(energy_coeff_outward_flow,'energy_coeff_outward_flow',default=big, &
            & ctrl_name='energy_coeff_outward_flow',help="coefficient for the energy")
-           CALL arg(energy_coeff_outward_flow_equil,'energy_coeff_outward_flow_equil',default=0.0_MK, &
+           CALL arg(energy_coeff_outward_flow_equil,'energy_coeff_outward_flow_equil',default=big, &
            & ctrl_name='energy_coeff_outward_flow_equil',help="coefficient for the energy")
+           CALL arg(energy_coeff_outward_flow_mcmc,'energy_coeff_outward_flow_mcmc',default=big, &
+           & ctrl_name='energy_coeff_outward_flow_mcmc',help="coefficient for the energy")
            !-------------------------------------------------------------------
            !  energy merging threshold coefficient
            !-------------------------------------------------------------------
            CALL arg(energy_region_merge_ths,'energy_region_merge_ths',default=0.2_MK, &
            &    ctrl_name='energy_region_merge_ths',help="merging threshold coefficient")
-           CALL arg(energy_region_merge_ths_equil,'energy_region_merge_ths_equil',default=0.0_MK, &
+           CALL arg(energy_region_merge_ths_equil,'energy_region_merge_ths_equil',default=big, &
            &    ctrl_name='energy_region_merge_ths_equil',help="merging threshold coefficient")
+           CALL arg(energy_region_merge_ths_mcmc,'energy_region_merge_ths_mcmc',default=big, &
+           &    ctrl_name='energy_region_merge_ths_mcmc',help="merging threshold coefficient")
            CALL arg(energy_local_window_radius,'energy_local_window_radius',default=3.0_MK, &
            &    ctrl_name='energy_local_window_radius',help="local window radius")
-           CALL arg(energy_local_window_radius_equil,'energy_local_window_radius_equil',default=0.0_MK, &
+           CALL arg(energy_local_window_radius_equil,'energy_local_window_radius_equil',default=big, &
            &    ctrl_name='energy_local_window_radius_equil',help="local window radius")
+           CALL arg(energy_local_window_radius_mcmc,'energy_local_window_radius_mcmc',default=big, &
+           &    ctrl_name='energy_local_window_radius_mcmc',help="local window radius")
            CALL arg(energy_curvature_mask_radius,'energy_curvature_mask_radius',default=4.0_MK, &
            &    ctrl_name='energy_curvature_mask_radius',help="hypersphere radius")
-           CALL arg(energy_curvature_mask_radius_equil,'energy_curvature_mask_radius_equil',default=0.0_MK, &
+           CALL arg(energy_curvature_mask_radius_equil,'energy_curvature_mask_radius_equil',default=big, &
            &    ctrl_name='energy_curvature_mask_radius_equil',help="hypersphere radius")
+           CALL arg(energy_curvature_mask_radius_mcmc,'energy_curvature_mask_radius_mcmc',default=big, &
+           &    ctrl_name='energy_curvature_mask_radius_mcmc',help="hypersphere radius")
 
 
            CALL arg(OscillationThreshold,'Oscillation_ths',default=0.02_ppm_kind_double, &
@@ -813,7 +906,7 @@
            !-------------------------------------------------------------------
            !  Sigma of the gaussian kernel
            !-------------------------------------------------------------------
-           CALL arg(Sigma,'Sigma',default=0.0_MK,ctrl_name='Sigma', &
+           CALL arg(Sigma,'Sigma',default=-1.0_MK,ctrl_name='Sigma', &
            &    help="Sigma (standard deviation of the Gaussian kernel)")
            CALL arg(Tolerance,'Tolerance',default=1,ctrl_name='Tolerance', &
            &    help="Intensity Tolerance of the image")

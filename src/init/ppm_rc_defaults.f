@@ -52,12 +52,13 @@
         &   MCMCFloatingParticlesProposalNormalizer,MCMCZe,MCMCTotalNormalizer, &
         &   MCMCStatsUpdateModulus,MCMCVerbose,MCMCUseForbiddenRegion,          &
         &   MCMCuseSafeSampling,MCMCmarginalFileNamePrefix,MCMCRegionLabelSize, &
-        &   MCMCAllParticlesFwdProposals,MCMC_CandidateMove,MCMC_PartnerMove,   &
+        &   MCMC_CandidateMove,MCMC_PartnerMove,   &
         &   MCMC_q_A,MCMC_q_B,MCMC_q_A_B,MCMC_q_B_A,MCMC_qb_A,MCMC_qb_B,        &
         &   MCMC_qb_A_B,MCMC_qb_B_A,MCMC_LabelsBeforeJump_A,                    &
         &   MCMC_LabelsBeforeJump_B,MCMC_Particle_Ab_IsFloating,                &
         &   MCMC_Particle_Bb_IsFloating,MCMC_Particle_A_IsFloating,             &
-        &   MCMC_CandidateMove_Index,MCMC_PartnerMove_Index
+        &   MCMC_CandidateMove_Index,MCMC_PartnerMove_Index,                    &
+        &   MCMCTotalNormalizerlocal
         IMPLICIT NONE
 
         !-------------------------------------------------------------------------
@@ -90,7 +91,6 @@
         ! Default pixel numbers if no input image is given
         !-------------------------------------------------------------------------
         Ngrid = 0
-        !Ngrid(1:3)
 
         !-------------------------------------------------------------------------
         !  Time step
@@ -98,43 +98,32 @@
         istep = 0
 
         !-------------------------------------------------------------------------
-        !  Default energy term
+        !  Default domain boundary conditions
         !-------------------------------------------------------------------------
         SELECT CASE (ppm_rc_dim)
         CASE (2)
-           ALLOCATE(bcdef(4),STAT=info)
+           ALLOCATE(bcdef(4),SOURCE=ppm_param_bcdef_freespace,STAT=info)
            or_fail_alloc("bcdef")
 
            IF (AllowFusionZ) AllowFusionZ=.FALSE.
-
         CASE (3)
-           ALLOCATE(bcdef(6),STAT=info)
+           ALLOCATE(bcdef(6),SOURCE=ppm_param_bcdef_freespace,STAT=info)
            or_fail_alloc("bcdef")
 
            IF (AllowFusionZ) AllowFusion=.TRUE.
-
         CASE DEFAULT
            fail("NOTICE: Wrong Case dimension.",ppm_error=ppm_error_fatal)
-
         END SELECT
 
-        ALLOCATE(init_rd(ppm_rc_dim),STAT=info)
-        or_fail_alloc("init_rd")
-
-        ALLOCATE(init_sp(ppm_rc_dim),STAT=info)
-        or_fail_alloc("init_rd")
-
-        ALLOCATE(ioghostsize(ppm_rc_dim),STAT=info)
-        or_fail_alloc("ioghostsize")
-
-        ALLOCATE(inighostsize(ppm_rc_dim),STAT=info)
-        or_fail_alloc("inighostsize")
-
-        ALLOCATE(ghostsize_run(ppm_rc_dim),STAT=info)
-        or_fail_alloc("ghostsize_run")
+        !-------------------------------------------------------------------------
+        !  Default ghostsize
+        !-------------------------------------------------------------------------
+        ALLOCATE(ioghostsize(ppm_rc_dim),inighostsize(ppm_rc_dim), &
+        &        ghostsize_run(ppm_rc_dim),SOURCE=0,STAT=info)
+        or_fail_alloc("ioghostsize,inighostsize & ghostsize_run")
 
         IF (nsteql.GT.0) THEN
-           ALLOCATE(ghostsize_equil(ppm_rc_dim),STAT=info)
+           ALLOCATE(ghostsize_equil(ppm_rc_dim),SOURCE=0,STAT=info)
            or_fail_alloc("ghostsize_equil")
         ENDIF
 
@@ -145,72 +134,62 @@
         or_fail_alloc("min_phys & max_phys")
 
         !-------------------------------------------------------------------------
-        !  Default blob_radius
-        !-------------------------------------------------------------------------
-        IF (ANY(radius.GT.zero).AND.Sigma.GT.zero) THEN
-           fail("You can not have both init_rd & Sigma at the same time!")
-        ELSE IF (Sigma.GT.zero) then
-           IF (ANY(rect.GT.zero)) THEN
-              fail("You can not have two initial modes at the same time!")
-           ENDIF
-           init_rd=Sigma
-        ELSE IF (ANY(radius.GT.zero)) THEN
-           IF (ANY(rect.GT.zero)) THEN
-              fail("You can not have two initial modes at the same time!")
-           ENDIF
-           init_rd=radius
-        ELSE IF (ANY(rect.GT.zero)) THEN
-           IF (ANY(radius.GT.zero).OR.Sigma.GT.zero) THEN
-              fail("You can not have two initial modes at the same time!")
-           ENDIF
-           init_rd=rect
-        ELSE
-           init_rd=-one
-        ENDIF
-
-        IF (ANY(space.GT.zero)) THEN
-           init_sp=space
-        ELSE
-           init_sp=-one
-        ENDIF
-
-        !-------------------------------------------------------------------------
-        !  Default ghostsize
-        !-------------------------------------------------------------------------
-        ioghostsize =0
-        inighostsize=0
-        ghostsize   =0
-        IF (nsteql.GT.0) THEN
-           ghostsize_equil=0
-           ghostsize_run  =0
-        ENDIF
-
-        !-------------------------------------------------------------------------
         !  Default domain size
         !-------------------------------------------------------------------------
         min_phys = zero
         max_phys = one
 
         !-------------------------------------------------------------------------
-        !  Default domain boundary conditions
+        !  Default blob_radius
         !-------------------------------------------------------------------------
-        bcdef = ppm_param_bcdef_freespace
+        IF (ANY(radius.GT.zero).AND.Sigma.GT.zero) THEN
+           fail("You can not have both init_rd & Sigma at the same time!")
+        ELSE IF (Sigma.GT.-small) then
+           IF (ANY(rect.GT.zero)) THEN
+              fail("You can not have two initial modes at the same time!")
+           ENDIF
 
-        IF (lNormalize) Normalfac=one
+           ALLOCATE(init_rd(ppm_rc_dim),SOURCE=Sigma,STAT=info)
+        ELSE IF (ANY(radius.GT.zero)) THEN
+           IF (ANY(rect.GT.zero)) THEN
+              fail("You can not have two initial modes at the same time!")
+           ENDIF
+
+           ALLOCATE(init_rd(ppm_rc_dim),SOURCE=radius(1:ppm_rc_dim),STAT=info)
+        ELSE IF (ANY(rect.GT.zero)) THEN
+           IF (ANY(radius.GT.zero).OR.Sigma.GT.zero) THEN
+              fail("You can not have two initial modes at the same time!")
+           ENDIF
+
+           ALLOCATE(init_rd(ppm_rc_dim),SOURCE=rect(1:ppm_rc_dim),STAT=info)
+        ELSE
+           ALLOCATE(init_rd(ppm_rc_dim),SOURCE=-one,STAT=info)
+        ENDIF
+        or_fail_alloc("init_rd")
+
+        IF (ANY(space.GT.zero)) THEN
+           ALLOCATE(init_sp(ppm_rc_dim),SOURCE=space(1:ppm_rc_dim),STAT=info)
+        ELSE
+           ALLOCATE(init_sp(ppm_rc_dim),SOURCE=-one,STAT=info)
+        ENDIF
+        or_fail_alloc("init_sp")
 
         DEALLOCATE(radius,rect,space,STAT=info)
         or_fail_dealloc("radius,rect,space")
 
         !-------------------------------------------------------------------------
+        !  Default Normal factor
+        !-------------------------------------------------------------------------
+        IF (lNormalize) ImageNormalfac=one
+
+        !-------------------------------------------------------------------------
         !  Default debugging time variables
         !-------------------------------------------------------------------------
-        IF (debug.GT.0) THEN
-           tmove_Simple    = zerod
-           tmove_SimpleComm= zerod
-           tmove_NotSimple = zerod
-           tmove_Part      = zerod
-           tmove_ghostfire = zerod
-        ENDIF
+        tmove_Simple    = zerod
+        tmove_SimpleComm= zerod
+        tmove_NotSimple = zerod
+        tmove_Part      = zerod
+        tmove_ghostfire = zerod
 
         !-------------------------------------------------------------------------
         !  Default topo & mesh ID
@@ -222,6 +201,9 @@
         topoid=0
         meshid=-1
 
+        ! In case MCMCcontinue is TRUE would result to TRUE UseMCMC
+        UseMCMC=MERGE(.TRUE.,UseMCMC,MCMCcontinue)
+
         !-------------------------------------------------------------------------
         !  Default for MCMC
         !-------------------------------------------------------------------------
@@ -232,10 +214,14 @@
               & ppm_error=ppm_error_fatal)
            ENDIF
 
+           ALLOCATE(ghostsize_mcmc(ppm_rc_dim),SOURCE=0,STAT=info)
+           or_fail_alloc("ghostsize_mcmc")
+
            MCMCsampleOffBoundaryPercentage         = 0.05_MK
            MCMCFloatingParticlesProposalNormalizer = zerod
-           MCMCZe                                  = zero
+           MCMCZe                                  = zerod
            MCMCTotalNormalizer                     = zerod
+           MCMCTotalNormalizerlocal                = zerod
 
            MCMCStatsUpdateModulus                  = 10000
            MCMCRegionLabelSize                     = 0
@@ -245,9 +231,6 @@
            MCMCuseSafeSampling                     = .FALSE.
 
            MCMCmarginalFileNamePrefix              = "marginals_region_"
-
-           ALLOCATE(MCMCAllParticlesFwdProposals(0),STAT=info)
-           or_fail_alloc("MCMCAllParticlesFwdProposals")
 
            ALLOCATE(MCMC_CandidateMove(MCMCstepsize),                  &
            &        MCMC_CandidateMove_Index(ppm_rc_dim,MCMCstepsize), &

@@ -32,9 +32,9 @@
       !  Subroutine   :                    ppm_rc_write_image
       !-------------------------------------------------------------------------
       !
-      !  Purpose      :
+      !  Purpose      : Write the FieldIn data to the output TIFF file
       !
-      !  Input        :
+      !  Input        : FieldIn,MeshIn,OutputFileName,MeshOut,idn,Scalefac
       !
       !  Output       : info          (I) return status. 0 on success.
       !
@@ -45,17 +45,22 @@
       !  Revisions    :
       !-------------------------------------------------------------------------
 
-      SUBROUTINE DTYPE(ppm_rc_write_image)(FieldIn,MeshIn,OutputFileName,info,MeshOut,idn)
+      SUBROUTINE DTYPE(ppm_rc_write_image)(FieldIn,MeshIn,OutputFileName,info, &
+      &          MeshOut,idn,Scalefac)
 
         !-------------------------------------------------------------------------
         !  Modules
         !-------------------------------------------------------------------------
+#ifdef __F2003
+        USE ISO_C_BINDING, ONLY : C_INT
+#endif
+
         USE ppm_module_topo_typedef, ONLY : ppm_t_topo,ppm_topo
         USE ppm_module_interfaces, ONLY : ppm_t_discr_info_
 
         USE ppm_rc_module_tiff, ONLY : ppm_rc_open_write_tiff,ppm_rc_open_write_bigtiff, &
-        &   ppm_rc_close_tiff,ppm_rc_write_tiff_header,ppm_rc_write_tiff_strip,bitsPerSampleW,  &
-        &   ppm_rc_write_tiff_scanline
+        &   ppm_rc_close_tiff,ppm_rc_write_tiff_header,ppm_rc_write_tiff_strip, &
+        &   bitsPerSampleW,ppm_rc_write_tiff_scanline
         IMPLICIT NONE
 
         !-------------------------------------------------------------------------
@@ -68,17 +73,31 @@
         !  Arguments
         !-------------------------------------------------------------------------
         CLASS(ppm_t_field_),               POINTER       :: FieldIn
+        !!! Input Field
 
         CLASS(ppm_t_equi_mesh_),           POINTER       :: MeshIn
+        !!! Input Filed is discretized on this Mesh.
 
         CHARACTER(LEN=*),                  INTENT(IN   ) :: OutputFileName
+        !!! Output file name for writing the data in.
 
         INTEGER,                           INTENT(  OUT) :: info
 
         CLASS(ppm_t_equi_mesh_), OPTIONAL, POINTER       :: MeshOut
+        !!! Output Mesh which we want to write the data in
+        !!! MeshOut can be different from MeshIn, As we want to work on
+        !!! one topology and the corresponding mesh and want to write the
+        !!! data on a different topology and its coressponding Mesh
 
         INTEGER,                 OPTIONAL, INTENT(IN   ) :: idn
+        !!! ID number of the file.
+        !!! It can be iteration index.
 
+        REAL(MK),                OPTIONAL, INTENT(IN   ) :: Scalefac
+        !!! Scaling factor for the output data
+        !!! We can write the normalized image in a 8,16 or 32 BITs format
+        !!! For writing the normal image in 8 BITs format Scalefac should be
+        !!! 255
         !-------------------------------------------------------------------------
         !  Local variables
         !-------------------------------------------------------------------------
@@ -89,29 +108,40 @@
         CLASS(ppm_t_equi_mesh_), POINTER :: MeshOut_
 
 #if   __DIME == __2D
-        REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wp_rs) => NULL()
-        REAL(MK),              CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wp_r) => NULL()
+        REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:),   POINTER :: wprs
+        REAL(MK),              CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpr
 #elif __DIME == __3D
-        REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wp_rs) => NULL()
-        REAL(MK),              CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wp_r) => NULL()
+        REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wprs
+        REAL(MK),              CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpr
 #endif
-        REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:),   POINTER :: bufrs => NULL()
-        REAL(MK),              CONTIGUOUS, DIMENSION(:,:),   POINTER :: bufr => NULL()
+        REAL(ppm_kind_single),             DIMENSION(:,:),   POINTER :: wprsp
+        REAL(MK),                          DIMENSION(:,:),   POINTER :: wprp
+        REAL(ppm_kind_single), CONTIGUOUS, DIMENSION(:,:),   POINTER :: bufrs
+        REAL(MK),              CONTIGUOUS, DIMENSION(:,:),   POINTER :: bufr
+        REAL(MK)                                                     :: Scalefac_
+        REAL(MK)                                                     :: MinShiftVal_
         REAL(ppm_kind_double) :: t0
-        REAL(ppm_kind_single) :: Normalfacs
+        REAL(ppm_kind_single) :: Scalefacs
+        REAL(ppm_kind_single) :: MinShiftVals
 
 #if   __DIME == __2D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wp_i) => NULL()
+        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpi
 #elif __DIME == __3D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wp_i) => NULL()
+        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpi
 #endif
-        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: bufi => NULL()
+        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpip
+        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: bufi
         INTEGER,             DIMENSION(:),     POINTER :: Nm
         INTEGER,             DIMENSION(:),     POINTER :: istart
         ! Lower-left coordinates on the global mesh
         INTEGER                                        :: isub,x,y,i,ipatch
         INTEGER                                        :: istrip
         INTEGER                                        :: ldu(2),iopt
+#ifdef __F2003
+        INTEGER(C_INT)                                 :: bitsPerSampleW_
+#else
+        INTEGER                                        :: bitsPerSampleW_
+#endif
 
         CHARACTER(LEN=ppm_char) :: filename
         CHARACTER(LEN=ppm_char) :: caller = 'ppm_rc_write_image'
@@ -123,6 +153,32 @@
         CALL substart(caller,t0,info)
 
         CALL check()
+
+        IF (PRESENT(Scalefac)) THEN
+           IF (Scalefac.GT.two) THEN
+              Scalefac_=Scalefac
+              MinShiftVal_=zero
+              IF      (Scalefac_.LE.255._MK) THEN
+                 bitsPerSampleW_=8
+              ELSE IF (Scalefac_.LE.65535._MK) THEN
+                 bitsPerSampleW_=16
+              ELSE
+                 bitsPerSampleW_=32
+              ENDIF
+           ELSE IF (Scalefac.GT.zero) THEN
+              Scalefac_=Scalefac
+              MinShiftVal_=zero
+              bitsPerSampleW_=bitsPerSampleW
+           ELSE
+              Scalefac_=ImageNormalfac
+              MinShiftVal_=MinShiftVal
+              bitsPerSampleW_=bitsPerSampleW
+           ENDIF
+        ELSE
+           Scalefac_=ImageNormalfac
+           MinShiftVal_=MinShiftVal
+           bitsPerSampleW_=bitsPerSampleW
+        ENDIF
 
         NULLIFY(tmp_dinfo)
 
@@ -157,6 +213,8 @@
         !-------------------------------------------------------------------------
         topo => ppm_topo(MeshOut_%topoid)%t
 
+        NULLIFY(wpr,wprs,wpi,bufi,bufrs,bufr)
+
         !---------------------------------------------------------------------
         ! First we find out which image slice to read
         ! We use the istart array for that
@@ -176,29 +234,25 @@
 #if   __DIME == __2D
                     WRITE(filename,'(A,A1,I0,A2,I0,A1,I0,A2,I0,A1,I0,A4,A1)') &
                     & TRIM(OutputFileName),'_',rank,'__',istart(1),'_',istart(2),'__',ipatch,'_',idn,'.tif',CHAR(0)
-!                     & TRIM(OutputFileName),'_',isub,'__',istart(1),'_',istart(2),'__',ipatch,'_',idn,'.tif',CHAR(0)
 #elif __DIME == __3D
                     WRITE(filename,'(A,A1,I0,A2,I0,A1,I0,A1,I0,A2,I0,A1,I0,A4,A1)') &
                     & TRIM(OutputFileName),'_',rank,'__',istart(1),'_',istart(2),'_',istart(3),'__',ipatch,'_',idn,'.tif',CHAR(0)
-!                     & TRIM(OutputFileName),'_',isub,'__',istart(1),'_',istart(2),'_',istart(3),'__',ipatch,'_',idn,'.tif',CHAR(0)
 #endif
                  ELSE
 #if   __DIME == __2D
                     WRITE(filename,'(A,A1,I0,A2,I0,A1,I0,A2,I0,A4,A1)') &
                     & TRIM(OutputFileName),'_',rank,'__',istart(1),'_',istart(2),'__',ipatch,'.tif',CHAR(0)
-!                     & TRIM(OutputFileName),'_',isub,'__',istart(1),'_',istart(2),'__',ipatch,'.tif',CHAR(0)
 #elif __DIME == __3D
                     WRITE(filename,'(A,A1,I0,A2,I0,A1,I0,A1,I0,A2,I0,A4,A1)') &
                     & TRIM(OutputFileName),'_',rank,'__',istart(1),'_',istart(2),'_',istart(3),'__',ipatch,'.tif',CHAR(0)
-!                     & TRIM(OutputFileName),'_',isub,'__',istart(1),'_',istart(2),'_',istart(3),'__',ipatch,'.tif',CHAR(0)
 #endif
                  ENDIF
 
                  !The TIFF file format uses 32bit offsets and, as such, is limited to 4 gigabytes
 #if   __DIME == __2D
-                 IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)*REAL(bitsPerSampleW/8,MK)/1024._MK.GE.4194304._MK
+                 IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)*REAL(bitsPerSampleW_/8,MK)/1024._MK.GE.4194304._MK
 #elif __DIME == __3D
-                 IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)*REAL(Nm(3),MK)*REAL(bitsPerSampleW/8,MK)/1024._MK.GE.4194304._MK
+                 IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)*REAL(Nm(3),MK)*REAL(bitsPerSampleW_/8,MK)/1024._MK.GE.4194304._MK
 #endif
 
                  SELECT CASE (IsBigTIFF)
@@ -209,23 +263,27 @@
                  END SELECT !(IsBigTIFF)
                  or_fail('Error opening tiff file to write in.')
 
-                 info=ppm_rc_write_tiff_header(bitsPerSampleW,1,Nm(1),Nm(2))
+                 info=ppm_rc_write_tiff_header(bitsPerSampleW_,1,Nm(1),Nm(2))
                  or_fail('Error writing tiff file header.')
 
                  SELECT CASE (FieldIn%data_type)
                  CASE (ppm_type_int)
-                    CALL p%get_field(FieldIn,DTYPE(wp_i),info)
-                    or_fail("Failed to get field wp_i.")
+                    CALL p%get_field(FieldIn,wpi,info)
+                    or_fail("Failed to get field wpi.")
 
 #if   __DIME == __2D
-                    info=ppm_rc_write_tiff_strip(DTYPE(wp_i)(1:Nm(1),1:Nm(2)),bitsPerSampleW,Nm(1),Nm(2),0,1)
+                    wpip => wpi(1:Nm(1),1:Nm(2))
+
+                    info=ppm_rc_write_tiff_strip(wpip,bitsPerSampleW_,Nm(1),Nm(2),0,1)
                     or_fail("ppm_rc_write_tiff_strip")
 #elif __DIME == __3D
                     DO istrip=1,Nm(3)
                        info=ppm_rc_write_tiff_header(istrip-1,Nm(3))
                        or_fail('Error writing tiff file header.')
 
-                       info=ppm_rc_write_tiff_strip(DTYPE(wp_i)(1:Nm(1),1:Nm(2),istrip),bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                       wpip => wpi(1:Nm(1),1:Nm(2),istrip)
+
+                       info=ppm_rc_write_tiff_strip(wpip,bitsPerSampleW_,Nm(1),Nm(2),istrip-1,Nm(3))
                        or_fail("ppm_rc_write_tiff_strip")
                     ENDDO ! loop through slices
 #endif
@@ -234,19 +292,16 @@
                  !!! For the real data type we do check whether the data is been normalized
                  !!! or not, also in the case of real data, it would be the image dada itself
                  !!! so we do not need to correct the range of data
-                    CALL p%get_field(FieldIn,DTYPE(wp_r),info)
-                    or_fail("Failed to get field wp_r.")
+                    CALL p%get_field(FieldIn,wpr,info)
+                    or_fail("Failed to get field wpr.")
 
                     IF (lNormalize) THEN
                        iopt=ppm_param_alloc_fit
-                       ldu(1:2)=Nm(1:2)
-                       SELECT CASE (bitsPerSampleW)
+                       SELECT CASE (bitsPerSampleW_)
                        CASE (32)
-                          CALL ppm_alloc(bufr,ldu,iopt,info)
-
+                          CALL ppm_alloc(bufr,Nm,iopt,info)
                        CASE DEFAULT
-                          CALL ppm_alloc(bufi,ldu,iopt,info)
-
+                          CALL ppm_alloc(bufi,Nm,iopt,info)
                        END SELECT
                        or_fail_alloc('Failed to allocate C buffer.')
                     ENDIF !(lNormalize)
@@ -254,27 +309,41 @@
 #if   __DIME == __2D
                     SELECT CASE (lNormalize)
                     CASE (.TRUE.)
-                       SELECT CASE (bitsPerSampleW)
+                       SELECT CASE (bitsPerSampleW_)
                        CASE (32)
-                          FORALL (x=1:Nm(1),y=1:Nm(2))
-                             bufr(x,y)=DTYPE(wp_r)(x,y)*Normalfac
-                          END FORALL
+                          IF (MinShiftVal_.GT.zero.OR.MinShiftVal_.LT.zero) THEN
+                             FORALL (x=1:Nm(1),y=1:Nm(2))
+                                bufr(x,y)=wpr(x,y)*Scalefac_+MinShiftVal_
+                             END FORALL
+                          ELSE
+                             FORALL (x=1:Nm(1),y=1:Nm(2))
+                                bufr(x,y)=wpr(x,y)*Scalefac_
+                             END FORALL
+                          ENDIF
 
-                          info=ppm_rc_write_tiff_strip(bufr,bitsPerSampleW,Nm(1),Nm(2),0,1)
+                          info=ppm_rc_write_tiff_strip(bufr,bitsPerSampleW_,Nm(1),Nm(2),0,1)
                           or_fail("ppm_rc_write_tiff_strip")
 
                        CASE DEFAULT
-                          FORALL (x=1:Nm(1),y=1:Nm(2))
-                             bufi(x,y)=INT(DTYPE(wp_r)(x,y)*Normalfac)
-                          END FORALL
+                          IF (MinShiftVal_.GT.zero.OR.MinShiftVal_.LT.zero) THEN
+                             FORALL (x=1:Nm(1),y=1:Nm(2))
+                                bufi(x,y)=INT(wpr(x,y)*Scalefac_+MinShiftVal_)
+                             END FORALL
+                          ELSE
+                             FORALL (x=1:Nm(1),y=1:Nm(2))
+                                bufi(x,y)=INT(wpr(x,y)*Scalefac_)
+                             END FORALL
+                          ENDIF
 
-                          info=ppm_rc_write_tiff_strip(bufi,bitsPerSampleW,Nm(1),Nm(2),0,1)
+                          info=ppm_rc_write_tiff_strip(bufi,bitsPerSampleW_,Nm(1),Nm(2),0,1)
                           or_fail("ppm_rc_write_tiff_strip")
 
-                       END SELECT !(bitsPerSampleW)
+                       END SELECT !(bitsPerSampleW_)
 
                     CASE (.FALSE.)
-                       info=ppm_rc_write_tiff_strip(DTYPE(wp_r)(1:Nm(1),1:Nm(2)),bitsPerSampleW,Nm(1),Nm(2),0,1)
+                       wprp => wpr(1:Nm(1),1:Nm(2))
+
+                       info=ppm_rc_write_tiff_strip(wprp,bitsPerSampleW_,Nm(1),Nm(2),0,1)
                        or_fail("ppm_rc_write_tiff_strip")
 
                     END SELECT !(lNormalize)
@@ -285,82 +354,108 @@
 
                        SELECT CASE (lNormalize)
                        CASE (.TRUE.)
-                          SELECT CASE (bitsPerSampleW)
+                          SELECT CASE (bitsPerSampleW_)
                           CASE (32)
-                             FORALL (x=1:Nm(1),y=1:Nm(2))
-                                bufr(x,y)=DTYPE(wp_r)(x,y,istrip)*Normalfac
-                             END FORALL
+                             IF (MinShiftVal_.GT.zero.OR.MinShiftVal_.LT.zero) THEN
+                                FORALL (x=1:Nm(1),y=1:Nm(2))
+                                   bufr(x,y)=wpr(x,y,istrip)*Scalefac_+MinShiftVal_
+                                END FORALL
+                             ELSE
+                                FORALL (x=1:Nm(1),y=1:Nm(2))
+                                   bufr(x,y)=wpr(x,y,istrip)*Scalefac_
+                                END FORALL
+                             ENDIF
 
-                             info=ppm_rc_write_tiff_strip(bufr,bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                             info=ppm_rc_write_tiff_strip(bufr,bitsPerSampleW_,Nm(1),Nm(2),istrip-1,Nm(3))
                              or_fail("ppm_rc_write_tiff_strip")
-!                              info=ppm_rc_write_tiff_scanline(bufr,0,bitsPerSampleW,0,Nm(1),Nm(2),istrip-1,Nm(3))
+!                              info=ppm_rc_write_tiff_scanline(bufr,0,bitsPerSampleW_,0,Nm(1),Nm(2),istrip-1,Nm(3))
 !                              or_fail("ppm_rc_write_tiff_scanline")
 
                           CASE DEFAULT
-                             FORALL (x=1:Nm(1),y=1:Nm(2))
-                                bufi(x,y)=INT(DTYPE(wp_r)(x,y,istrip)*Normalfac)
-                             END FORALL
+                             IF (MinShiftVal_.GT.zero.OR.MinShiftVal_.LT.zero) THEN
+                                FORALL (x=1:Nm(1),y=1:Nm(2))
+                                   bufi(x,y)=INT(wpr(x,y,istrip)*Scalefac_+MinShiftVal_)
+                                END FORALL
+                             ELSE
+                                FORALL (x=1:Nm(1),y=1:Nm(2))
+                                   bufi(x,y)=INT(wpr(x,y,istrip)*Scalefac_)
+                                END FORALL
+                             ENDIF
 
-                             info=ppm_rc_write_tiff_strip(bufi,bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                             info=ppm_rc_write_tiff_strip(bufi,bitsPerSampleW_,Nm(1),Nm(2),istrip-1,Nm(3))
                              or_fail("ppm_rc_write_tiff_strip")
 
-                          END SELECT !(bitsPerSampleW)
+                          END SELECT !(bitsPerSampleW_)
 
                        CASE (.FALSE.)
-                          info=ppm_rc_write_tiff_strip(DTYPE(wp_r)(1:Nm(1),1:Nm(2),istrip),bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                          wprp => wpr(1:Nm(1),1:Nm(2),istrip)
+
+                          info=ppm_rc_write_tiff_strip(wprp,bitsPerSampleW_,Nm(1),Nm(2),istrip-1,Nm(3))
                           or_fail("ppm_rc_write_tiff_strip")
 
                        END SELECT !(lNormalize)
                     ENDDO ! loop through slices
 #endif
 
-                 CASE (ppm_type_real_single)
                  !!! For the real data type we do check whether the data is been normalized
                  !!! or not, also in the case of real data, it would be the image dada itself
                  !!! so we do not need to correct the range of data
-                    CALL p%get_field(FieldIn,DTYPE(wp_rs),info)
-                    or_fail("Failed to get field wp_rs.")
+                 CASE (ppm_type_real_single)
+                    CALL p%get_field(FieldIn,wprs,info)
+                    or_fail("Failed to get field wprs.")
 
                     IF (lNormalize) THEN
                        iopt=ppm_param_alloc_fit
-                       ldu(1:2)=Nm(1:2)
-                       SELECT CASE (bitsPerSampleW)
+                       SELECT CASE (bitsPerSampleW_)
                        CASE (32)
-                          CALL ppm_alloc(bufrs,ldu,iopt,info)
-
+                          CALL ppm_alloc(bufrs,Nm,iopt,info)
                        CASE DEFAULT
-                          CALL ppm_alloc(bufi,ldu,iopt,info)
-
+                          CALL ppm_alloc(bufi,Nm,iopt,info)
                        END SELECT
                        or_fail_alloc('Failed to allocate C buffer.')
 
-                       Normalfacs=REAL(Normalfac,ppm_kind_single)
+                       Scalefacs=REAL(Scalefac_,ppm_kind_single)
+                       MinShiftVals=REAL(MinShiftVal_,ppm_kind_single)
                     ENDIF !(lNormalize)
 
 #if   __DIME == __2D
                     SELECT CASE (lNormalize)
                     CASE (.TRUE.)
-                       SELECT CASE (bitsPerSampleW)
+                       SELECT CASE (bitsPerSampleW_)
                        CASE (32)
-                          FORALL (x=1:Nm(1),y=1:Nm(2))
-                             bufrs(x,y)=DTYPE(wp_rs)(x,y)*Normalfacs
-                          END FORALL
+                          IF (MinShiftVal_.GT.zero.OR.MinShiftVal_.LT.zero) THEN
+                             FORALL (x=1:Nm(1),y=1:Nm(2))
+                                bufrs(x,y)=wprs(x,y)*Scalefacs+MinShiftVals
+                             END FORALL
+                          ELSE
+                             FORALL (x=1:Nm(1),y=1:Nm(2))
+                                bufrs(x,y)=wprs(x,y)*Scalefacs
+                             END FORALL
+                          ENDIF
 
-                          info=ppm_rc_write_tiff_strip(bufrs,bitsPerSampleW,Nm(1),Nm(2),0,1)
+                          info=ppm_rc_write_tiff_strip(bufrs,bitsPerSampleW_,Nm(1),Nm(2),0,1)
                           or_fail("ppm_rc_write_tiff_strip")
 
                        CASE DEFAULT
-                          FORALL (x=1:Nm(1),y=1:Nm(2))
-                             bufi(x,y)=INT(DTYPE(wp_rs)(x,y)*Normalfacs)
-                          END FORALL
+                          IF (MinShiftVal_.GT.zero.OR.MinShiftVal_.LT.zero) THEN
+                             FORALL (x=1:Nm(1),y=1:Nm(2))
+                                bufi(x,y)=INT(wprs(x,y)*Scalefacs+MinShiftVals)
+                             END FORALL
+                          ELSE
+                             FORALL (x=1:Nm(1),y=1:Nm(2))
+                                bufi(x,y)=INT(wprs(x,y)*Scalefacs)
+                             END FORALL
+                          ENDIF
 
-                          info=ppm_rc_write_tiff_strip(bufi,bitsPerSampleW,Nm(1),Nm(2),0,1)
+                          info=ppm_rc_write_tiff_strip(bufi,bitsPerSampleW_,Nm(1),Nm(2),0,1)
                           or_fail("ppm_rc_write_tiff_strip")
 
-                       END SELECT !(bitsPerSampleW)
+                       END SELECT !(bitsPerSampleW_)
 
                     CASE (.FALSE.)
-                       info=ppm_rc_write_tiff_strip(DTYPE(wp_rs)(1:Nm(1),1:Nm(2)),bitsPerSampleW,Nm(1),Nm(2),0,1)
+                       wprsp => wprs(1:Nm(1),1:Nm(2))
+
+                       info=ppm_rc_write_tiff_strip(wprsp,bitsPerSampleW_,Nm(1),Nm(2),0,1)
                        or_fail("ppm_rc_write_tiff_strip")
 
                     END SELECT !(lNormalize)
@@ -371,29 +466,43 @@
 
                        SELECT CASE (lNormalize)
                        CASE (.TRUE.)
-                          SELECT CASE (bitsPerSampleW)
+                          SELECT CASE (bitsPerSampleW_)
                           CASE (32)
-                             FORALL (x=1:Nm(1),y=1:Nm(2))
-                                bufrs(x,y)=DTYPE(wp_rs)(x,y,istrip)*Normalfacs
-                             END FORALL
+                             IF (MinShiftVal_.GT.zero.OR.MinShiftVal_.LT.zero) THEN
+                                FORALL (x=1:Nm(1),y=1:Nm(2))
+                                   bufrs(x,y)=wprs(x,y,istrip)*Scalefacs+MinShiftVals
+                                END FORALL
+                             ELSE
+                                FORALL (x=1:Nm(1),y=1:Nm(2))
+                                   bufrs(x,y)=wprs(x,y,istrip)*Scalefacs
+                                END FORALL
+                             ENDIF
 
-                             info=ppm_rc_write_tiff_strip(bufrs,bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                             info=ppm_rc_write_tiff_strip(bufrs,bitsPerSampleW_,Nm(1),Nm(2),istrip-1,Nm(3))
                              or_fail("ppm_rc_write_tiff_strip")
-!                              info=ppm_rc_write_tiff_scanline(bufr,0,bitsPerSampleW,0,Nm(1),Nm(2),istrip-1,Nm(3))
+!                              info=ppm_rc_write_tiff_scanline(bufr,0,bitsPerSampleW_,0,Nm(1),Nm(2),istrip-1,Nm(3))
 !                              or_fail("ppm_rc_write_tiff_scanline")
 
                           CASE DEFAULT
-                             FORALL (x=1:Nm(1),y=1:Nm(2))
-                                bufi(x,y)=INT(DTYPE(wp_rs)(x,y,istrip)*Normalfac)
-                             END FORALL
+                             IF (MinShiftVal_.GT.zero.OR.MinShiftVal_.LT.zero) THEN
+                                FORALL (x=1:Nm(1),y=1:Nm(2))
+                                   bufi(x,y)=INT(wprs(x,y,istrip)*Scalefacs+MinShiftVals)
+                                END FORALL
+                             ELSE
+                                FORALL (x=1:Nm(1),y=1:Nm(2))
+                                   bufi(x,y)=INT(wprs(x,y,istrip)*Scalefacs)
+                                END FORALL
+                             ENDIF
 
-                             info=ppm_rc_write_tiff_strip(bufi,bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                             info=ppm_rc_write_tiff_strip(bufi,bitsPerSampleW_,Nm(1),Nm(2),istrip-1,Nm(3))
                              or_fail("ppm_rc_write_tiff_strip")
 
-                          END SELECT !(bitsPerSampleW)
+                          END SELECT !(bitsPerSampleW_)
 
                        CASE (.FALSE.)
-                          info=ppm_rc_write_tiff_strip(DTYPE(wp_rs)(1:Nm(1),1:Nm(2),istrip),bitsPerSampleW,Nm(1),Nm(2),istrip-1,Nm(3))
+                          wprsp => wprs(1:Nm(1),1:Nm(2),istrip)
+
+                          info=ppm_rc_write_tiff_strip(wprsp,bitsPerSampleW_,Nm(1),Nm(2),istrip-1,Nm(3))
                           or_fail("ppm_rc_write_tiff_strip")
 
                        END SELECT !(lNormalize)
@@ -420,7 +529,7 @@
         CALL ppm_alloc(bufrs,ldu,iopt,info)
         or_fail_dealloc('Could not deallocate C buffer.')
 
-        NULLIFY(DTYPE(wp_r),DTYPE(wp_rs),DTYPE(wp_i),bufi,bufr)
+        NULLIFY(wpr,wprs,wpi,bufi,bufrs,bufr)
 
         IF (ASSOCIATED(tmp_dinfo)) THEN
            CALL MeshOut%field_ptr%remove(info,FieldIn)
@@ -444,17 +553,22 @@
       CONTAINS
         SUBROUTINE check
           IMPLICIT NONE
-          check_true(<#ASSOCIATED(MeshIn)#>, &
-          & "Input Mesh does not exist!",exit_point=8888)
+          check_true(<#ASSOCIATED(MeshIn)#>,"Input Mesh does not exist!",exit_point=8888)
 
           check_true(<#FieldIn%is_discretized_on(MeshIn)#>, &
           & "This Field is not discretized on Input Mesh!",exit_point=8888)
 
           IF (PRESENT(MeshOut)) THEN
-             check_true(<#ASSOCIATED(MeshOut)#>, &
-             & "Output Mesh does not exist!",exit_point=8888)
+             check_true(<#ASSOCIATED(MeshOut)#>,"Output Mesh does not exist!",exit_point=8888)
           ENDIF
-
+          IF (PRESENT(Scalefac)) THEN
+             IF (Scalefac.GT.zero) THEN
+                IF (FieldIn%data_type.EQ.ppm_type_int) THEN
+                   fail("No support to convert one type to the other! Scalefac can not be > 0 for integer data type!", &
+                   & ppm_error=ppm_error_fatal,exit_point=8888)
+                ENDIF
+             ENDIF
+          ENDIF
         8888 CONTINUE
           RETURN
         END SUBROUTINE
@@ -462,11 +576,16 @@
 
 
       SUBROUTINE DTYPE(ppm_rc_write_image_label)(FieldIn,MeshIn, &
-      &          OutputFileName,info,MeshOut,idn,liotopo)
+      &          OutputFileName,info,MeshOut,idn,liotopo,        &
+      &          bitsPerSampleW,lcast)
 
         !-------------------------------------------------------------------------
         !  Modules
         !-------------------------------------------------------------------------
+#ifdef __F2003
+        USE ISO_C_BINDING, ONLY : C_INT
+#endif
+
         USE ppm_module_data, ONLY : ppm_param_assign_internal, &
         & ppm_param_decomp_xpencil,ppm_param_decomp_xy_slab
         USE ppm_module_mktopo, ONLY : ppm_mktopo
@@ -474,7 +593,7 @@
         USE ppm_module_interfaces, ONLY : ppm_t_discr_info_
 
         USE ppm_rc_module_tiff, ONLY : ppm_rc_open_write_tiff,ppm_rc_open_write_bigtiff, &
-        &   ppm_rc_close_tiff,ppm_rc_write_tiff_header,ppm_rc_write_tiff_strip !,bitsPerSampleW
+        &   ppm_rc_close_tiff,ppm_rc_write_tiff_header,ppm_rc_write_tiff_strip
         IMPLICIT NONE
 
         !-------------------------------------------------------------------------
@@ -496,9 +615,15 @@
         INTEGER,                 OPTIONAL, INTENT(IN   ) :: idn
         !!!The image number which will be used for header information
         !!!The output file will use this header information
+
         LOGICAL,                 OPTIONAL, INTENT(IN   ) :: liotopo
         !!!This option set to TRUE will create IO topo IO mesh and write the
         !!!label on the new iomesh and new iotopo
+
+        INTEGER,                 OPTIONAL, INTENT(IN   ) :: bitsPerSampleW
+
+        LOGICAL,                 OPTIONAL, INTENT(IN   ) :: lcast
+        !!! Cast the labels to the output bitsPerSample and write the results
         !-------------------------------------------------------------------------
         !  Local variables
         !-------------------------------------------------------------------------
@@ -511,25 +636,32 @@
         !!! mesh for I/O
 
 
-        REAL(MK), DIMENSION(:,:), POINTER :: xp
-        REAL(ppm_kind_double)             :: t0
+        REAL(MK), CONTIGUOUS, DIMENSION(:,:), POINTER :: xp
+        REAL(ppm_kind_double)                         :: t0
 
 #if   __DIME == __2D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wp_i) => NULL()
+        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: wpi
 #elif __DIME == __3D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: DTYPE(wp_i) => NULL()
+        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER :: wpi
 #endif
-        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: buf => NULL()
+        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: buf
         INTEGER,             DIMENSION(:),     POINTER :: Nm
         INTEGER,             DIMENSION(:),     POINTER :: istart
         INTEGER                                        :: isub,x,y,i,ipatch
         INTEGER                                        :: white
+        INTEGER                                        :: mwhite
+        INTEGER                                        :: rwhite
 #if   __DIME == __3D
         INTEGER                                        :: istrip
 #endif
         INTEGER                                        :: ldu(2),iopt
         INTEGER                                        :: nproc,ld(__DIME)
         INTEGER                                        :: tiotopoid,tiomeshid
+#ifdef __F2003
+        INTEGER(C_INT)                                 :: bitsPerSampleW_
+#else
+        INTEGER                                        :: bitsPerSampleW_
+#endif
 
         CHARACTER(LEN=ppm_char) :: filename
         CHARACTER(LEN=ppm_char) :: caller = 'ppm_rc_write_image_label'
@@ -543,6 +675,8 @@
 
         CALL check()
 
+        bitsPerSampleW_=MERGE(bitsPerSampleW,8,PRESENT(bitsPerSampleW))
+
         !Write the label image file for using as an initialization input
         labelInit=.FALSE.
 
@@ -551,48 +685,23 @@
         IF (PRESENT(liotopo)) THEN
            IF (liotopo.AND.ppm_nproc.GT.1) THEN
               !-------------------------------------------------------------------------
-              !  Create an IO topology for reading the image file
+              !  Create an IO topology for writing the image file
               !-------------------------------------------------------------------------
               nproc=ppm_nproc
 
-              IF (n_io_procs_read.GT.1.AND.n_io_procs_read.LT.ppm_nproc) THEN
-                 ppm_nproc=n_io_procs_read
+              IF (n_procs_write.GT.0.AND.n_procs_write.LT.ppm_nproc) THEN
+                 ppm_nproc=n_procs_write
                  IF (Ngrid(ppm_rc_dim).LE.ppm_nproc) THEN
                     ppm_nproc=Ngrid(ppm_rc_dim)-1
                  ENDIF
-              ELSE IF (n_io_procs_read.GE.ppm_nproc) THEN
+              ELSE IF (n_procs_write.GE.ppm_nproc) THEN
                  IF (Ngrid(ppm_rc_dim).LE.ppm_nproc) THEN
                     ppm_nproc=Ngrid(ppm_rc_dim)-1
                  ENDIF
               ELSE
-                 !   ppm_nproc   n_io_procs
-                 ! +------------------------+
-                 ! |     2               2  |
-                 ! |     4               2  |
-                 ! |     8               2  |
-                 ! |    16               8  |
-                 ! |    32               8  |
-                 ! |    64               8  |
-                 ! |   128               8  |
-                 ! |   256               8  |
-                 ! |   512              16  |
-                 ! |  1024              16  |
-                 ! |  2048              16  |
-                 ! +------------------------+
-                 SELECT CASE (ppm_nproc)
-                 CASE (2:8)
-                    ppm_nproc=MAX(INT(LOG(REAL(ppm_nproc))/LOG(2.0)),2)
-                    DO WHILE (IAND(ppm_nproc,ppm_nproc-1).NE.0)
-                       ppm_nproc=ppm_nproc-1
-                    ENDDO
-
-                 CASE DEFAULT
-                    ppm_nproc=INT(LOG(REAL(ppm_nproc))/LOG(2.0))
-                    DO WHILE (IAND(ppm_nproc,ppm_nproc-1).NE.0)
-                       ppm_nproc=ppm_nproc+1
-                    ENDDO
-
-                 END SELECT
+                 IF (ppm_nproc.GE.Ngrid(ppm_rc_dim)) THEN
+                    ppm_nproc=Ngrid(ppm_rc_dim)-1
+                 ENDIF
               ENDIF
 
               ALLOCATE(xp(__DIME,1),STAT=info)
@@ -613,6 +722,16 @@
 
               DEALLOCATE(xp,STAT=info)
               or_fail_dealloc("xp")
+
+              IF (nproc.GT.1) THEN
+                 IF (ppm_nproc.EQ.1) THEN
+                    IF (rank.GT.0) THEN
+                       topo => ppm_topo(tiotopoid)%t
+                       topo%nsublist=0
+                       topo%sub2proc=0
+                    ENDIF
+                 ENDIF
+              ENDIF
 
               ppm_nproc=nproc
 
@@ -678,6 +797,8 @@
         !-------------------------------------------------------------------------
         topo => ppm_topo(MeshOut_%topoid)%t
 
+        NULLIFY(wpi,buf)
+
         !---------------------------------------------------------------------
         ! First we find out which image slice to read
         ! We use the istart array for that
@@ -699,33 +820,33 @@
 #if   __DIME == __2D
                     WRITE(filename,'(A,A1,I0,A2,I0,A1,I0,A2,I0,A1,I0,A4,A1)') &
                     & TRIM(OutputFileName),'_',rank,'__',istart(1),'_',istart(2),'__',ipatch,'_',idn,'.tif',CHAR(0)
-!                     & TRIM(OutputFileName),'_',isub,'__',istart(1),'_',istart(2),'__',ipatch,'_',idn,'.tif',CHAR(0)
 #elif __DIME == __3D
                     WRITE(filename,'(A,A1,I0,A2,I0,A1,I0,A1,I0,A2,I0,A1,I0,A4,A1)') &
                     & TRIM(OutputFileName),'_',rank,'__',istart(1),'_',istart(2),'_',istart(3),'__',ipatch,'_',idn,'.tif',CHAR(0)
-!                     & TRIM(OutputFileName),'_',isub,'__',istart(1),'_',istart(2),'_',istart(3),'__',ipatch,'_',idn,'.tif',CHAR(0)
 #endif
                  ELSE
 #if   __DIME == __2D
                     WRITE(filename,'(A,A1,I0,A2,I0,A1,I0,A2,I0,A4,A1)') &
                     & TRIM(OutputFileName),'_',rank,'__',istart(1),'_',istart(2),'__',ipatch,'.tif',CHAR(0)
-!                     & TRIM(OutputFileName),'_',isub,'__',istart(1),'_',istart(2),'__',ipatch,'.tif',CHAR(0)
 #elif __DIME == __3D
                     WRITE(filename,'(A,A1,I0,A2,I0,A1,I0,A1,I0,A2,I0,A4,A1)') &
                     & TRIM(OutputFileName),'_',rank,'__',istart(1),'_',istart(2),'_',istart(3),'__',ipatch,'.tif',CHAR(0)
-!                     & TRIM(OutputFileName),'_',isub,'__',istart(1),'_',istart(2),'_',istart(3),'__',ipatch,'.tif',CHAR(0)
 #endif
                  ENDIF
 
                  !The TIFF file format uses 32bit offsets and, as such, is limited to 4 gigabytes
 #if   __DIME == __2D
                  IF (PRESENT(idn)) THEN
-                    IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)/1024._MK.GE.4194304._MK
+                    IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)*REAL(bitsPerSampleW_/8,MK)/1024._MK.GE.4194304._MK
                  ELSE
-                    IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)*REAL(maxiter,MK)/1024._MK.GE.4194304._MK
+                    IF (maxiter.GT.0) THEN
+                       IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)*REAL(maxiter,MK)*REAL(bitsPerSampleW_/8,MK)/1024._MK.GE.4194304._MK
+                    ELSE
+                       IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)*REAL(bitsPerSampleW_/8,MK)/1024._MK.GE.4194304._MK
+                    ENDIF
                  ENDIF
 #elif __DIME == __3D
-                 IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)*REAL(Nm(3),MK)/1024._MK.GE.4194304._MK
+                 IsBigTIFF=REAL(Nm(1),MK)*REAL(Nm(2),MK)*REAL(Nm(3),MK)*REAL(bitsPerSampleW_/8,MK)/1024._MK.GE.4194304._MK
 #endif
 
                  SELECT CASE (IsBigTIFF)
@@ -736,87 +857,220 @@
                  END SELECT
                  or_fail('Error opening tiff file to write in.')
 
-!                  info=ppm_rc_write_tiff_header(bitsPerSampleW,1,Nm(1),Nm(2))
-!                  or_fail('Error writing tiff file header.')
-
-                 info=ppm_rc_write_tiff_header(8,1,Nm(1),Nm(2))
+                 info=ppm_rc_write_tiff_header(bitsPerSampleW_,1,Nm(1),Nm(2))
                  or_fail('Error writing tiff file header.')
 
                  SELECT CASE (FieldIn%data_type)
                  CASE (ppm_type_int)
-                    CALL p%get_field(FieldIn,DTYPE(wp_i),info)
-                    or_fail("Failed to get field wp_i.")
+                    CALL p%get_field(FieldIn,wpi,info)
+                    or_fail("Failed to get field wpi.")
 
-                    iopt=ppm_param_alloc_fit
-                    ldu(1:2)=Nm(1:2)
-                    CALL ppm_alloc(buf,ldu,iopt,info)
-                    or_fail_alloc('Failed to allocate C buffer.')
-
-                    !The white pixel value in the TIFF image
-                    white=255
-
-                    SELECT CASE (labelInit)
-                    CASE (.TRUE.)
+                    IF (PRESENT(lcast)) THEN
+                       !The white pixel value in the TIFF image
+                       SELECT CASE (bitsPerSampleW_)
+                       CASE (8)
+                          iopt=ppm_param_alloc_fit
+                          CALL ppm_alloc(buf,Nm,iopt,info)
+                          or_fail_alloc('Failed to allocate C buffer.')
 #if   __DIME == __2D
-                       !Take each labeled regoin
-                       DO y=1,Nm(2)
-                          DO x=1,Nm(1)
-                             IF (DTYPE(wp_i)(x,y).EQ.0.OR.DTYPE(wp_i)(x,y).EQ.FORBIDDEN) THEN
-                                buf(x,y)=0
-                             ELSE
-                                white=MOD(ABS(DTYPE(wp_i)(x,y)),150)+106
-                                buf(x,y)=white
-                             ENDIF
-                          ENDDO
-                       ENDDO
-
-                       info=ppm_rc_write_tiff_strip(buf,8,Nm(1),Nm(2),0,1)
-                       or_fail("ppm_rc_write_tiff_strip")
-#elif __DIME == __3D
-                       DO istrip=1,Nm(3)
                           !Take each labeled regoin
                           DO y=1,Nm(2)
                              DO x=1,Nm(1)
-                                IF (DTYPE(wp_i)(x,y,istrip).EQ.0.OR.DTYPE(wp_i)(x,y,istrip).EQ.FORBIDDEN) THEN
+                                IF (wpi(x,y).EQ.0.OR.wpi(x,y).EQ.FORBIDDEN) THEN
                                    buf(x,y)=0
                                 ELSE
-                                   white=MOD(ABS(DTYPE(wp_i)(x,y,istrip)),150)+106
+                                   IF (ABS(wpi(x,y)).GT.255) THEN
+                                      buf(x,y)=255
+                                   ELSE
+                                      buf(x,y)=ABS(wpi(x,y))
+                                   ENDIF
+                                ENDIF
+                             ENDDO
+                          ENDDO
+
+                          info=ppm_rc_write_tiff_strip(buf,bitsPerSampleW_,Nm(1),Nm(2),0,1)
+                          or_fail("ppm_rc_write_tiff_strip")
+#elif __DIME == __3D
+                          DO istrip=1,Nm(3)
+                             !Take each labeled regoin
+                             DO y=1,Nm(2)
+                                DO x=1,Nm(1)
+                                   IF (wpi(x,y,istrip).EQ.0.OR.wpi(x,y,istrip).EQ.FORBIDDEN) THEN
+                                      buf(x,y)=0
+                                   ELSE
+                                      IF (ABS(wpi(x,y,istrip)).GT.255) THEN
+                                         buf(x,y)=255
+                                      ELSE
+                                         buf(x,y)=ABS(wpi(x,y,istrip))
+                                      ENDIF
+                                   ENDIF
+                                ENDDO
+                             ENDDO
+
+                             info=ppm_rc_write_tiff_header(istrip-1,Nm(3))
+                             or_fail('Error writing tiff file header.')
+
+                             info=ppm_rc_write_tiff_strip(buf,bitsPerSampleW_,Nm(1),Nm(2),istrip-1,Nm(3))
+                             or_fail("libtiff_write_tiff_strip")
+                          ENDDO ! loop through slices
+#endif
+
+                          iopt=ppm_param_dealloc
+                          CALL ppm_alloc(buf,ldu,iopt,info)
+                          or_fail_dealloc('Could not deallocate C buffer.')
+                       CASE (16)
+                          iopt=ppm_param_alloc_fit
+                          CALL ppm_alloc(buf,Nm,iopt,info)
+                          or_fail_alloc('Failed to allocate C buffer.')
+
+#if   __DIME == __2D
+                          !Take each labeled regoin
+                          DO y=1,Nm(2)
+                             DO x=1,Nm(1)
+                                IF (wpi(x,y).EQ.0.OR.wpi(x,y).EQ.FORBIDDEN) THEN
+                                   buf(x,y)=0
+                                ELSE
+                                   IF (ABS(wpi(x,y)).GT.65535) THEN
+                                      buf(x,y)=65535
+                                   ELSE
+                                      buf(x,y)=ABS(wpi(x,y))
+                                   ENDIF
+                                ENDIF
+                             ENDDO
+                          ENDDO
+
+                          info=ppm_rc_write_tiff_strip(buf,bitsPerSampleW_,Nm(1),Nm(2),0,1)
+                          or_fail("ppm_rc_write_tiff_strip")
+#elif __DIME == __3D
+                          DO istrip=1,Nm(3)
+                             !Take each labeled regoin
+                             DO y=1,Nm(2)
+                                DO x=1,Nm(1)
+                                   IF (wpi(x,y,istrip).EQ.0.OR.wpi(x,y,istrip).EQ.FORBIDDEN) THEN
+                                      buf(x,y)=0
+                                   ELSE
+                                      IF (ABS(wpi(x,y,istrip)).GT.65535) THEN
+                                         buf(x,y)=65535
+                                      ELSE
+                                         buf(x,y)=ABS(wpi(x,y,istrip))
+                                      ENDIF
+                                   ENDIF
+                                ENDDO
+                             ENDDO
+
+                             info=ppm_rc_write_tiff_header(istrip-1,Nm(3))
+                             or_fail('Error writing tiff file header.')
+
+                             info=ppm_rc_write_tiff_strip(buf,bitsPerSampleW_,Nm(1),Nm(2),istrip-1,Nm(3))
+                             or_fail("libtiff_write_tiff_strip")
+                          ENDDO ! loop through slices
+#endif
+
+
+                          iopt=ppm_param_dealloc
+                          CALL ppm_alloc(buf,ldu,iopt,info)
+                          or_fail_dealloc('Could not deallocate C buffer.')
+                       CASE (32)
+                          iopt=ppm_param_alloc_fit
+                          CALL ppm_alloc(xp,Nm,iopt,info)
+                          or_fail_alloc('Failed to allocate C buffer.')
+
+
+#if   __DIME == __2D
+                          !Take each labeled regoin
+                          DO y=1,Nm(2)
+                             DO x=1,Nm(1)
+                                IF (wpi(x,y).EQ.0.OR.wpi(x,y).EQ.FORBIDDEN) THEN
+                                   xp(x,y)=0.0_MK
+                                ELSE
+                                   xp(x,y)=REAL(ABS(wpi(x,y)),MK)
+                                ENDIF
+                             ENDDO
+                          ENDDO
+
+                          info=ppm_rc_write_tiff_strip(xp,bitsPerSampleW_,Nm(1),Nm(2),0,1)
+                          or_fail("ppm_rc_write_tiff_strip")
+#elif __DIME == __3D
+                          DO istrip=1,Nm(3)
+                             !Take each labeled regoin
+                             DO y=1,Nm(2)
+                                DO x=1,Nm(1)
+                                   IF (wpi(x,y,istrip).EQ.0.OR.wpi(x,y,istrip).EQ.FORBIDDEN) THEN
+                                      xp(x,y)=0.0_MK
+                                   ELSE
+                                      xp(x,y)=REAL(ABS(wpi(x,y,istrip)),MK)
+                                   ENDIF
+                                ENDDO
+                             ENDDO
+
+                             info=ppm_rc_write_tiff_header(istrip-1,Nm(3))
+                             or_fail('Error writing tiff file header.')
+
+                             info=ppm_rc_write_tiff_strip(xp,bitsPerSampleW_,Nm(1),Nm(2),istrip-1,Nm(3))
+                             or_fail("libtiff_write_tiff_strip")
+                          ENDDO ! loop through slices
+#endif
+
+                          iopt=ppm_param_dealloc
+                          CALL ppm_alloc(xp,ldu,iopt,info)
+                          or_fail_dealloc('Could not deallocate C buffer.')
+                       END SELECT
+                    ELSE !(PRESENT(lcast))
+                       iopt=ppm_param_alloc_fit
+                       CALL ppm_alloc(buf,Nm,iopt,info)
+                       or_fail_alloc('Failed to allocate C buffer.')
+
+                       !The white pixel value in the TIFF image
+                       white=MERGE(255,65535,bitsPerSampleW_.EQ.8)
+                       mwhite=MERGE(205,60035,bitsPerSampleW_.EQ.8)
+                       rwhite=white-mwhite+1
+
+                       SELECT CASE (labelInit)
+                       CASE (.TRUE.)
+#if   __DIME == __2D
+                          !Take each labeled regoin
+                          DO y=1,Nm(2)
+                             DO x=1,Nm(1)
+                                IF (wpi(x,y).EQ.0.OR.wpi(x,y).EQ.FORBIDDEN) THEN
+                                   buf(x,y)=0
+                                ELSE
+                                   white=MOD(ABS(wpi(x,y)),mwhite)+rwhite
                                    buf(x,y)=white
                                 ENDIF
                              ENDDO
                           ENDDO
 
-                          info=ppm_rc_write_tiff_header(istrip-1,Nm(3))
-                          or_fail('Error writing tiff file header.')
+                          info=ppm_rc_write_tiff_strip(buf,bitsPerSampleW_,Nm(1),Nm(2),0,1)
+                          or_fail("ppm_rc_write_tiff_strip")
+#elif __DIME == __3D
+                          DO istrip=1,Nm(3)
+                             !Take each labeled regoin
+                             DO y=1,Nm(2)
+                                DO x=1,Nm(1)
+                                   IF (wpi(x,y,istrip).EQ.0.OR.wpi(x,y,istrip).EQ.FORBIDDEN) THEN
+                                      buf(x,y)=0
+                                   ELSE
+                                      white=MOD(ABS(wpi(x,y,istrip)),mwhite)+rwhite
+                                      buf(x,y)=white
+                                   ENDIF
+                                ENDDO
+                             ENDDO
 
-                          info=ppm_rc_write_tiff_strip(buf,8,Nm(1),Nm(2),istrip-1,Nm(3))
-                          or_fail("libtiff_write_tiff_strip")
-                       ENDDO ! loop through slices
+                             info=ppm_rc_write_tiff_header(istrip-1,Nm(3))
+                             or_fail('Error writing tiff file header.')
+
+                             info=ppm_rc_write_tiff_strip(buf,bitsPerSampleW_,Nm(1),Nm(2),istrip-1,Nm(3))
+                             or_fail("libtiff_write_tiff_strip")
+                          ENDDO ! loop through slices
 #endif
 
-                    CASE (.FALSE.)
+                       CASE (.FALSE.)
 #if   __DIME == __2D
-                       !Only take the boundary of each labeled regoin
-                       DO y=1,Nm(2)
-                          DO x=1,Nm(1)
-                             IF (DTYPE(wp_i)(x,y).LT.0) THEN
-!                                 white=MOD(ABS(DTYPE(wp_i)(x,y)),150)+106
-                                buf(x,y)=white
-                             ELSE
-                                buf(x,y)=0
-                             ENDIF
-                          ENDDO
-                       ENDDO
-
-                       info=ppm_rc_write_tiff_strip(buf,8,Nm(1),Nm(2),0,1)
-                       or_fail("ppm_rc_write_tiff_strip")
-#elif __DIME == __3D
-                       DO istrip=1,Nm(3)
                           !Only take the boundary of each labeled regoin
                           DO y=1,Nm(2)
                              DO x=1,Nm(1)
-                                IF (DTYPE(wp_i)(x,y,istrip).LT.0) THEN
-                                   white=MOD(ABS(DTYPE(wp_i)(x,y,istrip)),150)+106
+                                IF (wpi(x,y).LT.0) THEN
+!                                  white=MOD(ABS(wpi(x,y)),mwhite)+rwhite
                                    buf(x,y)=white
                                 ELSE
                                    buf(x,y)=0
@@ -824,15 +1078,37 @@
                              ENDDO
                           ENDDO
 
-                          info=ppm_rc_write_tiff_header(istrip-1,Nm(3))
-                          or_fail('Error writing tiff file header.')
+                          info=ppm_rc_write_tiff_strip(buf,bitsPerSampleW_,Nm(1),Nm(2),0,1)
+                          or_fail("ppm_rc_write_tiff_strip")
+#elif __DIME == __3D
+                          DO istrip=1,Nm(3)
+                             !Only take the boundary of each labeled regoin
+                             DO y=1,Nm(2)
+                                DO x=1,Nm(1)
+                                   IF (wpi(x,y,istrip).LT.0) THEN
+   !                                    white=MOD(ABS(wpi(x,y,istrip)),mwhite)+rwhite
+                                      buf(x,y)=white
+                                   ELSE
+                                      buf(x,y)=0
+                                   ENDIF
+                                ENDDO
+                             ENDDO
 
-                          info=ppm_rc_write_tiff_strip(buf,8,Nm(1),Nm(2),istrip-1,Nm(3))
-                          or_fail("libtiff_write_tiff_strip")
-                       ENDDO ! loop through slices
+                             info=ppm_rc_write_tiff_header(istrip-1,Nm(3))
+                             or_fail('Error writing tiff file header.')
+
+                             info=ppm_rc_write_tiff_strip(buf,bitsPerSampleW_,Nm(1),Nm(2),istrip-1,Nm(3))
+                             or_fail("libtiff_write_tiff_strip")
+                          ENDDO ! loop through slices
 #endif
 
-                    END SELECT !(labelInit)
+                       END SELECT !(labelInit)
+
+                       iopt=ppm_param_dealloc
+                       CALL ppm_alloc(buf,ldu,iopt,info)
+                       or_fail_dealloc('Could not deallocate C buffer.')
+
+                    ENDIF !(PRESENT(lcast))
 
                  CASE DEFAULT
                     fail("FieldIn data_type is not supported")
@@ -848,11 +1124,7 @@
 
         ENDDO sub_loop ! loop through subs
 
-        iopt=ppm_param_dealloc
-        CALL ppm_alloc(buf,ldu,iopt,info)
-        or_fail_dealloc('Could not deallocate C buffer.')
-
-        NULLIFY(DTYPE(wp_i),buf)
+        NULLIFY(wpi,buf)
 
         IF (ASSOCIATED(tmp_dinfo)) THEN
            CALL MeshOut_%field_ptr%remove(info,FieldIn)
@@ -914,7 +1186,6 @@
                 & ppm_error=ppm_error_fatal,exit_point=8888)
              ENDIF
           ENDIF
-
         8888 CONTINUE
           RETURN
         END SUBROUTINE

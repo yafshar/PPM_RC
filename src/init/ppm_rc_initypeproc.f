@@ -27,6 +27,47 @@
         END SUBROUTINE ImageSource_destroy
 
         ! Constructor
+        SUBROUTINE FFileImageSource_create(this,info,     &
+        &          ForegroundValue,BackgroundValue,size_, &
+        &          origin_,spacing_)
+
+          IMPLICIT NONE
+
+          CLASS(FFileImageSource)                         :: this
+
+          INTEGER,                         INTENT(  OUT) :: info
+          INTEGER,               OPTIONAL, INTENT(IN   ) :: ForegroundValue
+          INTEGER,               OPTIONAL, INTENT(IN   ) :: BackgroundValue
+          INTEGER, DIMENSION(:), OPTIONAL, INTENT(IN   ) :: size_
+          INTEGER, DIMENSION(:), OPTIONAL, INTENT(IN   ) :: origin_
+          INTEGER, DIMENSION(:), OPTIONAL, INTENT(IN   ) :: spacing_
+
+          start_subroutine("FFileImageSource_create")
+
+          IF (PRESENT(ForegroundValue)) THEN
+             IF (ForegroundValue.LT.0) THEN
+                this%m_ForegroundValue=1
+             ELSE
+                this%m_ForegroundValue=ForegroundValue
+             ENDIF
+          ELSE
+             this%m_ForegroundValue=1
+          ENDIF
+          IF (PRESENT(BackgroundValue)) THEN
+             IF (BackgroundValue.LT.0) THEN
+                this%m_BackgroundValue=0
+             ELSE
+                this%m_BackgroundValue=BackgroundValue
+             ENDIF
+          ELSE
+             this%m_BackgroundValue=0
+          ENDIF
+
+          end_subroutine()
+
+        END SUBROUTINE FFileImageSource_create
+
+        ! Constructor
         SUBROUTINE RectangularImageSource_create(this,info, &
         &          ForegroundValue,BackgroundValue,size_,   &
         &          origin_,spacing_)
@@ -246,13 +287,18 @@
           start_subroutine("CreateStructuringElement")
 
           SELECT CASE (vInitKind)
-          CASE (2)
+          CASE (e_fromfile)
+             check_true(<#LGT(TRIM(initimage),"")#>, &
+             & "The initimage filename is not given in the Ctrl file!")
+
+             ALLOCATE(FFileImageSource::this%elem,STAT=info)
+          CASE (e_rect)
              ALLOCATE(RectangularImageSource::this%elem,STAT=info)
-          CASE (3)
+          CASE (e_sphere)
              ALLOCATE(SphereImageSource::this%elem,STAT=info)
-          CASE (4)
+          CASE (e_otsu)
              ALLOCATE(OtsuImageSource::this%elem,STAT=info)
-          CASE (6)
+          CASE (e_localmax)
              ALLOCATE(SphereImageSource::this%elem,STAT=info)
           CASE DEFAULT
              fail("This init mode has not been implemented yet!", &

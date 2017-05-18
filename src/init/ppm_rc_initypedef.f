@@ -16,6 +16,12 @@
           PROCEDURE :: destroy => ImageSource_destroy
         END TYPE ImageSource
 
+        TYPE,EXTENDS(ImageSource) :: FFileImageSource
+        !m_Size is the rectangle length
+        CONTAINS
+          PROCEDURE :: create => FFileImageSource_create
+        END TYPE FFileImageSource
+
         TYPE,EXTENDS(ImageSource) :: RectangularImageSource
         !m_Size is the rectangle length
         CONTAINS
@@ -32,7 +38,6 @@
         CONTAINS
           PROCEDURE :: create => OtsuImageSource_create
         END TYPE OtsuImageSource
-
 
         ! Base class for initialization functions for
         ! the Region Competition optimizer and sampler

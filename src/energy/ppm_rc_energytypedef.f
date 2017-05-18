@@ -64,7 +64,9 @@
           PROCEDURE :: lalloc  => lalloc_RCExternalEnergyBaseClass
           PROCEDURE :: galloc  => galloc_RCExternalEnergyBaseClass
           PROCEDURE :: grow    => grow_RCExternalEnergyBaseClass
+          PROCEDURE :: shrink  => shrink_RCExternalEnergyBaseClass
           PROCEDURE :: destroy => destroy_RCExternalEnergyBaseClass
+          PROCEDURE :: size    => size_RCExternalEnergyBaseClass
 
           PROCEDURE(destroy_RCExternalEnergyBaseClass_), DEFERRED :: destroy_
 
@@ -130,7 +132,7 @@
           PROCEDURE :: UpdateStatistics
 
           PROCEDURE :: RemoveNotSignificantRegions
-          procedure :: RemoveFGRegion
+          PROCEDURE :: RemoveFGRegion
         END TYPE RCExternalEnergyBaseClass
 
         TYPE, EXTENDS(RCEnergyBaseClass), ABSTRACT :: RCInternalEnergyBaseClass
@@ -180,6 +182,8 @@
           &            E_ContourLengthApprox_PrepareEnergyCalculation_2d
           PROCEDURE :: PrepareEnergyCalculation_3d =>  &
           &            E_ContourLengthApprox_PrepareEnergyCalculation_3d
+          !!! Method is used to prepare energy functions.
+          !!! It is called only once in the beginning of the filter.
 
           PROCEDURE :: EvaluateEnergyDifference_2d_ => &
           &            E_ContourLengthApprox_EvaluateEnergyDifference_2d
@@ -272,6 +276,8 @@
           &            E_PS_PrepareEnergyCalculation_2d
           PROCEDURE :: PrepareEnergyCalculation_3d => &
           &            E_PS_PrepareEnergyCalculation_3d
+          !!! Method is used to prepare energy functions.
+          !!! It is called only once in the beginning of the filter.
 
           PROCEDURE :: EvaluateEnergyDifference_2d_ =>  &
           &            E_PS_EvaluateEnergyDifference_2d
@@ -307,6 +313,8 @@
           &            E_PSGaussian_PrepareEnergyCalculation_2d
           PROCEDURE :: PrepareEnergyCalculation_3d => &
           &            E_PSGaussian_PrepareEnergyCalculation_3d
+          !!! Method is used to prepare energy functions.
+          !!! It is called only once in the beginning of the filter.
 
           PROCEDURE :: EvaluateEnergyDifference_2d_ =>  &
           &            E_PSGaussian_EvaluateEnergyDifference_2d
@@ -336,6 +344,8 @@
           &            E_PSPoisson_PrepareEnergyCalculation_2d
           PROCEDURE :: PrepareEnergyCalculation_3d => &
           &            E_PSPoisson_PrepareEnergyCalculation_3d
+          !!! Method is used to prepare energy functions.
+          !!! It is called only once in the beginning of the filter.
 
           PROCEDURE :: EvaluateEnergyDifference_2d_ =>  &
           &            E_PSPoisson_EvaluateEnergyDifference_2d
@@ -377,22 +387,22 @@
         !----------------------------------------------------------------------
         INTERFACE
           ! Constructor
-          SUBROUTINE RCEnergyBaseClass_Set(this,RegionMergingThreshold_)
+          SUBROUTINE RCEnergyBaseClass_Set(this,RegionMergingThresholdIn)
             IMPORT                   :: RCEnergyBaseClass
             IMPORT                   :: MK
             IMPLICIT NONE
             CLASS(RCEnergyBaseClass) :: this
-            REAL(MK),  INTENT(IN   ) :: RegionMergingThreshold_
+            REAL(MK),  INTENT(IN   ) :: RegionMergingThresholdIn
           END SUBROUTINE RCEnergyBaseClass_Set
 
           FUNCTION RC_EvaluateEnergyDifference_2d(this, &
-          &        image_,labels_,coord,oldlabel,newlabel,e_merge)
+          &        imageIn,labelsIn,coord,oldlabel,newlabel,e_merge)
             IMPORT                                              :: RCEnergyBaseClass
             IMPORT                                              :: MK
             IMPLICIT NONE
             CLASS(RCEnergyBaseClass)                            :: this
-            REAL(MK), CONTIGUOUS, DIMENSION(:,:), POINTER       :: image_
-            INTEGER,  CONTIGUOUS, DIMENSION(:,:), POINTER       :: labels_
+            REAL(MK), CONTIGUOUS, DIMENSION(:,:), POINTER       :: imageIn
+            INTEGER,  CONTIGUOUS, DIMENSION(:,:), POINTER       :: labelsIn
             INTEGER,              DIMENSION(:),   INTENT(IN   ) :: coord
             INTEGER,                              INTENT(IN   ) :: oldlabel
             INTEGER,                              INTENT(IN   ) :: newlabel
@@ -401,13 +411,13 @@
           END FUNCTION RC_EvaluateEnergyDifference_2d
 
           FUNCTION RC_EvaluateEnergyDifference_3d(this, &
-          &        image_,labels_,coord,oldlabel,newlabel,e_merge)
+          &        imageIn,labelsIn,coord,oldlabel,newlabel,e_merge)
             IMPORT                                                :: RCEnergyBaseClass
             IMPORT                                                :: MK
             IMPLICIT NONE
             CLASS(RCEnergyBaseClass)                              :: this
-            REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
-            INTEGER,  CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: labels_
+            REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
+            INTEGER,  CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: labelsIn
             INTEGER,              DIMENSION(:),     INTENT(IN   ) :: coord
             INTEGER,                                INTENT(IN   ) :: oldlabel
             INTEGER,                                INTENT(IN   ) :: newlabel
@@ -415,15 +425,15 @@
             REAL(MK)                               :: RC_EvaluateEnergyDifference_3d
           END FUNCTION RC_EvaluateEnergyDifference_3d
 
-          FUNCTION RCExt_EvaluateEnergyDifference_2d_(  &
-          &        this,image_,labels_,coord,oldlabel,  &
+          FUNCTION RCExt_EvaluateEnergyDifference_2d_(    &
+          &        this,imageIn,labelsIn,coord,oldlabel,  &
           &        newlabel,oldlabel_region,newlabel_region)
             IMPORT                                              :: RCExternalEnergyBaseClass
             IMPORT                                              :: MK
             IMPLICIT NONE
             CLASS(RCExternalEnergyBaseClass)                    :: this
-            REAL(MK), CONTIGUOUS, DIMENSION(:,:), POINTER       :: image_
-            INTEGER,  CONTIGUOUS, DIMENSION(:,:), POINTER       :: labels_
+            REAL(MK), CONTIGUOUS, DIMENSION(:,:), POINTER       :: imageIn
+            INTEGER,  CONTIGUOUS, DIMENSION(:,:), POINTER       :: labelsIn
             INTEGER,              DIMENSION(:),   INTENT(IN   ) :: coord
             INTEGER,                              INTENT(IN   ) :: oldlabel
             INTEGER,                              INTENT(IN   ) :: newlabel
@@ -432,15 +442,15 @@
             REAL(MK)                                            :: RCExt_EvaluateEnergyDifference_2d_
           END FUNCTION RCExt_EvaluateEnergyDifference_2d_
 
-          FUNCTION RCExt_EvaluateEnergyDifference_3d_( &
-          &        this,image_,labels_,coord,oldlabel, &
+          FUNCTION RCExt_EvaluateEnergyDifference_3d_(   &
+          &        this,imageIn,labelsIn,coord,oldlabel, &
           &        newlabel,oldlabel_region,newlabel_region)
             IMPORT                                                :: RCExternalEnergyBaseClass
             IMPORT                                                :: MK
             IMPLICIT NONE
             CLASS(RCExternalEnergyBaseClass)                      :: this
-            REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
-            INTEGER,  CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: labels_
+            REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
+            INTEGER,  CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: labelsIn
             INTEGER,              DIMENSION(:),     INTENT(IN   ) :: coord
             INTEGER,                                INTENT(IN   ) :: oldlabel
             INTEGER,                                INTENT(IN   ) :: newlabel
@@ -457,13 +467,13 @@
           END SUBROUTINE destroy_RCExternalEnergyBaseClass_
 
           FUNCTION RCInt_EvaluateEnergyDifference_2d_(this, &
-          &        image_,labels_,coord,oldlabel,newlabel)
+          &        imageIn,labelsIn,coord,oldlabel,newlabel)
             IMPORT                                              :: RCInternalEnergyBaseClass
             IMPORT                                              :: MK
             IMPLICIT NONE
             CLASS(RCInternalEnergyBaseClass)                    :: this
-            REAL(MK), CONTIGUOUS, DIMENSION(:,:), POINTER       :: image_
-            INTEGER,  CONTIGUOUS, DIMENSION(:,:), POINTER       :: labels_
+            REAL(MK), CONTIGUOUS, DIMENSION(:,:), POINTER       :: imageIn
+            INTEGER,  CONTIGUOUS, DIMENSION(:,:), POINTER       :: labelsIn
             INTEGER,              DIMENSION(:),   INTENT(IN   ) :: coord
             INTEGER,                              INTENT(IN   ) :: oldlabel
             INTEGER,                              INTENT(IN   ) :: newlabel
@@ -471,13 +481,13 @@
           END FUNCTION RCInt_EvaluateEnergyDifference_2d_
 
           FUNCTION RCInt_EvaluateEnergyDifference_3d_(this, &
-          &        image_,labels_,coord,oldlabel,newlabel)
+          &        imageIn,labelsIn,coord,oldlabel,newlabel)
             IMPORT                                                :: RCInternalEnergyBaseClass
             IMPORT                                                :: MK
             IMPLICIT NONE
             CLASS(RCInternalEnergyBaseClass)                      :: this
-            REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: image_
-            INTEGER,  CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: labels_
+            REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: imageIn
+            INTEGER,  CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: labelsIn
             INTEGER,              DIMENSION(:),     INTENT(IN   ) :: coord
             INTEGER,                                INTENT(IN   ) :: oldlabel
             INTEGER,                                INTENT(IN   ) :: newlabel

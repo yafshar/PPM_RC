@@ -36,12 +36,8 @@
 using namespace boost;
 
 // create a typedef for the Graph type
-typedef boost::adjacency_list <
-  boost::vecS            // edge list
-, boost::vecS            // vertex list
-, boost::undirectedS     // directedness
-> Graph;
-
+typedef boost::adjacency_list <boost::vecS, boost::vecS, boost::undirectedS> Graph;
+//                             edge list,   vertex list, directedness
 typedef graph_traits<Graph>::vertices_size_type VertexIndex;
 typedef VertexIndex* Rank;
 typedef graph_traits<Graph>::vertex_descriptor Vertex;

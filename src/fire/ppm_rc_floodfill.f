@@ -46,7 +46,7 @@
       !  References   :
       !-------------------------------------------------------------------------
       SUBROUTINE DTYPE(ppm_rc_floodFillScanline)(labelled, &
-      &          labels_,Nm_,coord,oldlabel,newlabel,Sm,info)
+      &          labelsIn,NmIn,coord,oldlabel,newlabel,Sm,info)
         !-------------------------------------------------------------------------
         !  Modules
         !-------------------------------------------------------------------------
@@ -56,11 +56,11 @@
         !-------------------------------------------------------------------------
         INTEGER, DIMENSION(:,:),   ALLOCATABLE   :: labelled
 #if   __DIME == __2D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER       :: labels_
+        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER       :: labelsIn
 #elif __DIME == __3D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: labels_
+        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: labelsIn
 #endif
-        INTEGER, DIMENSION(:),     POINTER       :: Nm_
+        INTEGER, DIMENSION(:),     POINTER       :: NmIn
         !!! number of mesh points
         INTEGER, DIMENSION(:),     INTENT(IN   ) :: coord
         INTEGER,                   INTENT(IN   ) :: oldlabel
@@ -112,15 +112,15 @@
            GOTO 8888
         ENDIF
 
-        Nm=Nm_(1:__DIME)+MERGE(1,0,Sm.EQ.0)
+        Nm=NmIn(1:__DIME)+MERGE(1,0,Sm.EQ.0)
         Nmm=Nm-1
 
         Smp=Sm+1
 
 #if   __DIME == __2D
-        IF (ABS(labels_(coord(1),coord(2))).EQ.oldlabel) THEN
+        IF (ABS(labelsIn(coord(1),coord(2))).EQ.oldlabel) THEN
 #elif __DIME == __3D
-        IF (ABS(labels_(coord(1),coord(2),coord(3))).EQ.oldlabel) THEN
+        IF (ABS(labelsIn(coord(1),coord(2),coord(3))).EQ.oldlabel) THEN
 #endif
            IF (ALLOCATED(labelled)) THEN
               nsize=SIZE(labelled,DIM=2)
@@ -130,9 +130,9 @@
               or_fail_alloc("labelled")
            ENDIF
 #if   __DIME == __2D
-        ELSE IF (ABS(labels_(coord(1),coord(2))).EQ.newlabel) THEN
+        ELSE IF (ABS(labelsIn(coord(1),coord(2))).EQ.newlabel) THEN
 #elif __DIME == __3D
-        ELSE IF (ABS(labels_(coord(1),coord(2),coord(3))).EQ.newlabel) THEN
+        ELSE IF (ABS(labelsIn(coord(1),coord(2),coord(3))).EQ.newlabel) THEN
 #endif
            IF (ALLOCATED(labelled)) THEN
               DEALLOCATE(labelled,STAT=info)
@@ -142,9 +142,9 @@
            ALLOCATE(labelled(__DIME,nsize),STAT=info)
            or_fail_alloc("labelled")
 #if   __DIME == __2D
-           labels_(coord(1),coord(2))=SIGN(oldlabel,labels_(coord(1),coord(2)))
+           labelsIn(coord(1),coord(2))=SIGN(oldlabel,labelsIn(coord(1),coord(2)))
 #elif __DIME == __3D
-           labels_(coord(1),coord(2),coord(3))=SIGN(oldlabel,labels_(coord(1),coord(2),coord(3)))
+           labelsIn(coord(1),coord(2),coord(3))=SIGN(oldlabel,labelsIn(coord(1),coord(2),coord(3)))
 #endif
         ENDIF
 
@@ -165,12 +165,12 @@
 
 #if   __DIME == __2D
               DO xs=ld(1),Sm,-1
-                 IF (ABS(labels_(xs,ld(2))).NE.oldlabel) EXIT
+                 IF (ABS(labelsIn(xs,ld(2))).NE.oldlabel) EXIT
               ENDDO
-              xs=MERGE(Sm,xs+1,xs.EQ.Sm.AND.ABS(labels_(Sm,ld(2))).EQ.oldlabel)
+              xs=MERGE(Sm,xs+1,xs.EQ.Sm.AND.ABS(labelsIn(Sm,ld(2))).EQ.oldlabel)
 
               DO xe=ld(1)+1,Nm(1)
-                 IF (ABS(labels_(xe,ld(2))).NE.oldlabel) EXIT
+                 IF (ABS(labelsIn(xe,ld(2))).NE.oldlabel) EXIT
               ENDDO
               xe=xe-1
 
@@ -192,49 +192,49 @@
               north=.FALSE.
               IF      (ld(2).EQ.Sm) THEN
                  DO xx=xs,xe
-                    labels_(xx,ld(2))=SIGN(newlabel,labels_(xx,ld(2)))
+                    labelsIn(xx,ld(2))=SIGN(newlabel,labelsIn(xx,ld(2)))
                     nb=nb+1
                     labelled(1,nb)=xx
                     labelled(2,nb)=ld(2)
 
-                    IF (.NOT.north.AND.ABS(labels_(xx,Smp)).EQ.oldlabel) THEN
+                    IF (.NOT.north.AND.ABS(labelsIn(xx,Smp)).EQ.oldlabel) THEN
                        CALL seedlst%add(xx,Smp)
                        north=.TRUE.
-                    ELSE IF (north.AND.ABS(labels_(xx,Smp)).NE.oldlabel) THEN
+                    ELSE IF (north.AND.ABS(labelsIn(xx,Smp)).NE.oldlabel) THEN
                        north=.FALSE.
                     ENDIF
                  ENDDO !xx=xs,xe
               ELSE IF (ld(2).EQ.Nm(2)) THEN
                  DO xx=xs,xe
-                    labels_(xx,ld(2))=SIGN(newlabel,labels_(xx,ld(2)))
+                    labelsIn(xx,ld(2))=SIGN(newlabel,labelsIn(xx,ld(2)))
                     nb=nb+1
                     labelled(1,nb)=xx
                     labelled(2,nb)=ld(2)
 
-                    IF (.NOT.south.AND.ABS(labels_(xx,Nmm(2))).EQ.oldlabel) THEN
+                    IF (.NOT.south.AND.ABS(labelsIn(xx,Nmm(2))).EQ.oldlabel) THEN
                        CALL seedlst%add(xx,Nmm(2))
                        south=.TRUE.
-                    ELSE IF (south.AND.ABS(labels_(xx,Nmm(2))).NE.oldlabel) THEN
+                    ELSE IF (south.AND.ABS(labelsIn(xx,Nmm(2))).NE.oldlabel) THEN
                        south=.FALSE.
                     ENDIF
                  ENDDO !xx=xs,xe
               ELSE
                  DO xx=xs,xe
-                    labels_(xx,ld(2))=SIGN(newlabel,labels_(xx,ld(2)))
+                    labelsIn(xx,ld(2))=SIGN(newlabel,labelsIn(xx,ld(2)))
                     nb=nb+1
                     labelled(1,nb)=xx
                     labelled(2,nb)=ld(2)
 
-                    IF (.NOT.south.AND.ABS(labels_(xx,ld(2)-1)).EQ.oldlabel) THEN
+                    IF (.NOT.south.AND.ABS(labelsIn(xx,ld(2)-1)).EQ.oldlabel) THEN
                        CALL seedlst%add(xx,ld(2)-1)
                        south=.TRUE.
-                    ELSE IF (south.AND.ABS(labels_(xx,ld(2)-1)).NE.oldlabel) THEN
+                    ELSE IF (south.AND.ABS(labelsIn(xx,ld(2)-1)).NE.oldlabel) THEN
                        south=.FALSE.
                     ENDIF
-                    IF (.NOT.north.AND.ABS(labels_(xx,ld(2)+1)).EQ.oldlabel) THEN
+                    IF (.NOT.north.AND.ABS(labelsIn(xx,ld(2)+1)).EQ.oldlabel) THEN
                        CALL seedlst%add(xx,ld(2)+1)
                        north=.TRUE.
-                    ELSE IF (north.AND.ABS(labels_(xx,ld(2)+1)).NE.oldlabel) THEN
+                    ELSE IF (north.AND.ABS(labelsIn(xx,ld(2)+1)).NE.oldlabel) THEN
                        north=.FALSE.
                     ENDIF
                  ENDDO !xx=xs,xe
@@ -251,12 +251,12 @@
                  ENDIF
 
                  DO xs=ldi(1),Sm,-1
-                    IF (ABS(labels_(xs,ldi(2),ldi(3))).NE.oldlabel) EXIT
+                    IF (ABS(labelsIn(xs,ldi(2),ldi(3))).NE.oldlabel) EXIT
                  ENDDO
-                 xs=MERGE(Sm,xs+1,xs.EQ.Sm.AND.ABS(labels_(Sm,ldi(2),ldi(3))).EQ.oldlabel)
+                 xs=MERGE(Sm,xs+1,xs.EQ.Sm.AND.ABS(labelsIn(Sm,ldi(2),ldi(3))).EQ.oldlabel)
 
                  DO xe=ldi(1)+1,Nm(1)
-                    IF (ABS(labels_(xe,ldi(2),ldi(3))).NE.oldlabel) EXIT
+                    IF (ABS(labelsIn(xe,ldi(2),ldi(3))).NE.oldlabel) EXIT
                  ENDDO
                  xe=xe-1
 
@@ -282,70 +282,70 @@
                  IF      (ldi(3).EQ.Sm) THEN
                     IF      (ldi(2).EQ.Sm) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
                           nb=nb+1
                           labelled(1,nb)=xx
                           labelled(2:3,nb)=ldi(2:3)
 
-                          IF (.NOT.north.AND.ABS(labels_(xx,Smp,Sm)).EQ.oldlabel) THEN
+                          IF (.NOT.north.AND.ABS(labelsIn(xx,Smp,Sm)).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,Smp,Sm)
                              north=.TRUE.
-                          ELSE IF (north.AND.ABS(labels_(xx,Smp,Sm)).NE.oldlabel) THEN
+                          ELSE IF (north.AND.ABS(labelsIn(xx,Smp,Sm)).NE.oldlabel) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.top.AND.ABS(labels_(xx,Sm,Smp)).EQ.oldlabel) THEN
+                          IF (.NOT.top.AND.ABS(labelsIn(xx,Sm,Smp)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,Sm,Smp)
                              top=.TRUE.
-                          ELSE IF (top.AND.ABS(labels_(xx,Sm,Smp)).NE.oldlabel) THEN
+                          ELSE IF (top.AND.ABS(labelsIn(xx,Sm,Smp)).NE.oldlabel) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE IF (ldi(2).EQ.Nm(2)) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
                           nb=nb+1
                           labelled(1,nb)=xx
                           labelled(2:3,nb)=ldi(2:3)
 
-                          IF (.NOT.south.AND.ABS(labels_(xx,Nmm(2),ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.south.AND.ABS(labelsIn(xx,Nmm(2),ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,Nmm(2),ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.ABS(labels_(xx,Nmm(2),ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (south.AND.ABS(labelsIn(xx,Nmm(2),ldi(3))).NE.oldlabel) THEN
                              south=.FALSE.
                           ENDIF
 
-                          IF (.NOT.top.AND.ABS(labels_(xx,ldi(2),Smp)).EQ.oldlabel) THEN
+                          IF (.NOT.top.AND.ABS(labelsIn(xx,ldi(2),Smp)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),Smp)
                              top=.TRUE.
-                          ELSE IF (top.AND.ABS(labels_(xx,ldi(2),Smp)).NE.oldlabel) THEN
+                          ELSE IF (top.AND.ABS(labelsIn(xx,ldi(2),Smp)).NE.oldlabel) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
                           nb=nb+1
                           labelled(1,nb)=xx
                           labelled(2:3,nb)=ldi(2:3)
 
-                          IF (.NOT.south.AND.ABS(labels_(xx,ldi(2)-1,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.south.AND.ABS(labelsIn(xx,ldi(2)-1,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,ldi(2)-1,ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.ABS(labels_(xx,ldi(2)-1,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (south.AND.ABS(labelsIn(xx,ldi(2)-1,ldi(3))).NE.oldlabel) THEN
                              south=.FALSE.
                           ENDIF
-                          IF (.NOT.north.AND.ABS(labels_(xx,ldi(2)+1,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.north.AND.ABS(labelsIn(xx,ldi(2)+1,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,ldi(2)+1,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.ABS(labels_(xx,ldi(2)+1,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (north.AND.ABS(labelsIn(xx,ldi(2)+1,ldi(3))).NE.oldlabel) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.top.AND.ABS(labels_(xx,ldi(2),Smp)).EQ.oldlabel) THEN
+                          IF (.NOT.top.AND.ABS(labelsIn(xx,ldi(2),Smp)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),Smp)
                              top=.TRUE.
-                          ELSE IF (top.AND.ABS(labels_(xx,ldi(2),Smp)).NE.oldlabel) THEN
+                          ELSE IF (top.AND.ABS(labelsIn(xx,ldi(2),Smp)).NE.oldlabel) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
@@ -353,70 +353,70 @@
                  ELSE IF (ldi(3).EQ.Nm(3)) THEN
                     IF      (ldi(2).EQ.Sm) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
                           nb=nb+1
                           labelled(1,nb)=xx
                           labelled(2:3,nb)=ldi(2:3)
 
-                          IF (.NOT.north.AND.ABS(labels_(xx,Smp,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.north.AND.ABS(labelsIn(xx,Smp,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,Smp,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.ABS(labels_(xx,Smp,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (north.AND.ABS(labelsIn(xx,Smp,ldi(3))).NE.oldlabel) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.ABS(labels_(xx,ldi(2),Nmm(3))).EQ.oldlabel) THEN
+                          IF (.NOT.bottom.AND.ABS(labelsIn(xx,ldi(2),Nmm(3))).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),Nmm(3))
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.ABS(labels_(xx,ldi(2),Nmm(3))).NE.oldlabel) THEN
+                          ELSE IF (bottom.AND.ABS(labelsIn(xx,ldi(2),Nmm(3))).NE.oldlabel) THEN
                              bottom=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE IF (ldi(2).EQ.Nm(2)) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
                           nb=nb+1
                           labelled(1,nb)=xx
                           labelled(2:3,nb)=ldi(2:3)
 
-                          IF (.NOT.south.AND.ABS(labels_(xx,Nmm(2),ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.south.AND.ABS(labelsIn(xx,Nmm(2),ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,Nmm(2),ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.ABS(labels_(xx,Nmm(2),ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (south.AND.ABS(labelsIn(xx,Nmm(2),ldi(3))).NE.oldlabel) THEN
                              south=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.ABS(labels_(xx,ldi(2),Nmm(3))).EQ.oldlabel) THEN
+                          IF (.NOT.bottom.AND.ABS(labelsIn(xx,ldi(2),Nmm(3))).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),Nmm(3))
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.ABS(labels_(xx,ldi(2),Nmm(3))).NE.oldlabel) THEN
+                          ELSE IF (bottom.AND.ABS(labelsIn(xx,ldi(2),Nmm(3))).NE.oldlabel) THEN
                              bottom=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
                           nb=nb+1
                           labelled(1,nb)=xx
                           labelled(2:3,nb)=ldi(2:3)
 
-                          IF (.NOT.south.AND.ABS(labels_(xx,ldi(2)-1,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.south.AND.ABS(labelsIn(xx,ldi(2)-1,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,ldi(2)-1,ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.ABS(labels_(xx,ldi(2)-1,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (south.AND.ABS(labelsIn(xx,ldi(2)-1,ldi(3))).NE.oldlabel) THEN
                              south=.FALSE.
                           ENDIF
-                          IF (.NOT.north.AND.ABS(labels_(xx,ldi(2)+1,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.north.AND.ABS(labelsIn(xx,ldi(2)+1,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,ldi(2)+1,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.ABS(labels_(xx,ldi(2)+1,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (north.AND.ABS(labelsIn(xx,ldi(2)+1,ldi(3))).NE.oldlabel) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.ABS(labels_(xx,ldi(2),Nmm(3))).EQ.oldlabel) THEN
+                          IF (.NOT.bottom.AND.ABS(labelsIn(xx,ldi(2),Nmm(3))).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),Nmm(3))
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.ABS(labels_(xx,ldi(2),Nmm(3))).NE.oldlabel) THEN
+                          ELSE IF (bottom.AND.ABS(labelsIn(xx,ldi(2),Nmm(3))).NE.oldlabel) THEN
                              bottom=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
@@ -424,88 +424,88 @@
                  ELSE
                     IF      (ldi(2).EQ.Sm) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
                           nb=nb+1
                           labelled(1,nb)=xx
                           labelled(2:3,nb)=ldi(2:3)
 
-                          IF (.NOT.north.AND.ABS(labels_(xx,Smp,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.north.AND.ABS(labelsIn(xx,Smp,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,Smp,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.ABS(labels_(xx,Smp,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (north.AND.ABS(labelsIn(xx,Smp,ldi(3))).NE.oldlabel) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.ABS(labels_(xx,ldi(2),ldi(3)-1)).EQ.oldlabel) THEN
+                          IF (.NOT.bottom.AND.ABS(labelsIn(xx,ldi(2),ldi(3)-1)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)-1)
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.ABS(labels_(xx,ldi(2),ldi(3)-1)).NE.oldlabel) THEN
+                          ELSE IF (bottom.AND.ABS(labelsIn(xx,ldi(2),ldi(3)-1)).NE.oldlabel) THEN
                              bottom=.FALSE.
                           ENDIF
-                          IF (.NOT.top.AND.ABS(labels_(xx,ldi(2),ldi(3)+1)).EQ.oldlabel) THEN
+                          IF (.NOT.top.AND.ABS(labelsIn(xx,ldi(2),ldi(3)+1)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)+1)
                              top=.TRUE.
-                          ELSE IF (top.AND.ABS(labels_(xx,ldi(2),ldi(3)+1)).NE.oldlabel) THEN
+                          ELSE IF (top.AND.ABS(labelsIn(xx,ldi(2),ldi(3)+1)).NE.oldlabel) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE IF (ldi(2).EQ.Nm(2)) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
                           nb=nb+1
                           labelled(1,nb)=xx
                           labelled(2:3,nb)=ldi(2:3)
 
-                          IF (.NOT.south.AND.ABS(labels_(xx,Nmm(2),ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.south.AND.ABS(labelsIn(xx,Nmm(2),ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,Nmm(2),ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.ABS(labels_(xx,Nmm(2),ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (south.AND.ABS(labelsIn(xx,Nmm(2),ldi(3))).NE.oldlabel) THEN
                              south=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.ABS(labels_(xx,ldi(2),ldi(3)-1)).EQ.oldlabel) THEN
+                          IF (.NOT.bottom.AND.ABS(labelsIn(xx,ldi(2),ldi(3)-1)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)-1)
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.ABS(labels_(xx,ldi(2),ldi(3)-1)).NE.oldlabel) THEN
+                          ELSE IF (bottom.AND.ABS(labelsIn(xx,ldi(2),ldi(3)-1)).NE.oldlabel) THEN
                              bottom=.FALSE.
                           ENDIF
-                          IF (.NOT.top.AND.ABS(labels_(xx,ldi(2),ldi(3)+1)).EQ.oldlabel) THEN
+                          IF (.NOT.top.AND.ABS(labelsIn(xx,ldi(2),ldi(3)+1)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)+1)
                              top=.TRUE.
-                          ELSE IF (top.AND.ABS(labels_(xx,ldi(2),ldi(3)+1)).NE.oldlabel) THEN
+                          ELSE IF (top.AND.ABS(labelsIn(xx,ldi(2),ldi(3)+1)).NE.oldlabel) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
                           nb=nb+1
                           labelled(1,nb)=xx
                           labelled(2:3,nb)=ldi(2:3)
 
-                          IF (.NOT.south.AND.ABS(labels_(xx,ldi(2)-1,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.south.AND.ABS(labelsIn(xx,ldi(2)-1,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,ldi(2)-1,ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.ABS(labels_(xx,ldi(2)-1,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (south.AND.ABS(labelsIn(xx,ldi(2)-1,ldi(3))).NE.oldlabel) THEN
                              south=.FALSE.
                           ENDIF
-                          IF (.NOT.north.AND.ABS(labels_(xx,ldi(2)+1,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.north.AND.ABS(labelsIn(xx,ldi(2)+1,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,ldi(2)+1,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.ABS(labels_(xx,ldi(2)+1,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (north.AND.ABS(labelsIn(xx,ldi(2)+1,ldi(3))).NE.oldlabel) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.ABS(labels_(xx,ldi(2),ldi(3)-1)).EQ.oldlabel) THEN
+                          IF (.NOT.bottom.AND.ABS(labelsIn(xx,ldi(2),ldi(3)-1)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)-1)
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.ABS(labels_(xx,ldi(2),ldi(3)-1)).NE.oldlabel) THEN
+                          ELSE IF (bottom.AND.ABS(labelsIn(xx,ldi(2),ldi(3)-1)).NE.oldlabel) THEN
                              bottom=.FALSE.
                           ENDIF
-                          IF (.NOT.top.AND.ABS(labels_(xx,ldi(2),ldi(3)+1)).EQ.oldlabel) THEN
+                          IF (.NOT.top.AND.ABS(labelsIn(xx,ldi(2),ldi(3)+1)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)+1)
                              top=.TRUE.
-                          ELSE IF (top.AND.ABS(labels_(xx,ldi(2),ldi(3)+1)).NE.oldlabel) THEN
+                          ELSE IF (top.AND.ABS(labelsIn(xx,ldi(2),ldi(3)+1)).NE.oldlabel) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
@@ -563,8 +563,8 @@
       !  MOSAIC Group
       !  Author           - y.afshar           April   2014
       !-------------------------------------------------------------------------
-      SUBROUTINE DTYPE(ppm_rc_floodFillScanline_)(labels_, &
-      &          Nm_,coord,oldlabel,newlabel,Sm,info)
+      SUBROUTINE DTYPE(ppm_rc_floodFillScanline_)(labelsIn, &
+      &          NmIn,coord,oldlabel,newlabel,Sm,info)
         !-------------------------------------------------------------------------
         !  Modules
         !-------------------------------------------------------------------------
@@ -573,11 +573,11 @@
         !  Includes
         !-------------------------------------------------------------------------
 #if   __DIME == __2D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER       :: labels_
+        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER       :: labelsIn
 #elif __DIME == __3D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: labels_
+        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: labelsIn
 #endif
-        INTEGER, DIMENSION(:),     POINTER       :: Nm_
+        INTEGER, DIMENSION(:),     POINTER       :: NmIn
         !!! number of mesh points
         INTEGER, DIMENSION(:),     INTENT(IN   ) :: coord
         INTEGER,                   INTENT(IN   ) :: oldlabel
@@ -615,17 +615,17 @@
 
         IF (newlabel.EQ.oldlabel) GOTO 9999
 
-        Nm=Nm_(1:__DIME)+MERGE(1,0,Sm.EQ.0)
+        Nm=NmIn(1:__DIME)+MERGE(1,0,Sm.EQ.0)
         Nmm=Nm-1
 
         Smp=Sm+1
 
 #if   __DIME == __2D
-        IF (ABS(labels_(coord(1),coord(2))).EQ.newlabel) THEN
-           labels_(coord(1),coord(2))=SIGN(oldlabel,labels_(coord(1),coord(2)))
+        IF (ABS(labelsIn(coord(1),coord(2))).EQ.newlabel) THEN
+           labelsIn(coord(1),coord(2))=SIGN(oldlabel,labelsIn(coord(1),coord(2)))
 #elif __DIME == __3D
-        IF (ABS(labels_(coord(1),coord(2),coord(3))).EQ.newlabel) THEN
-           labels_(coord(1),coord(2),coord(3))=SIGN(oldlabel,labels_(coord(1),coord(2),coord(3)))
+        IF (ABS(labelsIn(coord(1),coord(2),coord(3))).EQ.newlabel) THEN
+           labelsIn(coord(1),coord(2),coord(3))=SIGN(oldlabel,labelsIn(coord(1),coord(2),coord(3)))
 #endif
         ENDIF
 
@@ -646,12 +646,12 @@
 
 #if   __DIME == __2D
               DO xs=ld(1),Sm,-1
-                 IF (ABS(labels_(xs,ld(2))).NE.oldlabel) EXIT
+                 IF (ABS(labelsIn(xs,ld(2))).NE.oldlabel) EXIT
               ENDDO
-              xs=MERGE(Sm,xs+1,xs.EQ.Sm.AND.ABS(labels_(Sm,ld(2))).EQ.oldlabel)
+              xs=MERGE(Sm,xs+1,xs.EQ.Sm.AND.ABS(labelsIn(Sm,ld(2))).EQ.oldlabel)
 
               DO xe=ld(1)+1,Nm(1)
-                 IF (ABS(labels_(xe,ld(2))).NE.oldlabel) EXIT
+                 IF (ABS(labelsIn(xe,ld(2))).NE.oldlabel) EXIT
               ENDDO
               xe=xe-1
 
@@ -659,40 +659,40 @@
               north=.FALSE.
               IF      (ld(2).EQ.Sm) THEN
                  DO xx=xs,xe
-                    labels_(xx,ld(2))=SIGN(newlabel,labels_(xx,ld(2)))
+                    labelsIn(xx,ld(2))=SIGN(newlabel,labelsIn(xx,ld(2)))
 
-                    IF (.NOT.north.AND.ABS(labels_(xx,Smp)).EQ.oldlabel) THEN
+                    IF (.NOT.north.AND.ABS(labelsIn(xx,Smp)).EQ.oldlabel) THEN
                        CALL seedlst%add(xx,Smp)
                        north=.TRUE.
-                    ELSE IF (north.AND.ABS(labels_(xx,Smp)).NE.oldlabel) THEN
+                    ELSE IF (north.AND.ABS(labelsIn(xx,Smp)).NE.oldlabel) THEN
                        north=.FALSE.
                     ENDIF
                  ENDDO !xx=xs,xe
               ELSE IF (ld(2).EQ.Nm(2)) THEN
                  DO xx=xs,xe
-                    labels_(xx,ld(2))=SIGN(newlabel,labels_(xx,ld(2)))
+                    labelsIn(xx,ld(2))=SIGN(newlabel,labelsIn(xx,ld(2)))
 
-                    IF (.NOT.south.AND.ABS(labels_(xx,Nmm(2))).EQ.oldlabel) THEN
+                    IF (.NOT.south.AND.ABS(labelsIn(xx,Nmm(2))).EQ.oldlabel) THEN
                        CALL seedlst%add(xx,Nmm(2))
                        south=.TRUE.
-                    ELSE IF (south.AND.ABS(labels_(xx,Nmm(2))).NE.oldlabel) THEN
+                    ELSE IF (south.AND.ABS(labelsIn(xx,Nmm(2))).NE.oldlabel) THEN
                        south=.FALSE.
                     ENDIF
                  ENDDO !xx=xs,xe
               ELSE
                  DO xx=xs,xe
-                    labels_(xx,ld(2))=SIGN(newlabel,labels_(xx,ld(2)))
+                    labelsIn(xx,ld(2))=SIGN(newlabel,labelsIn(xx,ld(2)))
 
-                    IF (.NOT.south.AND.ABS(labels_(xx,ld(2)-1)).EQ.oldlabel) THEN
+                    IF (.NOT.south.AND.ABS(labelsIn(xx,ld(2)-1)).EQ.oldlabel) THEN
                        CALL seedlst%add(xx,ld(2)-1)
                        south=.TRUE.
-                    ELSE IF (south.AND.ABS(labels_(xx,ld(2)-1)).NE.oldlabel) THEN
+                    ELSE IF (south.AND.ABS(labelsIn(xx,ld(2)-1)).NE.oldlabel) THEN
                        south=.FALSE.
                     ENDIF
-                    IF (.NOT.north.AND.ABS(labels_(xx,ld(2)+1)).EQ.oldlabel) THEN
+                    IF (.NOT.north.AND.ABS(labelsIn(xx,ld(2)+1)).EQ.oldlabel) THEN
                        CALL seedlst%add(xx,ld(2)+1)
                        north=.TRUE.
-                    ELSE IF (north.AND.ABS(labels_(xx,ld(2)+1)).NE.oldlabel) THEN
+                    ELSE IF (north.AND.ABS(labelsIn(xx,ld(2)+1)).NE.oldlabel) THEN
                        north=.FALSE.
                     ENDIF
                  ENDDO !xx=xs,xe
@@ -709,12 +709,12 @@
                  ENDIF
 
                  DO xs=ldi(1),Sm,-1
-                    IF (ABS(labels_(xs,ldi(2),ldi(3))).NE.oldlabel) EXIT
+                    IF (ABS(labelsIn(xs,ldi(2),ldi(3))).NE.oldlabel) EXIT
                  ENDDO
-                 xs=MERGE(Sm,xs+1,xs.EQ.Sm.AND.ABS(labels_(Sm,ldi(2),ldi(3))).EQ.oldlabel)
+                 xs=MERGE(Sm,xs+1,xs.EQ.Sm.AND.ABS(labelsIn(Sm,ldi(2),ldi(3))).EQ.oldlabel)
 
                  DO xe=ldi(1)+1,Nm(1)
-                    IF (ABS(labels_(xe,ldi(2),ldi(3))).NE.oldlabel) EXIT
+                    IF (ABS(labelsIn(xe,ldi(2),ldi(3))).NE.oldlabel) EXIT
                  ENDDO
                  xe=xe-1
 
@@ -725,61 +725,61 @@
                  IF      (ldi(3).EQ.Sm) THEN
                     IF      (ldi(2).EQ.Sm) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
 
-                          IF (.NOT.north.AND.ABS(labels_(xx,Smp,Sm)).EQ.oldlabel) THEN
+                          IF (.NOT.north.AND.ABS(labelsIn(xx,Smp,Sm)).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,Smp,Sm)
                              north=.TRUE.
-                          ELSE IF (north.AND.ABS(labels_(xx,Smp,Sm)).NE.oldlabel) THEN
+                          ELSE IF (north.AND.ABS(labelsIn(xx,Smp,Sm)).NE.oldlabel) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.top.AND.ABS(labels_(xx,Sm,Smp)).EQ.oldlabel) THEN
+                          IF (.NOT.top.AND.ABS(labelsIn(xx,Sm,Smp)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,Sm,Smp)
                              top=.TRUE.
-                          ELSE IF (top.AND.ABS(labels_(xx,Sm,Smp)).NE.oldlabel) THEN
+                          ELSE IF (top.AND.ABS(labelsIn(xx,Sm,Smp)).NE.oldlabel) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE IF (ldi(2).EQ.Nm(2)) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
 
-                          IF (.NOT.south.AND.ABS(labels_(xx,Nmm(2),ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.south.AND.ABS(labelsIn(xx,Nmm(2),ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,Nmm(2),ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.ABS(labels_(xx,Nmm(2),ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (south.AND.ABS(labelsIn(xx,Nmm(2),ldi(3))).NE.oldlabel) THEN
                              south=.FALSE.
                           ENDIF
 
-                          IF (.NOT.top.AND.ABS(labels_(xx,ldi(2),Smp)).EQ.oldlabel) THEN
+                          IF (.NOT.top.AND.ABS(labelsIn(xx,ldi(2),Smp)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),Smp)
                              top=.TRUE.
-                          ELSE IF (top.AND.ABS(labels_(xx,ldi(2),Smp)).NE.oldlabel) THEN
+                          ELSE IF (top.AND.ABS(labelsIn(xx,ldi(2),Smp)).NE.oldlabel) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
 
-                          IF (.NOT.south.AND.ABS(labels_(xx,ldi(2)-1,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.south.AND.ABS(labelsIn(xx,ldi(2)-1,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,ldi(2)-1,ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.ABS(labels_(xx,ldi(2)-1,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (south.AND.ABS(labelsIn(xx,ldi(2)-1,ldi(3))).NE.oldlabel) THEN
                              south=.FALSE.
                           ENDIF
-                          IF (.NOT.north.AND.ABS(labels_(xx,ldi(2)+1,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.north.AND.ABS(labelsIn(xx,ldi(2)+1,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,ldi(2)+1,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.ABS(labels_(xx,ldi(2)+1,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (north.AND.ABS(labelsIn(xx,ldi(2)+1,ldi(3))).NE.oldlabel) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.top.AND.ABS(labels_(xx,ldi(2),Smp)).EQ.oldlabel) THEN
+                          IF (.NOT.top.AND.ABS(labelsIn(xx,ldi(2),Smp)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),Smp)
                              top=.TRUE.
-                          ELSE IF (top.AND.ABS(labels_(xx,ldi(2),Smp)).NE.oldlabel) THEN
+                          ELSE IF (top.AND.ABS(labelsIn(xx,ldi(2),Smp)).NE.oldlabel) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
@@ -787,61 +787,61 @@
                  ELSE IF (ldi(3).EQ.Nm(3)) THEN
                     IF      (ldi(2).EQ.Sm) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
 
-                          IF (.NOT.north.AND.ABS(labels_(xx,Smp,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.north.AND.ABS(labelsIn(xx,Smp,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,Smp,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.ABS(labels_(xx,Smp,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (north.AND.ABS(labelsIn(xx,Smp,ldi(3))).NE.oldlabel) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.ABS(labels_(xx,ldi(2),Nmm(3))).EQ.oldlabel) THEN
+                          IF (.NOT.bottom.AND.ABS(labelsIn(xx,ldi(2),Nmm(3))).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),Nmm(3))
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.ABS(labels_(xx,ldi(2),Nmm(3))).NE.oldlabel) THEN
+                          ELSE IF (bottom.AND.ABS(labelsIn(xx,ldi(2),Nmm(3))).NE.oldlabel) THEN
                              bottom=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE IF (ldi(2).EQ.Nm(2)) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
 
-                          IF (.NOT.south.AND.ABS(labels_(xx,Nmm(2),ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.south.AND.ABS(labelsIn(xx,Nmm(2),ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,Nmm(2),ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.ABS(labels_(xx,Nmm(2),ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (south.AND.ABS(labelsIn(xx,Nmm(2),ldi(3))).NE.oldlabel) THEN
                              south=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.ABS(labels_(xx,ldi(2),Nmm(3))).EQ.oldlabel) THEN
+                          IF (.NOT.bottom.AND.ABS(labelsIn(xx,ldi(2),Nmm(3))).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),Nmm(3))
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.ABS(labels_(xx,ldi(2),Nmm(3))).NE.oldlabel) THEN
+                          ELSE IF (bottom.AND.ABS(labelsIn(xx,ldi(2),Nmm(3))).NE.oldlabel) THEN
                              bottom=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
 
-                          IF (.NOT.south.AND.ABS(labels_(xx,ldi(2)-1,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.south.AND.ABS(labelsIn(xx,ldi(2)-1,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,ldi(2)-1,ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.ABS(labels_(xx,ldi(2)-1,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (south.AND.ABS(labelsIn(xx,ldi(2)-1,ldi(3))).NE.oldlabel) THEN
                              south=.FALSE.
                           ENDIF
-                          IF (.NOT.north.AND.ABS(labels_(xx,ldi(2)+1,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.north.AND.ABS(labelsIn(xx,ldi(2)+1,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,ldi(2)+1,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.ABS(labels_(xx,ldi(2)+1,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (north.AND.ABS(labelsIn(xx,ldi(2)+1,ldi(3))).NE.oldlabel) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.ABS(labels_(xx,ldi(2),Nmm(3))).EQ.oldlabel) THEN
+                          IF (.NOT.bottom.AND.ABS(labelsIn(xx,ldi(2),Nmm(3))).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),Nmm(3))
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.ABS(labels_(xx,ldi(2),Nmm(3))).NE.oldlabel) THEN
+                          ELSE IF (bottom.AND.ABS(labelsIn(xx,ldi(2),Nmm(3))).NE.oldlabel) THEN
                              bottom=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
@@ -849,79 +849,79 @@
                  ELSE
                     IF      (ldi(2).EQ.Sm) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
 
-                          IF (.NOT.north.AND.ABS(labels_(xx,Smp,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.north.AND.ABS(labelsIn(xx,Smp,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,Smp,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.ABS(labels_(xx,Smp,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (north.AND.ABS(labelsIn(xx,Smp,ldi(3))).NE.oldlabel) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.ABS(labels_(xx,ldi(2),ldi(3)-1)).EQ.oldlabel) THEN
+                          IF (.NOT.bottom.AND.ABS(labelsIn(xx,ldi(2),ldi(3)-1)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)-1)
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.ABS(labels_(xx,ldi(2),ldi(3)-1)).NE.oldlabel) THEN
+                          ELSE IF (bottom.AND.ABS(labelsIn(xx,ldi(2),ldi(3)-1)).NE.oldlabel) THEN
                              bottom=.FALSE.
                           ENDIF
-                          IF (.NOT.top.AND.ABS(labels_(xx,ldi(2),ldi(3)+1)).EQ.oldlabel) THEN
+                          IF (.NOT.top.AND.ABS(labelsIn(xx,ldi(2),ldi(3)+1)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)+1)
                              top=.TRUE.
-                          ELSE IF (top.AND.ABS(labels_(xx,ldi(2),ldi(3)+1)).NE.oldlabel) THEN
+                          ELSE IF (top.AND.ABS(labelsIn(xx,ldi(2),ldi(3)+1)).NE.oldlabel) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE IF (ldi(2).EQ.Nm(2)) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
 
-                          IF (.NOT.south.AND.ABS(labels_(xx,Nmm(2),ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.south.AND.ABS(labelsIn(xx,Nmm(2),ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,Nmm(2),ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.ABS(labels_(xx,Nmm(2),ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (south.AND.ABS(labelsIn(xx,Nmm(2),ldi(3))).NE.oldlabel) THEN
                              south=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.ABS(labels_(xx,ldi(2),ldi(3)-1)).EQ.oldlabel) THEN
+                          IF (.NOT.bottom.AND.ABS(labelsIn(xx,ldi(2),ldi(3)-1)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)-1)
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.ABS(labels_(xx,ldi(2),ldi(3)-1)).NE.oldlabel) THEN
+                          ELSE IF (bottom.AND.ABS(labelsIn(xx,ldi(2),ldi(3)-1)).NE.oldlabel) THEN
                              bottom=.FALSE.
                           ENDIF
-                          IF (.NOT.top.AND.ABS(labels_(xx,ldi(2),ldi(3)+1)).EQ.oldlabel) THEN
+                          IF (.NOT.top.AND.ABS(labelsIn(xx,ldi(2),ldi(3)+1)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)+1)
                              top=.TRUE.
-                          ELSE IF (top.AND.ABS(labels_(xx,ldi(2),ldi(3)+1)).NE.oldlabel) THEN
+                          ELSE IF (top.AND.ABS(labelsIn(xx,ldi(2),ldi(3)+1)).NE.oldlabel) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=SIGN(newlabel,labels_(xx,ldi(2),ldi(3)))
+                          labelsIn(xx,ldi(2),ldi(3))=SIGN(newlabel,labelsIn(xx,ldi(2),ldi(3)))
 
-                          IF (.NOT.south.AND.ABS(labels_(xx,ldi(2)-1,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.south.AND.ABS(labelsIn(xx,ldi(2)-1,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,ldi(2)-1,ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.ABS(labels_(xx,ldi(2)-1,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (south.AND.ABS(labelsIn(xx,ldi(2)-1,ldi(3))).NE.oldlabel) THEN
                              south=.FALSE.
                           ENDIF
-                          IF (.NOT.north.AND.ABS(labels_(xx,ldi(2)+1,ldi(3))).EQ.oldlabel) THEN
+                          IF (.NOT.north.AND.ABS(labelsIn(xx,ldi(2)+1,ldi(3))).EQ.oldlabel) THEN
                              CALL seedlsti%add(xx,ldi(2)+1,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.ABS(labels_(xx,ldi(2)+1,ldi(3))).NE.oldlabel) THEN
+                          ELSE IF (north.AND.ABS(labelsIn(xx,ldi(2)+1,ldi(3))).NE.oldlabel) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.ABS(labels_(xx,ldi(2),ldi(3)-1)).EQ.oldlabel) THEN
+                          IF (.NOT.bottom.AND.ABS(labelsIn(xx,ldi(2),ldi(3)-1)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)-1)
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.ABS(labels_(xx,ldi(2),ldi(3)-1)).NE.oldlabel) THEN
+                          ELSE IF (bottom.AND.ABS(labelsIn(xx,ldi(2),ldi(3)-1)).NE.oldlabel) THEN
                              bottom=.FALSE.
                           ENDIF
-                          IF (.NOT.top.AND.ABS(labels_(xx,ldi(2),ldi(3)+1)).EQ.oldlabel) THEN
+                          IF (.NOT.top.AND.ABS(labelsIn(xx,ldi(2),ldi(3)+1)).EQ.oldlabel) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)+1)
                              top=.TRUE.
-                          ELSE IF (top.AND.ABS(labels_(xx,ldi(2),ldi(3)+1)).NE.oldlabel) THEN
+                          ELSE IF (top.AND.ABS(labelsIn(xx,ldi(2),ldi(3)+1)).NE.oldlabel) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
@@ -971,8 +971,8 @@
       !  MOSAIC Group
       !  Author           - y.afshar           April   2014
       !-------------------------------------------------------------------------
-      SUBROUTINE DTYPE(ppm_rc_floodFillScanlineConditional)(labels_,  &
-      &          field_,Nm_,coord,oldlabel,newlabel,lower_,upper_,Sm,info)
+      SUBROUTINE DTYPE(ppm_rc_floodFillScanlineConditional)(labelsIn,  &
+      &          dataIn,NmIn,coord,oldlabel,newlabel,lower_,upper_,Sm,info)
         !-------------------------------------------------------------------------
         !  Modules
         !-------------------------------------------------------------------------
@@ -981,18 +981,18 @@
         !  Includes
         !-------------------------------------------------------------------------
 #if   __DIME == __2D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER       :: labels_
+        INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER       :: labelsIn
 #elif __DIME == __3D
-        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: labels_
+        INTEGER, CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: labelsIn
 #endif
 
 #if   __DIME == __2D
-        REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: field_
+        REAL(MK), CONTIGUOUS, DIMENSION(:,:),   POINTER       :: dataIn
 #elif __DIME == __3D
-        REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: field_
+        REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER       :: dataIn
 #endif
 
-        INTEGER, DIMENSION(:),     POINTER       :: Nm_
+        INTEGER, DIMENSION(:),     POINTER       :: NmIn
         !!! number of mesh points
         INTEGER, DIMENSION(:),     INTENT(IN   ) :: coord
         INTEGER,                   INTENT(IN   ) :: oldlabel
@@ -1035,17 +1035,17 @@
 
         IF (newlabel.EQ.oldlabel) GOTO 9999
 
-        Nm=Nm_(1:__DIME)+MERGE(1,0,Sm.EQ.0)
+        Nm=NmIn(1:__DIME)+MERGE(1,0,Sm.EQ.0)
         Nmm=Nm-1
 
         Smp=Sm+1
 
 #if   __DIME == __2D
-        IF (ABS(labels_(coord(1),coord(2))).EQ.newlabel) THEN
-           labels_(coord(1),coord(2))=SIGN(oldlabel,labels_(coord(1),coord(2)))
+        IF (ABS(labelsIn(coord(1),coord(2))).EQ.newlabel) THEN
+           labelsIn(coord(1),coord(2))=SIGN(oldlabel,labelsIn(coord(1),coord(2)))
 #elif __DIME == __3D
-        IF (ABS(labels_(coord(1),coord(2),coord(3))).EQ.newlabel) THEN
-           labels_(coord(1),coord(2),coord(3))=SIGN(oldlabel,labels_(coord(1),coord(2),coord(3)))
+        IF (ABS(labelsIn(coord(1),coord(2),coord(3))).EQ.newlabel) THEN
+           labelsIn(coord(1),coord(2),coord(3))=SIGN(oldlabel,labelsIn(coord(1),coord(2),coord(3)))
 #endif
         ENDIF
 
@@ -1062,19 +1062,19 @@
               ENDIF
 
 #if   __DIME == __2D
-              lower=field_(ld(1),ld(2))-lower_
-              upper=field_(ld(1),ld(2))+upper_
+              lower=dataIn(ld(1),ld(2))-lower_
+              upper=dataIn(ld(1),ld(2))+upper_
 
               DO xs=ld(1),Sm,-1
-                 IF (labels_(xs,ld(2)).NE.oldlabel.OR. &
-                 &   field_(xs,ld(2)).LT.lower.OR.field_(xs,ld(2)).GT.upper) EXIT
+                 IF (labelsIn(xs,ld(2)).NE.oldlabel.OR. &
+                 &   dataIn(xs,ld(2)).LT.lower.OR.dataIn(xs,ld(2)).GT.upper) EXIT
               ENDDO
-              xs=MERGE(Sm,xs+1,xs.EQ.Sm.AND.labels_(Sm,ld(2)).EQ.oldlabel &
-              & .AND.lower.LE.field_(Sm,ld(2)).AND.field_(Sm,ld(2)).LE.upper)
+              xs=MERGE(Sm,xs+1,xs.EQ.Sm.AND.labelsIn(Sm,ld(2)).EQ.oldlabel &
+              & .AND.lower.LE.dataIn(Sm,ld(2)).AND.dataIn(Sm,ld(2)).LE.upper)
 
               DO xe=ld(1)+1,Nm(1)
-                 IF (labels_(xe,ld(2)).NE.oldlabel.OR. &
-                 & field_(xe,ld(2)).LT.lower.OR.field_(xe,ld(2)).GT.upper) EXIT
+                 IF (labelsIn(xe,ld(2)).NE.oldlabel.OR. &
+                 & dataIn(xe,ld(2)).LT.lower.OR.dataIn(xe,ld(2)).GT.upper) EXIT
               ENDDO
               xe=xe-1
 
@@ -1082,48 +1082,48 @@
               north=.FALSE.
               IF      (ld(2).EQ.Sm) THEN
                  DO xx=xs,xe
-                    labels_(xx,ld(2))=newlabel
+                    labelsIn(xx,ld(2))=newlabel
 
-                    IF (.NOT.north.AND.labels_(xx,Smp).EQ.oldlabel &
-                    &   .AND.lower.LE.field_(xx,Smp).AND.field_(xx,Smp).LE.upper) THEN
+                    IF (.NOT.north.AND.labelsIn(xx,Smp).EQ.oldlabel &
+                    &   .AND.lower.LE.dataIn(xx,Smp).AND.dataIn(xx,Smp).LE.upper) THEN
                        CALL seedlst%add(xx,Smp)
                        north=.TRUE.
-                    ELSE IF (north.AND.labels_(xx,Smp).NE.oldlabel &
-                    &   .AND.(field_(xx,Smp).LT.lower.OR.field_(xx,Smp).GT.upper)) THEN
+                    ELSE IF (north.AND.labelsIn(xx,Smp).NE.oldlabel &
+                    &   .AND.(dataIn(xx,Smp).LT.lower.OR.dataIn(xx,Smp).GT.upper)) THEN
                        north=.FALSE.
                     ENDIF
                  ENDDO !xx=xs,xe
               ELSE IF (ld(2).EQ.Nm(2)) THEN
                  DO xx=xs,xe
-                    labels_(xx,ld(2))=newlabel
+                    labelsIn(xx,ld(2))=newlabel
 
-                    IF (.NOT.south.AND.labels_(xx,Nmm(2)).EQ.oldlabel &
-                    &   .AND.lower.LE.field_(xx,Nmm(2)).AND.field_(xx,Nmm(2)).LE.upper) THEN
+                    IF (.NOT.south.AND.labelsIn(xx,Nmm(2)).EQ.oldlabel &
+                    &   .AND.lower.LE.dataIn(xx,Nmm(2)).AND.dataIn(xx,Nmm(2)).LE.upper) THEN
                        CALL seedlst%add(xx,Nmm(2))
                        south=.TRUE.
-                    ELSE IF (south.AND.labels_(xx,Nmm(2)).NE.oldlabel &
-                    &   .AND.(field_(xx,Nmm(2)).LT.lower.OR.field_(xx,Nmm(2)).GT.upper)) THEN
+                    ELSE IF (south.AND.labelsIn(xx,Nmm(2)).NE.oldlabel &
+                    &   .AND.(dataIn(xx,Nmm(2)).LT.lower.OR.dataIn(xx,Nmm(2)).GT.upper)) THEN
                        south=.FALSE.
                     ENDIF
                  ENDDO !xx=xs,xe
               ELSE
                  DO xx=xs,xe
-                    labels_(xx,ld(2))=newlabel
+                    labelsIn(xx,ld(2))=newlabel
 
-                    IF (.NOT.south.AND.labels_(xx,ld(2)-1).EQ.oldlabel &
-                    &   .AND.lower.LE.field_(xx,ld(2)-1).AND.field_(xx,ld(2)-1).LE.upper) THEN
+                    IF (.NOT.south.AND.labelsIn(xx,ld(2)-1).EQ.oldlabel &
+                    &   .AND.lower.LE.dataIn(xx,ld(2)-1).AND.dataIn(xx,ld(2)-1).LE.upper) THEN
                        CALL seedlst%add(xx,ld(2)-1)
                        south=.TRUE.
-                    ELSE IF (south.AND.labels_(xx,ld(2)-1).NE.oldlabel &
-                    &   .AND.(field_(xx,ld(2)-1).LT.lower.OR.field_(xx,ld(2)-1).GT.upper)) THEN
+                    ELSE IF (south.AND.labelsIn(xx,ld(2)-1).NE.oldlabel &
+                    &   .AND.(dataIn(xx,ld(2)-1).LT.lower.OR.dataIn(xx,ld(2)-1).GT.upper)) THEN
                        south=.FALSE.
                     ENDIF
-                    IF (.NOT.north.AND.labels_(xx,ld(2)+1).EQ.oldlabel &
-                    &   .AND.lower.LE.field_(xx,ld(2)+1).AND.field_(xx,ld(2)+1).LE.upper) THEN
+                    IF (.NOT.north.AND.labelsIn(xx,ld(2)+1).EQ.oldlabel &
+                    &   .AND.lower.LE.dataIn(xx,ld(2)+1).AND.dataIn(xx,ld(2)+1).LE.upper) THEN
                        CALL seedlst%add(xx,ld(2)+1)
                        north=.TRUE.
-                    ELSE IF (north.AND.labels_(xx,ld(2)+1).NE.oldlabel &
-                    &   .AND.(field_(xx,ld(2)+1).LT.lower.OR.field_(xx,ld(2)+1).GT.upper)) THEN
+                    ELSE IF (north.AND.labelsIn(xx,ld(2)+1).NE.oldlabel &
+                    &   .AND.(dataIn(xx,ld(2)+1).LT.lower.OR.dataIn(xx,ld(2)+1).GT.upper)) THEN
                        north=.FALSE.
                     ENDIF
                  ENDDO !xx=xs,xe
@@ -1139,19 +1139,19 @@
                     CYCLE seedlsti_loop
                  ENDIF
 
-                 lower=field_(ldi(1),ldi(2),ldi(3))-lower_
-                 upper=field_(ldi(1),ldi(2),ldi(3))+upper_
+                 lower=dataIn(ldi(1),ldi(2),ldi(3))-lower_
+                 upper=dataIn(ldi(1),ldi(2),ldi(3))+upper_
 
                  DO xs=ldi(1),Sm,-1
-                    IF (labels_(xs,ldi(2),ldi(3)).NE.oldlabel.OR. &
-                    &  field_(xs,ldi(2),ldi(3)).LT.lower.OR.field_(xs,ldi(2),ldi(3)).GT.upper) EXIT
+                    IF (labelsIn(xs,ldi(2),ldi(3)).NE.oldlabel.OR. &
+                    &  dataIn(xs,ldi(2),ldi(3)).LT.lower.OR.dataIn(xs,ldi(2),ldi(3)).GT.upper) EXIT
                  ENDDO
-                 xs=MERGE(Sm,xs+1,xs.EQ.Sm.AND.labels_(Sm,ldi(2),ldi(3)).EQ.oldlabel.AND. &
-                 & lower.LE.field_(Sm,ldi(2),ldi(3)).AND.field_(Sm,ldi(2),ldi(3)).LE.upper)
+                 xs=MERGE(Sm,xs+1,xs.EQ.Sm.AND.labelsIn(Sm,ldi(2),ldi(3)).EQ.oldlabel.AND. &
+                 & lower.LE.dataIn(Sm,ldi(2),ldi(3)).AND.dataIn(Sm,ldi(2),ldi(3)).LE.upper)
 
                  DO xe=ldi(1)+1,Nm(1)
-                    IF (labels_(xe,ldi(2),ldi(3)).NE.oldlabel.OR. &
-                    &  field_(xe,ldi(2),ldi(3)).LT.lower.OR.field_(xe,ldi(2),ldi(3)).GT.upper) EXIT
+                    IF (labelsIn(xe,ldi(2),ldi(3)).NE.oldlabel.OR. &
+                    &  dataIn(xe,ldi(2),ldi(3)).LT.lower.OR.dataIn(xe,ldi(2),ldi(3)).GT.upper) EXIT
                  ENDDO
                  xe=xe-1
 
@@ -1162,89 +1162,89 @@
                  IF      (ldi(3).EQ.Sm) THEN
                     IF      (ldi(2).EQ.Sm) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=newlabel
+                          labelsIn(xx,ldi(2),ldi(3))=newlabel
 
-                          IF (.NOT.north.AND.labels_(xx,Smp,Sm).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,Smp,Sm) &
-                          &   .AND.field_(xx,Smp,Sm).LE.upper) THEN
+                          IF (.NOT.north.AND.labelsIn(xx,Smp,Sm).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,Smp,Sm) &
+                          &   .AND.dataIn(xx,Smp,Sm).LE.upper) THEN
                              CALL seedlsti%add(xx,Smp,Sm)
                              north=.TRUE.
-                          ELSE IF (north.AND.labels_(xx,Smp,Sm).NE.oldlabel &
-                          &   .AND.(field_(xx,Smp,Sm).LT.lower &
-                          &   .OR.field_(xx,Smp,Sm).GT.upper)) THEN
+                          ELSE IF (north.AND.labelsIn(xx,Smp,Sm).NE.oldlabel &
+                          &   .AND.(dataIn(xx,Smp,Sm).LT.lower &
+                          &   .OR.dataIn(xx,Smp,Sm).GT.upper)) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.top.AND.labels_(xx,Sm,Smp).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,Sm,Smp) &
-                          &   .AND.field_(xx,Sm,Smp).LE.upper) THEN
+                          IF (.NOT.top.AND.labelsIn(xx,Sm,Smp).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,Sm,Smp) &
+                          &   .AND.dataIn(xx,Sm,Smp).LE.upper) THEN
                              CALL seedlst%add(xx,Sm,Smp)
                              top=.TRUE.
-                          ELSE IF (top.AND.labels_(xx,Sm,Smp).NE.oldlabel &
-                          &   .AND.(field_(xx,Sm,Smp).LT.lower &
-                          &   .OR.field_(xx,Sm,Smp).GT.upper)) THEN
+                          ELSE IF (top.AND.labelsIn(xx,Sm,Smp).NE.oldlabel &
+                          &   .AND.(dataIn(xx,Sm,Smp).LT.lower &
+                          &   .OR.dataIn(xx,Sm,Smp).GT.upper)) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE IF (ldi(2).EQ.Nm(2)) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=newlabel
+                          labelsIn(xx,ldi(2),ldi(3))=newlabel
 
-                          IF (.NOT.south.AND.labels_(xx,Nmm(2),ldi(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,Nmm(2),ldi(3)) &
-                          &   .AND.field_(xx,Nmm(2),ldi(3)).LE.upper) THEN
+                          IF (.NOT.south.AND.labelsIn(xx,Nmm(2),ldi(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,Nmm(2),ldi(3)) &
+                          &   .AND.dataIn(xx,Nmm(2),ldi(3)).LE.upper) THEN
                              CALL seedlsti%add(xx,Nmm(2),ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.labels_(xx,Nmm(2),ldi(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,Nmm(2),ldi(3)).LT.lower &
-                          &   .OR.field_(xx,Nmm(2),ldi(3)).GT.upper)) THEN
+                          ELSE IF (south.AND.labelsIn(xx,Nmm(2),ldi(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,Nmm(2),ldi(3)).LT.lower &
+                          &   .OR.dataIn(xx,Nmm(2),ldi(3)).GT.upper)) THEN
                              south=.FALSE.
                           ENDIF
 
-                          IF (.NOT.top.AND.labels_(xx,ldi(2),Smp).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2),Smp) &
-                          &   .AND.field_(xx,ldi(2),Smp).LE.upper) THEN
+                          IF (.NOT.top.AND.labelsIn(xx,ldi(2),Smp).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2),Smp) &
+                          &   .AND.dataIn(xx,ldi(2),Smp).LE.upper) THEN
                              CALL seedlst%add(xx,ldi(2),Smp)
                              top=.TRUE.
-                          ELSE IF (top.AND.labels_(xx,ldi(2),Smp).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2),Smp).LT.lower &
-                          &   .OR.field_(xx,ldi(2),Smp).GT.upper)) THEN
+                          ELSE IF (top.AND.labelsIn(xx,ldi(2),Smp).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2),Smp).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2),Smp).GT.upper)) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=newlabel
+                          labelsIn(xx,ldi(2),ldi(3))=newlabel
 
-                          IF (.NOT.south.AND.labels_(xx,ldi(2)-1,ldi(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2)-1,ldi(3)) &
-                          &   .AND.field_(xx,ldi(2)-1,ldi(3)).LE.upper) THEN
+                          IF (.NOT.south.AND.labelsIn(xx,ldi(2)-1,ldi(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2)-1,ldi(3)) &
+                          &   .AND.dataIn(xx,ldi(2)-1,ldi(3)).LE.upper) THEN
                              CALL seedlsti%add(xx,ldi(2)-1,ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.labels_(xx,ldi(2)-1,ldi(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2)-1,ldi(3)).LT.lower &
-                          &   .OR.field_(xx,ldi(2)-1,ldi(3)).GT.upper)) THEN
+                          ELSE IF (south.AND.labelsIn(xx,ldi(2)-1,ldi(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2)-1,ldi(3)).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2)-1,ldi(3)).GT.upper)) THEN
                              south=.FALSE.
                           ENDIF
-                          IF (.NOT.north.AND.labels_(xx,ldi(2)+1,ldi(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2)+1,ldi(3)) &
-                          &   .AND.field_(xx,ldi(2)+1,ldi(3)).LE.upper) THEN
+                          IF (.NOT.north.AND.labelsIn(xx,ldi(2)+1,ldi(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2)+1,ldi(3)) &
+                          &   .AND.dataIn(xx,ldi(2)+1,ldi(3)).LE.upper) THEN
                              CALL seedlsti%add(xx,ldi(2)+1,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.labels_(xx,ldi(2)+1,ldi(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2)+1,ldi(3)).LT.lower &
-                          &   .OR.field_(xx,ldi(2)+1,ldi(3)).GT.upper)) THEN
+                          ELSE IF (north.AND.labelsIn(xx,ldi(2)+1,ldi(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2)+1,ldi(3)).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2)+1,ldi(3)).GT.upper)) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.top.AND.labels_(xx,ldi(2),Smp).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2),Smp) &
-                          &   .AND.field_(xx,ldi(2),Smp).LE.upper) THEN
+                          IF (.NOT.top.AND.labelsIn(xx,ldi(2),Smp).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2),Smp) &
+                          &   .AND.dataIn(xx,ldi(2),Smp).LE.upper) THEN
                              CALL seedlst%add(xx,ldi(2),Smp)
                              top=.TRUE.
-                          ELSE IF (top.AND.labels_(xx,ldi(2),Smp).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2),Smp).LT.lower &
-                          &   .OR.field_(xx,ldi(2),Smp).GT.upper)) THEN
+                          ELSE IF (top.AND.labelsIn(xx,ldi(2),Smp).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2),Smp).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2),Smp).GT.upper)) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
@@ -1252,89 +1252,89 @@
                  ELSE IF (ldi(3).EQ.Nm(3)) THEN
                     IF      (ldi(2).EQ.Sm) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=newlabel
+                          labelsIn(xx,ldi(2),ldi(3))=newlabel
 
-                          IF (.NOT.north.AND.labels_(xx,Smp,ldi(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,Smp,ldi(3)) &
-                          &   .AND.field_(xx,Smp,ldi(3)).LE.upper) THEN
+                          IF (.NOT.north.AND.labelsIn(xx,Smp,ldi(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,Smp,ldi(3)) &
+                          &   .AND.dataIn(xx,Smp,ldi(3)).LE.upper) THEN
                              CALL seedlsti%add(xx,Smp,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.labels_(xx,Smp,ldi(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,Smp,ldi(3)).LT.lower &
-                          &   .OR.field_(xx,Smp,ldi(3)).GT.upper)) THEN
+                          ELSE IF (north.AND.labelsIn(xx,Smp,ldi(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,Smp,ldi(3)).LT.lower &
+                          &   .OR.dataIn(xx,Smp,ldi(3)).GT.upper)) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.labels_(xx,ldi(2),Nmm(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2),Nmm(3)) &
-                          &   .AND.field_(xx,ldi(2),Nmm(3)).LE.upper) THEN
+                          IF (.NOT.bottom.AND.labelsIn(xx,ldi(2),Nmm(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2),Nmm(3)) &
+                          &   .AND.dataIn(xx,ldi(2),Nmm(3)).LE.upper) THEN
                              CALL seedlst%add(xx,ldi(2),Nmm(3))
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.labels_(xx,ldi(2),Nmm(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2),Nmm(3)).LT.lower &
-                          &   .OR.field_(xx,ldi(2),Nmm(3)).GT.upper)) THEN
+                          ELSE IF (bottom.AND.labelsIn(xx,ldi(2),Nmm(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2),Nmm(3)).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2),Nmm(3)).GT.upper)) THEN
                              bottom=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE IF (ldi(2).EQ.Nm(2)) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=newlabel
+                          labelsIn(xx,ldi(2),ldi(3))=newlabel
 
-                          IF (.NOT.south.AND.labels_(xx,Nmm(2),ldi(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,Nmm(2),ldi(3)) &
-                          &   .AND.field_(xx,Nmm(2),ldi(3)).LE.upper) THEN
+                          IF (.NOT.south.AND.labelsIn(xx,Nmm(2),ldi(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,Nmm(2),ldi(3)) &
+                          &   .AND.dataIn(xx,Nmm(2),ldi(3)).LE.upper) THEN
                              CALL seedlsti%add(xx,Nmm(2),ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.labels_(xx,Nmm(2),ldi(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,Nmm(2),ldi(3)).LT.lower &
-                          &   .OR.field_(xx,Nmm(2),ldi(3)).GT.upper)) THEN
+                          ELSE IF (south.AND.labelsIn(xx,Nmm(2),ldi(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,Nmm(2),ldi(3)).LT.lower &
+                          &   .OR.dataIn(xx,Nmm(2),ldi(3)).GT.upper)) THEN
                              south=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.labels_(xx,ldi(2),Nmm(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2),Nmm(3)) &
-                          &   .AND.field_(xx,ldi(2),Nmm(3)).LE.upper) THEN
+                          IF (.NOT.bottom.AND.labelsIn(xx,ldi(2),Nmm(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2),Nmm(3)) &
+                          &   .AND.dataIn(xx,ldi(2),Nmm(3)).LE.upper) THEN
                              CALL seedlst%add(xx,ldi(2),Nmm(3))
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.labels_(xx,ldi(2),Nmm(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2),Nmm(3)).LT.lower &
-                          &   .OR.field_(xx,ldi(2),Nmm(3)).GT.upper)) THEN
+                          ELSE IF (bottom.AND.labelsIn(xx,ldi(2),Nmm(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2),Nmm(3)).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2),Nmm(3)).GT.upper)) THEN
                              bottom=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=newlabel
+                          labelsIn(xx,ldi(2),ldi(3))=newlabel
 
-                          IF (.NOT.south.AND.labels_(xx,ldi(2)-1,ldi(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2)-1,ldi(3)) &
-                          &   .AND.field_(xx,ldi(2)-1,ldi(3)).LE.upper) THEN
+                          IF (.NOT.south.AND.labelsIn(xx,ldi(2)-1,ldi(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2)-1,ldi(3)) &
+                          &   .AND.dataIn(xx,ldi(2)-1,ldi(3)).LE.upper) THEN
                              CALL seedlsti%add(xx,ldi(2)-1,ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.labels_(xx,ldi(2)-1,ldi(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2)-1,ldi(3)).LT.lower &
-                          &   .OR.field_(xx,ldi(2)-1,ldi(3)).GT.upper)) THEN
+                          ELSE IF (south.AND.labelsIn(xx,ldi(2)-1,ldi(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2)-1,ldi(3)).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2)-1,ldi(3)).GT.upper)) THEN
                              south=.FALSE.
                           ENDIF
-                          IF (.NOT.north.AND.labels_(xx,ldi(2)+1,ldi(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2)+1,ldi(3)) &
-                          &   .AND.field_(xx,ldi(2)+1,ldi(3)).LE.upper) THEN
+                          IF (.NOT.north.AND.labelsIn(xx,ldi(2)+1,ldi(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2)+1,ldi(3)) &
+                          &   .AND.dataIn(xx,ldi(2)+1,ldi(3)).LE.upper) THEN
                              CALL seedlsti%add(xx,ldi(2)+1,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.labels_(xx,ldi(2)+1,ldi(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2)+1,ldi(3)).LT.lower &
-                          &   .OR.field_(xx,ldi(2)+1,ldi(3)).GT.upper)) THEN
+                          ELSE IF (north.AND.labelsIn(xx,ldi(2)+1,ldi(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2)+1,ldi(3)).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2)+1,ldi(3)).GT.upper)) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.labels_(xx,ldi(2),Nmm(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2),Nmm(3)) &
-                          &   .AND.field_(xx,ldi(2),Nmm(3)).LE.upper) THEN
+                          IF (.NOT.bottom.AND.labelsIn(xx,ldi(2),Nmm(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2),Nmm(3)) &
+                          &   .AND.dataIn(xx,ldi(2),Nmm(3)).LE.upper) THEN
                              CALL seedlst%add(xx,ldi(2),Nmm(3))
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.labels_(xx,ldi(2),Nmm(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2),Nmm(3)).LT.lower &
-                          &   .OR.field_(xx,ldi(2),Nmm(3)).GT.upper)) THEN
+                          ELSE IF (bottom.AND.labelsIn(xx,ldi(2),Nmm(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2),Nmm(3)).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2),Nmm(3)).GT.upper)) THEN
                              bottom=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
@@ -1342,119 +1342,119 @@
                  ELSE
                     IF      (ldi(2).EQ.Sm) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=newlabel
+                          labelsIn(xx,ldi(2),ldi(3))=newlabel
 
-                          IF (.NOT.north.AND.labels_(xx,Smp,ldi(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,Smp,ldi(3)) &
-                          &   .AND.field_(xx,Smp,ldi(3)).LE.upper) THEN
+                          IF (.NOT.north.AND.labelsIn(xx,Smp,ldi(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,Smp,ldi(3)) &
+                          &   .AND.dataIn(xx,Smp,ldi(3)).LE.upper) THEN
                              CALL seedlsti%add(xx,Smp,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.labels_(xx,Smp,ldi(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,Smp,ldi(3)).LT.lower &
-                          &   .OR.field_(xx,Smp,ldi(3)).GT.upper)) THEN
+                          ELSE IF (north.AND.labelsIn(xx,Smp,ldi(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,Smp,ldi(3)).LT.lower &
+                          &   .OR.dataIn(xx,Smp,ldi(3)).GT.upper)) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.labels_(xx,ldi(2),ldi(3)-1).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2),ldi(3)-1) &
-                          &   .AND.field_(xx,ldi(2),ldi(3)-1).LE.upper) THEN
+                          IF (.NOT.bottom.AND.labelsIn(xx,ldi(2),ldi(3)-1).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2),ldi(3)-1) &
+                          &   .AND.dataIn(xx,ldi(2),ldi(3)-1).LE.upper) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)-1)
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.labels_(xx,ldi(2),ldi(3)-1).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2),ldi(3)-1).LT.lower &
-                          &   .OR.field_(xx,ldi(2),ldi(3)-1).GT.upper)) THEN
+                          ELSE IF (bottom.AND.labelsIn(xx,ldi(2),ldi(3)-1).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2),ldi(3)-1).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2),ldi(3)-1).GT.upper)) THEN
                              bottom=.FALSE.
                           ENDIF
-                          IF (.NOT.top.AND.labels_(xx,ldi(2),ldi(3)+1).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2),ldi(3)+1) &
-                          &   .AND.field_(xx,ldi(2),ldi(3)+1).LE.upper) THEN
+                          IF (.NOT.top.AND.labelsIn(xx,ldi(2),ldi(3)+1).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2),ldi(3)+1) &
+                          &   .AND.dataIn(xx,ldi(2),ldi(3)+1).LE.upper) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)+1)
                              top=.TRUE.
-                          ELSE IF (top.AND.labels_(xx,ldi(2),ldi(3)+1).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2),ldi(3)+1).LT.lower &
-                          &   .OR.field_(xx,ldi(2),ldi(3)+1).GT.upper)) THEN
+                          ELSE IF (top.AND.labelsIn(xx,ldi(2),ldi(3)+1).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2),ldi(3)+1).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2),ldi(3)+1).GT.upper)) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE IF (ldi(2).EQ.Nm(2)) THEN
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=newlabel
+                          labelsIn(xx,ldi(2),ldi(3))=newlabel
 
-                          IF (.NOT.south.AND.labels_(xx,Nmm(2),ldi(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,Nmm(2),ldi(3)) &
-                          &   .AND.field_(xx,Nmm(2),ldi(3)).LE.upper) THEN
+                          IF (.NOT.south.AND.labelsIn(xx,Nmm(2),ldi(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,Nmm(2),ldi(3)) &
+                          &   .AND.dataIn(xx,Nmm(2),ldi(3)).LE.upper) THEN
                              CALL seedlsti%add(xx,Nmm(2),ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.labels_(xx,Nmm(2),ldi(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,Nmm(2),ldi(3)).LT.lower &
-                          &   .OR.field_(xx,Nmm(2),ldi(3)).GT.upper)) THEN
+                          ELSE IF (south.AND.labelsIn(xx,Nmm(2),ldi(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,Nmm(2),ldi(3)).LT.lower &
+                          &   .OR.dataIn(xx,Nmm(2),ldi(3)).GT.upper)) THEN
                              south=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.labels_(xx,ldi(2),ldi(3)-1).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2),ldi(3)-1) &
-                          &   .AND.field_(xx,ldi(2),ldi(3)-1).LE.upper) THEN
+                          IF (.NOT.bottom.AND.labelsIn(xx,ldi(2),ldi(3)-1).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2),ldi(3)-1) &
+                          &   .AND.dataIn(xx,ldi(2),ldi(3)-1).LE.upper) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)-1)
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.labels_(xx,ldi(2),ldi(3)-1).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2),ldi(3)-1).LT.lower &
-                          &   .OR.field_(xx,ldi(2),ldi(3)-1).GT.upper)) THEN
+                          ELSE IF (bottom.AND.labelsIn(xx,ldi(2),ldi(3)-1).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2),ldi(3)-1).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2),ldi(3)-1).GT.upper)) THEN
                              bottom=.FALSE.
                           ENDIF
-                          IF (.NOT.top.AND.labels_(xx,ldi(2),ldi(3)+1).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2),ldi(3)+1) &
-                          &   .AND.field_(xx,ldi(2),ldi(3)+1).LE.upper) THEN
+                          IF (.NOT.top.AND.labelsIn(xx,ldi(2),ldi(3)+1).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2),ldi(3)+1) &
+                          &   .AND.dataIn(xx,ldi(2),ldi(3)+1).LE.upper) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)+1)
                              top=.TRUE.
-                          ELSE IF (top.AND.labels_(xx,ldi(2),ldi(3)+1).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2),ldi(3)+1).LT.lower &
-                          &   .OR.field_(xx,ldi(2),ldi(3)+1).GT.upper)) THEN
+                          ELSE IF (top.AND.labelsIn(xx,ldi(2),ldi(3)+1).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2),ldi(3)+1).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2),ldi(3)+1).GT.upper)) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe
                     ELSE
                        DO xx=xs,xe
-                          labels_(xx,ldi(2),ldi(3))=newlabel
+                          labelsIn(xx,ldi(2),ldi(3))=newlabel
 
-                          IF (.NOT.south.AND.labels_(xx,ldi(2)-1,ldi(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2)-1,ldi(3)) &
-                          &   .AND.field_(xx,ldi(2)-1,ldi(3)).LE.upper) THEN
+                          IF (.NOT.south.AND.labelsIn(xx,ldi(2)-1,ldi(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2)-1,ldi(3)) &
+                          &   .AND.dataIn(xx,ldi(2)-1,ldi(3)).LE.upper) THEN
                              CALL seedlsti%add(xx,ldi(2)-1,ldi(3))
                              south=.TRUE.
-                          ELSE IF (south.AND.labels_(xx,ldi(2)-1,ldi(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2)-1,ldi(3)).LT.lower &
-                          &   .OR.field_(xx,ldi(2)-1,ldi(3)).GT.upper)) THEN
+                          ELSE IF (south.AND.labelsIn(xx,ldi(2)-1,ldi(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2)-1,ldi(3)).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2)-1,ldi(3)).GT.upper)) THEN
                              south=.FALSE.
                           ENDIF
-                          IF (.NOT.north.AND.labels_(xx,ldi(2)+1,ldi(3)).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2)+1,ldi(3)) &
-                          &   .AND.field_(xx,ldi(2)+1,ldi(3)).LE.upper) THEN
+                          IF (.NOT.north.AND.labelsIn(xx,ldi(2)+1,ldi(3)).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2)+1,ldi(3)) &
+                          &   .AND.dataIn(xx,ldi(2)+1,ldi(3)).LE.upper) THEN
                              CALL seedlsti%add(xx,ldi(2)+1,ldi(3))
                              north=.TRUE.
-                          ELSE IF (north.AND.labels_(xx,ldi(2)+1,ldi(3)).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2)+1,ldi(3)).LT.lower &
-                          &   .OR.field_(xx,ldi(2)+1,ldi(3)).GT.upper)) THEN
+                          ELSE IF (north.AND.labelsIn(xx,ldi(2)+1,ldi(3)).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2)+1,ldi(3)).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2)+1,ldi(3)).GT.upper)) THEN
                              north=.FALSE.
                           ENDIF
 
-                          IF (.NOT.bottom.AND.labels_(xx,ldi(2),ldi(3)-1).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2),ldi(3)-1) &
-                          &   .AND.field_(xx,ldi(2),ldi(3)-1).LE.upper) THEN
+                          IF (.NOT.bottom.AND.labelsIn(xx,ldi(2),ldi(3)-1).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2),ldi(3)-1) &
+                          &   .AND.dataIn(xx,ldi(2),ldi(3)-1).LE.upper) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)-1)
                              bottom=.TRUE.
-                          ELSE IF (bottom.AND.labels_(xx,ldi(2),ldi(3)-1).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2),ldi(3)-1).LT.lower &
-                          &   .OR.field_(xx,ldi(2),ldi(3)-1).GT.upper)) THEN
+                          ELSE IF (bottom.AND.labelsIn(xx,ldi(2),ldi(3)-1).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2),ldi(3)-1).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2),ldi(3)-1).GT.upper)) THEN
                              bottom=.FALSE.
                           ENDIF
-                          IF (.NOT.top.AND.labels_(xx,ldi(2),ldi(3)+1).EQ.oldlabel &
-                          &   .AND.lower.LE.field_(xx,ldi(2),ldi(3)+1) &
-                          &   .AND.field_(xx,ldi(2),ldi(3)+1).LE.upper) THEN
+                          IF (.NOT.top.AND.labelsIn(xx,ldi(2),ldi(3)+1).EQ.oldlabel &
+                          &   .AND.lower.LE.dataIn(xx,ldi(2),ldi(3)+1) &
+                          &   .AND.dataIn(xx,ldi(2),ldi(3)+1).LE.upper) THEN
                              CALL seedlst%add(xx,ldi(2),ldi(3)+1)
                              top=.TRUE.
-                          ELSE IF (top.AND.labels_(xx,ldi(2),ldi(3)+1).NE.oldlabel &
-                          &   .AND.(field_(xx,ldi(2),ldi(3)+1).LT.lower &
-                          &   .OR.field_(xx,ldi(2),ldi(3)+1).GT.upper)) THEN
+                          ELSE IF (top.AND.labelsIn(xx,ldi(2),ldi(3)+1).NE.oldlabel &
+                          &   .AND.(dataIn(xx,ldi(2),ldi(3)+1).LT.lower &
+                          &   .OR.dataIn(xx,ldi(2),ldi(3)+1).GT.upper)) THEN
                              top=.FALSE.
                           ENDIF
                        ENDDO !xx=xs,xe

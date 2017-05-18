@@ -76,11 +76,9 @@
         TYPE(ppm_rc_c_list), DIMENSION(:), ALLOCATABLE :: CompetingRegions
         TYPE(ppm_rc_c_list), DIMENSION(:), ALLOCATABLE :: m_Seeds
 
-        TYPE(ppm_rc_c_list), DIMENSION(:), ALLOCATABLE :: MCMCParticleInContainerHistory
-        TYPE(ppm_rc_c_list), DIMENSION(:), ALLOCATABLE :: MCMCFloatingParticleInContainerHistory
-        TYPE(ppm_rc_c_list), DIMENSION(:), ALLOCATABLE :: MCMCLabelImageHistory
-
-        TYPE(ppm_rc_list),   DIMENSION(:), ALLOCATABLE :: MCMCAppliedParticleOrigLabels
+        TYPE(ppm_rc_c_list)                            :: MCMCParticleInContainerHistory
+        TYPE(ppm_rc_c_list)                            :: MCMCFloatingParticleInContainerHistory
+        TYPE(ppm_rc_c_list)                            :: MCMCLabelImageHistory
 
         INTEGER,             DIMENSION(:), ALLOCATABLE :: Candidates_list
 
@@ -102,10 +100,53 @@
         PUBLIC :: MCMCParticleInContainerHistory
         PUBLIC :: MCMCFloatingParticleInContainerHistory
         PUBLIC :: MCMCLabelImageHistory
-        PUBLIC :: MCMCAppliedParticleOrigLabels
+
+        !----------------------------------------------------------------------
+        !  Define module interfaces
+        !----------------------------------------------------------------------
+
+        INTERFACE IndexHashFunctor_2d
+          MODULE PROCEDURE IndexHashFunctor32_2d
+          MODULE PROCEDURE IndexHashFunctor32__2d
+        END INTERFACE
+        INTERFACE IndexHashFunctor_3d
+          MODULE PROCEDURE IndexHashFunctor32_3d
+          MODULE PROCEDURE IndexHashFunctor32__3d
+        END INTERFACE
+
+        !!! I have two versions both for 32 and 64 bits
+        !!! as the FORTRAN compiler can not create one interface
+        !!! for different output types
+
+        INTERFACE HashIndexFunctor_2d
+          MODULE PROCEDURE HashIndexFunctor32_2d
+          MODULE PROCEDURE HashIndexFunctor32__2d
+          MODULE PROCEDURE HashIndexFunctor64_2d
+          MODULE PROCEDURE HashIndexFunctor64__2d
+        END INTERFACE
+        INTERFACE HashIndexFunctor_3d
+          MODULE PROCEDURE HashIndexFunctor32_3d
+          MODULE PROCEDURE HashIndexFunctor32__3d
+          MODULE PROCEDURE HashIndexFunctor64_3d
+          MODULE PROCEDURE HashIndexFunctor64__3d
+        END INTERFACE
 
       CONTAINS
+#define __2D  2
+#define __3D  3
 
+#define  DTYPE(a) a/**/_3d
+#define __DIME  __3D
 #include "./linkedlist/ppm_rc_linkedlistypeproc.f"
+#undef  __DIME
+#undef  DTYPE
+
+#define  DTYPE(a) a/**/_2d
+#define __DIME  __2D
+#include "./linkedlist/ppm_rc_linkedlistypeproc.f"
+#undef  __DIME
+#undef  DTYPE
+#undef  __2D
+#undef  __3D
 
       END MODULE ppm_rc_module_linkedlist

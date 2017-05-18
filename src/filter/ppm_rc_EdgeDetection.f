@@ -58,22 +58,27 @@
 
         USE ppm_module_interfaces, ONLY : ppm_t_equi_mesh_,ppm_t_field_
         USE ppm_module_field_typedef, ONLY : ppm_t_field
+        USE ppm_module_mpi
 
         USE ppm_rc_module_write, ONLY : DTYPE(ppm_rc_write_image)
         USE ppm_rc_module_rnd, ONLY : ppm_rc_GenerateImageDiscrDistr
+        USE ppm_rc_module_util, ONLY : DTYPE(ppm_rc_CopyImageAndNormalize)
         IMPLICIT NONE
 
         !-------------------------------------------------------------------------
         !  Arguments
         !-------------------------------------------------------------------------
-        CLASS(ppm_t_field_),     POINTER       :: FieldIn
+        CLASS(ppm_t_field_),             POINTER       :: FieldIn
         !!! the source filed
 
-        CLASS(ppm_t_equi_mesh_), POINTER       :: MeshIn
+        CLASS(ppm_t_equi_mesh_),         POINTER       :: MeshIn
+        !!! The FieldIn is discretized on this Mesh
 
-        INTEGER,                 INTENT(  OUT) :: info
+        INTEGER,                         INTENT(  OUT) :: info
+        !!! Status
 
-        REAL(MK), OPTIONAL,      INTENT(INOUT) :: MCMCZe_
+        REAL(ppm_kind_double), OPTIONAL, INTENT(INOUT) :: MCMCZe_
+        !!!
         !-------------------------------------------------------------------------
         !  Local variables
         !-------------------------------------------------------------------------
@@ -88,7 +93,9 @@
 #elif __DIME == __3D
         REAL(MK), CONTIGUOUS, DIMENSION(:,:,:), POINTER     :: DTYPE(wpi)
 #endif
-        REAL(MK) :: MCMCZe
+        REAL(ppm_kind_double)                               :: MCMCZe
+        REAL(MK)                                            :: FMinVal,FMaxVal
+        REAL(MK)                                            :: Normalfac
 
 #if   __DIME == __2D
         INTEGER, CONTIGUOUS, DIMENSION(:,:),   POINTER :: DTYPE(wpl)
@@ -104,6 +111,8 @@
         INTEGER                                        :: memory
 #endif
 
+        LOGICAL :: tmpNormalize
+
         CHARACTER(LEN=ppm_char) :: caller = 'ppm_rc_EdgeDetection'
         !-------------------------------------------------------------------------
         !  Initialize
@@ -112,7 +121,7 @@
 
         CALL check
 
-        MCMCZe=MERGE(MCMCZe_,zero,PRESENT(MCMCZe_))
+        MCMCZe=MERGE(MCMCZe_,zerod,PRESENT(MCMCZe_))
 
         ALLOCATE(ppm_t_field::Fieldtmp,STAT=info)
         or_fail_alloc('Failed to allocate Fieldtmp.')
@@ -120,9 +129,29 @@
         CALL Fieldtmp%create(1,info,dtype=FieldIn%data_type,name="edge_image")
         or_fail("Failed to create field!" )
 
-        !First blur the image by a Gaussian kernel with sigma=2 (!rull of thumb)
-        !then use the Sobel operator to calculate the image gradient
-        CALL DTYPE(ppm_rc_GaussianImageFilter)((/two/),FieldIn,MeshIn,info,Fieldtmp)
+        SELECT CASE (lNormalize)
+        CASE (.TRUE.)
+           Normalfac=ImageNormalfac
+
+           ! First blur the image by a Gaussian kernel with sigma=SQRT(2) (!rull of thumb)
+           ! then use the Sobel operator to calculate the image gradient
+           CALL DTYPE(ppm_rc_GaussianImageFilter)((/SQRT(two)/),FieldIn,MeshIn,info,&
+           &    Fieldtmp,UseImageSpacing=.FALSE.)
+        CASE (.FALSE.)
+           CALL Fieldtmp%discretize_on(MeshIn,info)
+           or_fail("Failed to discretize Field on Mesh!")
+
+           CALL DTYPE(ppm_rc_CopyImageAndNormalize)(FieldIn,Fieldtmp,MeshIn,info, &
+           &    Normalize=.TRUE.,FieldMinVal=FMinVal,FieldMaxVal=FMaxVal)
+           or_fail("Normalizing the FieldIn faield!")
+
+           Normalfac=FMaxVal-FMinVal
+
+           ! First blur the image by a Gaussian kernel with sigma=2 (!rull of thumb)
+           ! then use the Sobel operator to calculate the image gradient
+           CALL DTYPE(ppm_rc_GaussianImageFilter)((/SQRT(two)/),Fieldtmp,MeshIn,info,&
+           &    UseImageSpacing=.FALSE.)
+        END SELECT
         or_fail("ppm_rc_GaussianImageFilter!")
 
         IF (ppm_nproc.GT.1) THEN
@@ -312,14 +341,14 @@
 #if   __DIME == __2D
            DO j=1,Nm(2)
               DO i=1,Nm(1)
-                 MCMCZe=MCMCZe+DTYPE(wpi)(i,j)
+                 MCMCZe=MCMCZe+REAL(DTYPE(wpi)(i,j),ppm_kind_double)
               ENDDO
            ENDDO
 #elif __DIME == __3D
            DO k=1,Nm(3)
               DO j=1,Nm(2)
                  DO i=1,Nm(1)
-                    MCMCZe=MCMCZe+DTYPE(wpi)(i,j,k)
+                    MCMCZe=MCMCZe+REAL(DTYPE(wpi)(i,j,k),ppm_kind_double)
                  ENDDO
               ENDDO
            ENDDO
@@ -328,6 +357,10 @@
         ENDDO
         NULLIFY(DTYPE(wpi))
 
+#ifdef __MPI
+        CALL MPI_Allreduce(MPI_IN_PLACE,MCMCZe,1,MPI_DOUBLE_PRECISION,MPI_SUM,comm,info)
+        or_fail_MPI("MPI_Allreduce")
+#endif
 
         sbpitr => MeshIn%subpatch%begin()
         DO WHILE (ASSOCIATED(sbpitr))
@@ -336,17 +369,23 @@
            CALL sbpitr%get_field(Fieldtmp,DTYPE(wpi),info)
            or_fail("Failed to get field wpi data.")
 
-           IF (MCMCZe.LE.small*ten) THEN
+           IF (MCMCZe.LE.smalld*tend) THEN
 #if   __DIME == __2D
-              FORALL (i=1:Nm(1),j=1:Nm(2))
-                 DTYPE(wpi)(i,j)=one
-              END FORALL
-              MCMCZe=REAL(Nm(1),MK)*REAL(Nm(2),MK)
+              DO j=1,Nm(2)
+                 DO i=1,Nm(1)
+                    DTYPE(wpi)(i,j)=one
+                 ENDDO
+              ENDDO
+              MCMCZe=REAL(Nm(1),ppm_kind_double)*REAL(Nm(2),ppm_kind_double)
 #elif __DIME == __3D
-              FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
-                 DTYPE(wpi)(i,j,k)=one
-              END FORALL
-              MCMCZe=REAL(Nm(1),MK)*REAL(Nm(2),MK)*REAL(Nm(3),MK)
+              DO k=1,Nm(3)
+                 DO j=1,Nm(2)
+                    DO i=1,Nm(1)
+                       DTYPE(wpi)(i,j,k)=one
+                    ENDDO
+                 ENDDO
+              ENDDO
+              MCMCZe=REAL(Nm(1),ppm_kind_double)*REAL(Nm(2),ppm_kind_double)*REAL(Nm(3),ppm_kind_double)
 #endif
            ENDIF
            !-------------------------------------------------------------------------
@@ -365,8 +404,27 @@
         NULLIFY(DTYPE(wpi))
 
         IF (debug.GT.0) THEN
-           CALL DTYPE(ppm_rc_write_image)(Fieldtmp,MeshIn,"EdgeImage",info)
+           ! We are shifting and scaling the Fieldtmp as it has negative value.
+           CALL DTYPE(ppm_rc_CopyImageAndNormalize)(Fieldtmp,Fieldtmp,MeshIn,info, &
+           &    Normalize=.TRUE.,FieldMinVal=FMinVal,FieldMaxVal=FMaxVal)
+           or_fail("ppm_rc_CopyImageAndNormalize")
+
+
+           IF (Normalfac.LE.255._MK) THEN
+              Normalfac=255._MK
+           ELSE
+              Normalfac=65535._MK
+           ENDIF
+
+           tmpNormalize=lNormalize
+
+           lNormalize=.TRUE.
+
+           ! Fieldtmp is already shifted and normalized, so we Write a 8 BITS Edge image
+           CALL DTYPE(ppm_rc_write_image)(Fieldtmp,MeshIn,"EdgeImage",info,Scalefac=Normalfac)
            or_fail("ppm_rc_write_image")
+
+           lNormalize=tmpNormalize
         ENDIF
 
         !-------------------------------------------------------------------------

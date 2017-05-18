@@ -88,9 +88,9 @@
         !!! Do operation with or without ghost
         !!! (If FieldIn1 ghosts are uptodate, it is safe to do operation with ghosts)
         LOGICAL,  OPTIONAL,      INTENT(IN   ) :: Normalize
-        !!! Whether normalize the image or just copy the content
+        !!! Whether to normalize the image or just copy the content
 
-        REAL(MK), OPTIONAL,      INTENT(  OUT) :: FieldMinVal
+        REAL(MK), OPTIONAL,      INTENT(INOUT) :: FieldMinVal
         REAL(MK), OPTIONAL,      INTENT(  OUT) :: FieldMaxVal
         !!! Return the global min and max value
 
@@ -206,83 +206,18 @@
            !-------------------------------------------------------------------------
            coef=Scalefac_/(FieldMaxVal_-FieldMinVal_)
 
-           sbpitr => MeshIn%subpatch%begin()
-           DO WHILE (ASSOCIATED(sbpitr))
-              Nm   => sbpitr%nnodes
-              hi_a => sbpitr%hi_a
-              lo_a => sbpitr%lo_a
+           IF (FieldMinVal_.GT.zero.OR.FieldMinVal_.LT.zero) THEN
+              sbpitr => MeshIn%subpatch%begin()
+              DO WHILE (ASSOCIATED(sbpitr))
+                 Nm   => sbpitr%nnodes
+                 hi_a => sbpitr%hi_a
+                 lo_a => sbpitr%lo_a
 
-              CALL sbpitr%get_field(FieldIn1,DTYPE(wp1),info)
-              or_fail("Failed to get field wp data.")
-
-              SELECT CASE (FieldIn2%data_type)
-              CASE (ppm_type_real)
-                 CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
+                 CALL sbpitr%get_field(FieldIn1,DTYPE(wp1),info)
                  or_fail("Failed to get field wp data.")
 
-                 SELECT CASE (withGhost_)
-                 CASE (.FALSE.)
-#if   __DIME == __2D
-                    FORALL (i=1:Nm(1),j=1:Nm(2))
-                       DTYPE(wp2)(i,j)=(DTYPE(wp1)(i,j)-FieldMinVal_)*coef
-#elif __DIME == __3D
-                    FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
-                       DTYPE(wp2)(i,j,k)=(DTYPE(wp1)(i,j,k)-FieldMinVal_)*coef
-#endif
-                    END FORALL
-                 CASE (.TRUE.)
-#if   __DIME == __2D
-                    DO j=lo_a(2),hi_a(2)
-                       DO i=lo_a(1),hi_a(1)
-                          DTYPE(wp2)(i,j)=(DTYPE(wp1)(i,j)-FieldMinVal_)*coef
-                       ENDDO !i=lo_a(1),hi_a(1)
-                    ENDDO !j=lo_a(2),hi_a(2)
-#elif __DIME == __3D
-                    DO k=lo_a(3),hi_a(3)
-                       DO j=lo_a(2),hi_a(2)
-                          DO i=lo_a(1),hi_a(1)
-                             DTYPE(wp2)(i,j,k)=(DTYPE(wp1)(i,j,k)-FieldMinVal_)*coef
-                          ENDDO !i=lo_a(1),hi_a(1)
-                       ENDDO !j=lo_a(2),hi_a(2)
-                    ENDDO !k=lo_a(3),hi_a(3)
-#endif
-
-                 END SELECT
-
-              CASE (ppm_type_real_single)
-                 IF (ppm_kind.EQ.ppm_kind_double) THEN
-                    CALL sbpitr%get_field(FieldIn2,DTYPE(wp2s),info)
-                    or_fail("Failed to get field wp data.")
-
-                    SELECT CASE (withGhost_)
-                    CASE (.FALSE.)
-#if   __DIME == __2D
-                       FORALL (i=1:Nm(1),j=1:Nm(2))
-                          DTYPE(wp2s)(i,j)=REAL((DTYPE(wp1)(i,j)-FieldMinVal_)*coef,ppm_kind_single)
-#elif __DIME == __3D
-                       FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
-                          DTYPE(wp2s)(i,j,k)=REAL((DTYPE(wp1)(i,j,k)-FieldMinVal_)*coef,ppm_kind_single)
-#endif
-                       END FORALL
-                    CASE (.TRUE.)
-#if   __DIME == __2D
-                       DO j=lo_a(2),hi_a(2)
-                          DO i=lo_a(1),hi_a(1)
-                             DTYPE(wp2s)(i,j)=REAL((DTYPE(wp1)(i,j)-FieldMinVal_)*coef,ppm_kind_single)
-                          ENDDO !i=lo_a(1),hi_a(1)
-                       ENDDO !j=lo_a(2),hi_a(2)
-#elif __DIME == __3D
-                       DO k=lo_a(3),hi_a(3)
-                          DO j=lo_a(2),hi_a(2)
-                             DO i=lo_a(1),hi_a(1)
-                                DTYPE(wp2s)(i,j,k)=REAL((DTYPE(wp1)(i,j,k)-FieldMinVal_)*coef,ppm_kind_single)
-                             ENDDO !i=lo_a(1),hi_a(1)
-                          ENDDO !j=lo_a(2),hi_a(2)
-                       ENDDO !k=lo_a(3),hi_a(3)
-#endif
-                    END SELECT
-
-                 ELSE IF (ppm_kind.EQ.ppm_kind_single) THEN
+                 SELECT CASE (FieldIn2%data_type)
+                 CASE (ppm_type_real)
                     CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
                     or_fail("Failed to get field wp data.")
 
@@ -312,97 +247,91 @@
                           ENDDO !j=lo_a(2),hi_a(2)
                        ENDDO !k=lo_a(3),hi_a(3)
 #endif
+
                     END SELECT
-                 ENDIF
 
-              END SELECT
+                 CASE (ppm_type_real_single)
+                    IF (ppm_kind.EQ.ppm_kind_double) THEN
+                       CALL sbpitr%get_field(FieldIn2,DTYPE(wp2s),info)
+                       or_fail("Failed to get field wp data.")
 
-              sbpitr => MeshIn%subpatch%next()
-           ENDDO
-
-           IF (PRESENT(FieldMinVal)) FieldMinVal=FieldMinVal_
-           IF (PRESENT(FieldMaxVal)) FieldMaxVal=FieldMaxVal_
-
-        CASE (.FALSE.) !(Normalize_)
-           sbpitr => MeshIn%subpatch%begin()
-           DO WHILE (ASSOCIATED(sbpitr))
-              Nm   => sbpitr%nnodes
-              hi_a => sbpitr%hi_a
-              lo_a => sbpitr%lo_a
-
-              SELECT CASE (FieldIn2%data_type)
-              CASE (ppm_type_real)
-                 CALL sbpitr%get_field(FieldIn1,DTYPE(wp1),info)
-                 or_fail("Failed to get field i_wp data.")
-
-                 CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
-                 or_fail("Failed to get field wp data.")
-
-                 SELECT CASE (withGhost_)
-                 CASE (.FALSE.)
+                       SELECT CASE (withGhost_)
+                       CASE (.FALSE.)
 #if   __DIME == __2D
-                    FORALL (i=1:Nm(1),j=1:Nm(2))
-                       DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)
+                          FORALL (i=1:Nm(1),j=1:Nm(2))
+                             DTYPE(wp2s)(i,j)=REAL((DTYPE(wp1)(i,j)-FieldMinVal_)*coef,ppm_kind_single)
 #elif __DIME == __3D
-                    FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
-                       DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)
+                          FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                             DTYPE(wp2s)(i,j,k)=REAL((DTYPE(wp1)(i,j,k)-FieldMinVal_)*coef,ppm_kind_single)
 #endif
-                    END FORALL
-                 CASE (.TRUE.)
+                          END FORALL
+                       CASE (.TRUE.)
 #if   __DIME == __2D
-                    DO j=lo_a(2),hi_a(2)
-                       DO i=lo_a(1),hi_a(1)
-                          DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)
-                       ENDDO !i=lo_a(1),hi_a(1)
-                    ENDDO !j=lo_a(2),hi_a(2)
-#elif __DIME == __3D
-                    DO k=lo_a(3),hi_a(3)
-                       DO j=lo_a(2),hi_a(2)
-                          DO i=lo_a(1),hi_a(1)
-                             DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)
-                          ENDDO !i=lo_a(1),hi_a(1)
-                       ENDDO !j=lo_a(2),hi_a(2)
-                    ENDDO !k=lo_a(3),hi_a(3)
-#endif
-                 END SELECT
-
-              CASE (ppm_type_real_single)
-                 CALL sbpitr%get_field(FieldIn1,DTYPE(wp1),info)
-                 or_fail("Failed to get field i_wp data.")
-
-                 IF (ppm_kind.EQ.ppm_kind_double) THEN
-                    CALL sbpitr%get_field(FieldIn2,DTYPE(wp2s),info)
-                    or_fail("Failed to get field wp data.")
-
-                    SELECT CASE (withGhost_)
-                    CASE (.FALSE.)
-#if   __DIME == __2D
-                       FORALL (i=1:Nm(1),j=1:Nm(2))
-                          DTYPE(wp2s)(i,j)=REAL(DTYPE(wp1)(i,j),ppm_kind_single)
-#elif __DIME == __3D
-                       FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
-                          DTYPE(wp2s)(i,j,k)=REAL(DTYPE(wp1)(i,j,k),ppm_kind_single)
-#endif
-                       END FORALL
-                    CASE (.TRUE.)
-#if   __DIME == __2D
-                       DO j=lo_a(2),hi_a(2)
-                          DO i=lo_a(1),hi_a(1)
-                             DTYPE(wp2s)(i,j)=REAL(DTYPE(wp1)(i,j),ppm_kind_single)
-                          ENDDO !i=lo_a(1),hi_a(1)
-                       ENDDO !j=lo_a(2),hi_a(2)
-#elif __DIME == __3D
-                       DO k=lo_a(3),hi_a(3)
                           DO j=lo_a(2),hi_a(2)
                              DO i=lo_a(1),hi_a(1)
-                                DTYPE(wp2s)(i,j,k)=REAL(DTYPE(wp1)(i,j,k),ppm_kind_single)
+                                DTYPE(wp2s)(i,j)=REAL((DTYPE(wp1)(i,j)-FieldMinVal_)*coef,ppm_kind_single)
                              ENDDO !i=lo_a(1),hi_a(1)
                           ENDDO !j=lo_a(2),hi_a(2)
-                       ENDDO !k=lo_a(3),hi_a(3)
+#elif __DIME == __3D
+                          DO k=lo_a(3),hi_a(3)
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2s)(i,j,k)=REAL((DTYPE(wp1)(i,j,k)-FieldMinVal_)*coef,ppm_kind_single)
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+                          ENDDO !k=lo_a(3),hi_a(3)
 #endif
-                    END SELECT
+                       END SELECT
 
-                 ELSE IF (ppm_kind.EQ.ppm_kind_single) THEN
+                    ELSE IF (ppm_kind.EQ.ppm_kind_single) THEN
+                       CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
+                       or_fail("Failed to get field wp data.")
+
+                       SELECT CASE (withGhost_)
+                       CASE (.FALSE.)
+#if   __DIME == __2D
+                          FORALL (i=1:Nm(1),j=1:Nm(2))
+                             DTYPE(wp2)(i,j)=(DTYPE(wp1)(i,j)-FieldMinVal_)*coef
+#elif __DIME == __3D
+                          FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                             DTYPE(wp2)(i,j,k)=(DTYPE(wp1)(i,j,k)-FieldMinVal_)*coef
+#endif
+                          END FORALL
+                       CASE (.TRUE.)
+#if   __DIME == __2D
+                          DO j=lo_a(2),hi_a(2)
+                             DO i=lo_a(1),hi_a(1)
+                                DTYPE(wp2)(i,j)=(DTYPE(wp1)(i,j)-FieldMinVal_)*coef
+                             ENDDO !i=lo_a(1),hi_a(1)
+                          ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                          DO k=lo_a(3),hi_a(3)
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2)(i,j,k)=(DTYPE(wp1)(i,j,k)-FieldMinVal_)*coef
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+                          ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                       END SELECT
+                    ENDIF
+
+                 END SELECT
+
+                 sbpitr => MeshIn%subpatch%next()
+              ENDDO
+           ELSE
+              sbpitr => MeshIn%subpatch%begin()
+              DO WHILE (ASSOCIATED(sbpitr))
+                 Nm   => sbpitr%nnodes
+                 hi_a => sbpitr%hi_a
+                 lo_a => sbpitr%lo_a
+
+                 CALL sbpitr%get_field(FieldIn1,DTYPE(wp1),info)
+                 or_fail("Failed to get field wp data.")
+
+                 SELECT CASE (FieldIn2%data_type)
+                 CASE (ppm_type_real)
                     CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
                     or_fail("Failed to get field wp data.")
 
@@ -410,70 +339,717 @@
                     CASE (.FALSE.)
 #if   __DIME == __2D
                        FORALL (i=1:Nm(1),j=1:Nm(2))
-                          DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)
+                          DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)*coef
 #elif __DIME == __3D
                        FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
-                          DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)
+                          DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)*coef
 #endif
                        END FORALL
                     CASE (.TRUE.)
 #if   __DIME == __2D
                        DO j=lo_a(2),hi_a(2)
                           DO i=lo_a(1),hi_a(1)
-                             DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)
+                             DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)*coef
                           ENDDO !i=lo_a(1),hi_a(1)
                        ENDDO !j=lo_a(2),hi_a(2)
 #elif __DIME == __3D
                        DO k=lo_a(3),hi_a(3)
                           DO j=lo_a(2),hi_a(2)
                              DO i=lo_a(1),hi_a(1)
-                                DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)
+                                DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)*coef
                              ENDDO !i=lo_a(1),hi_a(1)
                           ENDDO !j=lo_a(2),hi_a(2)
                        ENDDO !k=lo_a(3),hi_a(3)
 #endif
+
                     END SELECT
-                 ENDIF
 
-              CASE (ppm_type_int)
-                 CALL sbpitr%get_field(FieldIn1,DTYPE(wpi1),info)
-                 or_fail("Failed to get field i_wp data.")
+                 CASE (ppm_type_real_single)
+                    IF (ppm_kind.EQ.ppm_kind_double) THEN
+                       CALL sbpitr%get_field(FieldIn2,DTYPE(wp2s),info)
+                       or_fail("Failed to get field wp data.")
 
-                 CALL sbpitr%get_field(FieldIn2,DTYPE(wpi2),info)
-                 or_fail("Failed to get field wp data.")
-
-                 SELECT CASE (withGhost_)
-                 CASE (.FALSE.)
+                       SELECT CASE (withGhost_)
+                       CASE (.FALSE.)
 #if   __DIME == __2D
-                    FORALL (i=1:Nm(1),j=1:Nm(2))
-                       DTYPE(wpi2)(i,j)=DTYPE(wpi1)(i,j)
+                          FORALL (i=1:Nm(1),j=1:Nm(2))
+                             DTYPE(wp2s)(i,j)=REAL(DTYPE(wp1)(i,j)*coef,ppm_kind_single)
 #elif __DIME == __3D
-                    FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
-                       DTYPE(wpi2)(i,j,k)=DTYPE(wpi1)(i,j,k)
+                          FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                             DTYPE(wp2s)(i,j,k)=REAL(DTYPE(wp1)(i,j,k)*coef,ppm_kind_single)
 #endif
-                    END FORALL
-                 CASE (.TRUE.)
+                          END FORALL
+                       CASE (.TRUE.)
 #if   __DIME == __2D
-                    DO j=lo_a(2),hi_a(2)
-                       DO i=lo_a(1),hi_a(1)
-                          DTYPE(wpi2)(i,j)=DTYPE(wpi1)(i,j)
-                       ENDDO !i=lo_a(1),hi_a(1)
-                    ENDDO !j=lo_a(2),hi_a(2)
+                          DO j=lo_a(2),hi_a(2)
+                             DO i=lo_a(1),hi_a(1)
+                                DTYPE(wp2s)(i,j)=REAL(DTYPE(wp1)(i,j)*coef,ppm_kind_single)
+                             ENDDO !i=lo_a(1),hi_a(1)
+                          ENDDO !j=lo_a(2),hi_a(2)
 #elif __DIME == __3D
-                    DO k=lo_a(3),hi_a(3)
-                       DO j=lo_a(2),hi_a(2)
-                          DO i=lo_a(1),hi_a(1)
+                          DO k=lo_a(3),hi_a(3)
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2s)(i,j,k)=REAL(DTYPE(wp1)(i,j,k)*coef,ppm_kind_single)
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+                          ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                       END SELECT
+
+                    ELSE IF (ppm_kind.EQ.ppm_kind_single) THEN
+                       CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
+                       or_fail("Failed to get field wp data.")
+
+                       SELECT CASE (withGhost_)
+                       CASE (.FALSE.)
+#if   __DIME == __2D
+                          FORALL (i=1:Nm(1),j=1:Nm(2))
+                             DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)*coef
+#elif __DIME == __3D
+                          FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                             DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)*coef
+#endif
+                          END FORALL
+                       CASE (.TRUE.)
+#if   __DIME == __2D
+                          DO j=lo_a(2),hi_a(2)
+                             DO i=lo_a(1),hi_a(1)
+                                DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)*coef
+                             ENDDO !i=lo_a(1),hi_a(1)
+                          ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                          DO k=lo_a(3),hi_a(3)
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)*coef
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+                          ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                       END SELECT
+                    ENDIF
+
+                 END SELECT
+
+                 sbpitr => MeshIn%subpatch%next()
+              ENDDO
+           ENDIF !FieldMinVal_.GT.zero.OR.FieldMinVal_.LT.zero
+
+           IF (PRESENT(FieldMinVal)) FieldMinVal=FieldMinVal_
+           IF (PRESENT(FieldMaxVal)) FieldMaxVal=FieldMaxVal_
+
+        CASE (.FALSE.) !(Normalize_)
+           FieldMinVal_=MERGE(FieldMinVal,zero,PRESENT(FieldMinVal))
+           IF (Scalefac_.GT.oneplus.OR.Scalefac_.LT.oneminus) THEN
+              IF (FieldMinVal_.GT.zero.OR.FieldMinVal_.LT.zero) THEN
+                 sbpitr => MeshIn%subpatch%begin()
+                 DO WHILE (ASSOCIATED(sbpitr))
+                    Nm   => sbpitr%nnodes
+                    hi_a => sbpitr%hi_a
+                    lo_a => sbpitr%lo_a
+
+                    SELECT CASE (FieldIn2%data_type)
+                    CASE (ppm_type_real)
+                       CALL sbpitr%get_field(FieldIn1,DTYPE(wp1),info)
+                       or_fail("Failed to get field i_wp data.")
+
+                       CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
+                       or_fail("Failed to get field wp data.")
+
+                       SELECT CASE (withGhost_)
+                       CASE (.FALSE.)
+#if   __DIME == __2D
+                          FORALL (i=1:Nm(1),j=1:Nm(2))
+                             DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)*Scalefac_+FieldMinVal_
+#elif __DIME == __3D
+                          FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                             DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)*Scalefac_+FieldMinVal_
+#endif
+                          END FORALL
+                       CASE (.TRUE.)
+#if   __DIME == __2D
+                          DO j=lo_a(2),hi_a(2)
+                             DO i=lo_a(1),hi_a(1)
+                                DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)*Scalefac_+FieldMinVal_
+                             ENDDO !i=lo_a(1),hi_a(1)
+                          ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                          DO k=lo_a(3),hi_a(3)
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)*Scalefac_+FieldMinVal_
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+                          ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                       END SELECT
+
+                    CASE (ppm_type_real_single)
+                       CALL sbpitr%get_field(FieldIn1,DTYPE(wp1),info)
+                       or_fail("Failed to get field i_wp data.")
+
+                       IF (ppm_kind.EQ.ppm_kind_double) THEN
+                          CALL sbpitr%get_field(FieldIn2,DTYPE(wp2s),info)
+                          or_fail("Failed to get field wp data.")
+
+                          SELECT CASE (withGhost_)
+                          CASE (.FALSE.)
+#if   __DIME == __2D
+                             FORALL (i=1:Nm(1),j=1:Nm(2))
+                                DTYPE(wp2s)(i,j)=REAL(DTYPE(wp1)(i,j)*Scalefac_+FieldMinVal_,ppm_kind_single)
+#elif __DIME == __3D
+                             FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                                DTYPE(wp2s)(i,j,k)=REAL(DTYPE(wp1)(i,j,k)*Scalefac_+FieldMinVal_,ppm_kind_single)
+#endif
+                             END FORALL
+                          CASE (.TRUE.)
+#if   __DIME == __2D
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2s)(i,j)=REAL(DTYPE(wp1)(i,j)*Scalefac_+FieldMinVal_,ppm_kind_single)
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                             DO k=lo_a(3),hi_a(3)
+                                DO j=lo_a(2),hi_a(2)
+                                   DO i=lo_a(1),hi_a(1)
+                                      DTYPE(wp2s)(i,j,k)=REAL(DTYPE(wp1)(i,j,k)*Scalefac_+FieldMinVal_,ppm_kind_single)
+                                   ENDDO !i=lo_a(1),hi_a(1)
+                                ENDDO !j=lo_a(2),hi_a(2)
+                             ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                          END SELECT
+
+                       ELSE IF (ppm_kind.EQ.ppm_kind_single) THEN
+                          CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
+                          or_fail("Failed to get field wp data.")
+
+                          SELECT CASE (withGhost_)
+                          CASE (.FALSE.)
+#if   __DIME == __2D
+                             FORALL (i=1:Nm(1),j=1:Nm(2))
+                                DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)*Scalefac_+FieldMinVal_
+#elif __DIME == __3D
+                             FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                                DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)*Scalefac_+FieldMinVal_
+#endif
+                             END FORALL
+                          CASE (.TRUE.)
+#if   __DIME == __2D
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)*Scalefac_+FieldMinVal_
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                             DO k=lo_a(3),hi_a(3)
+                                DO j=lo_a(2),hi_a(2)
+                                   DO i=lo_a(1),hi_a(1)
+                                      DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)*Scalefac_+FieldMinVal_
+                                   ENDDO !i=lo_a(1),hi_a(1)
+                                ENDDO !j=lo_a(2),hi_a(2)
+                             ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                          END SELECT
+                       ENDIF
+
+                    CASE (ppm_type_int)
+                       CALL sbpitr%get_field(FieldIn1,DTYPE(wpi1),info)
+                       or_fail("Failed to get field i_wp data.")
+
+                       CALL sbpitr%get_field(FieldIn2,DTYPE(wpi2),info)
+                       or_fail("Failed to get field wp data.")
+
+                       SELECT CASE (withGhost_)
+                       CASE (.FALSE.)
+#if   __DIME == __2D
+                          FORALL (i=1:Nm(1),j=1:Nm(2))
+                             DTYPE(wpi2)(i,j)=DTYPE(wpi1)(i,j)
+#elif __DIME == __3D
+                          FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
                              DTYPE(wpi2)(i,j,k)=DTYPE(wpi1)(i,j,k)
-                          ENDDO !i=lo_a(1),hi_a(1)
-                       ENDDO !j=lo_a(2),hi_a(2)
-                    ENDDO !k=lo_a(3),hi_a(3)
 #endif
-                 END SELECT !withGhost_
+                          END FORALL
+                       CASE (.TRUE.)
+#if   __DIME == __2D
+                          DO j=lo_a(2),hi_a(2)
+                             DO i=lo_a(1),hi_a(1)
+                                DTYPE(wpi2)(i,j)=DTYPE(wpi1)(i,j)
+                             ENDDO !i=lo_a(1),hi_a(1)
+                          ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                          DO k=lo_a(3),hi_a(3)
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wpi2)(i,j,k)=DTYPE(wpi1)(i,j,k)
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+                          ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                       END SELECT !withGhost_
 
-              END SELECT !FieldIn2%data_type
+                    END SELECT !FieldIn2%data_type
 
-              sbpitr => MeshIn%subpatch%next()
-           ENDDO
+                    sbpitr => MeshIn%subpatch%next()
+                 ENDDO
+              ELSE
+                 sbpitr => MeshIn%subpatch%begin()
+                 DO WHILE (ASSOCIATED(sbpitr))
+                    Nm   => sbpitr%nnodes
+                    hi_a => sbpitr%hi_a
+                    lo_a => sbpitr%lo_a
+
+                    SELECT CASE (FieldIn2%data_type)
+                    CASE (ppm_type_real)
+                       CALL sbpitr%get_field(FieldIn1,DTYPE(wp1),info)
+                       or_fail("Failed to get field i_wp data.")
+
+                       CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
+                       or_fail("Failed to get field wp data.")
+
+                       SELECT CASE (withGhost_)
+                       CASE (.FALSE.)
+#if   __DIME == __2D
+                          FORALL (i=1:Nm(1),j=1:Nm(2))
+                             DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)*Scalefac_
+#elif __DIME == __3D
+                          FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                             DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)*Scalefac_
+#endif
+                          END FORALL
+                       CASE (.TRUE.)
+#if   __DIME == __2D
+                          DO j=lo_a(2),hi_a(2)
+                             DO i=lo_a(1),hi_a(1)
+                                DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)*Scalefac_
+                             ENDDO !i=lo_a(1),hi_a(1)
+                          ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                          DO k=lo_a(3),hi_a(3)
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)*Scalefac_
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+                          ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                       END SELECT
+
+                    CASE (ppm_type_real_single)
+                       CALL sbpitr%get_field(FieldIn1,DTYPE(wp1),info)
+                       or_fail("Failed to get field i_wp data.")
+
+                       IF (ppm_kind.EQ.ppm_kind_double) THEN
+                          CALL sbpitr%get_field(FieldIn2,DTYPE(wp2s),info)
+                          or_fail("Failed to get field wp data.")
+
+                          SELECT CASE (withGhost_)
+                          CASE (.FALSE.)
+#if   __DIME == __2D
+                             FORALL (i=1:Nm(1),j=1:Nm(2))
+                                DTYPE(wp2s)(i,j)=REAL(DTYPE(wp1)(i,j)*Scalefac_,ppm_kind_single)
+#elif __DIME == __3D
+                             FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                                DTYPE(wp2s)(i,j,k)=REAL(DTYPE(wp1)(i,j,k)*Scalefac_,ppm_kind_single)
+#endif
+                             END FORALL
+                          CASE (.TRUE.)
+#if   __DIME == __2D
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2s)(i,j)=REAL(DTYPE(wp1)(i,j)*Scalefac_,ppm_kind_single)
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                             DO k=lo_a(3),hi_a(3)
+                                DO j=lo_a(2),hi_a(2)
+                                   DO i=lo_a(1),hi_a(1)
+                                      DTYPE(wp2s)(i,j,k)=REAL(DTYPE(wp1)(i,j,k)*Scalefac_,ppm_kind_single)
+                                   ENDDO !i=lo_a(1),hi_a(1)
+                                ENDDO !j=lo_a(2),hi_a(2)
+                             ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                          END SELECT
+
+                       ELSE IF (ppm_kind.EQ.ppm_kind_single) THEN
+                          CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
+                          or_fail("Failed to get field wp data.")
+
+                          SELECT CASE (withGhost_)
+                          CASE (.FALSE.)
+#if   __DIME == __2D
+                             FORALL (i=1:Nm(1),j=1:Nm(2))
+                                DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)*Scalefac_
+#elif __DIME == __3D
+                             FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                                DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)*Scalefac_
+#endif
+                             END FORALL
+                          CASE (.TRUE.)
+#if   __DIME == __2D
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)*Scalefac_
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                             DO k=lo_a(3),hi_a(3)
+                                DO j=lo_a(2),hi_a(2)
+                                   DO i=lo_a(1),hi_a(1)
+                                      DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)*Scalefac_
+                                   ENDDO !i=lo_a(1),hi_a(1)
+                                ENDDO !j=lo_a(2),hi_a(2)
+                             ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                          END SELECT
+                       ENDIF
+
+                    CASE (ppm_type_int)
+                       CALL sbpitr%get_field(FieldIn1,DTYPE(wpi1),info)
+                       or_fail("Failed to get field i_wp data.")
+
+                       CALL sbpitr%get_field(FieldIn2,DTYPE(wpi2),info)
+                       or_fail("Failed to get field wp data.")
+
+                       SELECT CASE (withGhost_)
+                       CASE (.FALSE.)
+#if   __DIME == __2D
+                          FORALL (i=1:Nm(1),j=1:Nm(2))
+                             DTYPE(wpi2)(i,j)=DTYPE(wpi1)(i,j)
+#elif __DIME == __3D
+                          FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                             DTYPE(wpi2)(i,j,k)=DTYPE(wpi1)(i,j,k)
+#endif
+                          END FORALL
+                       CASE (.TRUE.)
+#if   __DIME == __2D
+                          DO j=lo_a(2),hi_a(2)
+                             DO i=lo_a(1),hi_a(1)
+                                DTYPE(wpi2)(i,j)=DTYPE(wpi1)(i,j)
+                             ENDDO !i=lo_a(1),hi_a(1)
+                          ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                          DO k=lo_a(3),hi_a(3)
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wpi2)(i,j,k)=DTYPE(wpi1)(i,j,k)
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+                          ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                       END SELECT !withGhost_
+
+                    END SELECT !FieldIn2%data_type
+
+                    sbpitr => MeshIn%subpatch%next()
+                 ENDDO
+              ENDIF !FieldMinVal_.GT.zero.OR.FieldMinVal_.LT.zero
+           ELSE
+              IF (FieldMinVal_.GT.zero.OR.FieldMinVal_.LT.zero) THEN
+                 sbpitr => MeshIn%subpatch%begin()
+                 DO WHILE (ASSOCIATED(sbpitr))
+                    Nm   => sbpitr%nnodes
+                    hi_a => sbpitr%hi_a
+                    lo_a => sbpitr%lo_a
+
+                    SELECT CASE (FieldIn2%data_type)
+                    CASE (ppm_type_real)
+                       CALL sbpitr%get_field(FieldIn1,DTYPE(wp1),info)
+                       or_fail("Failed to get field i_wp data.")
+
+                       CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
+                       or_fail("Failed to get field wp data.")
+
+                       SELECT CASE (withGhost_)
+                       CASE (.FALSE.)
+#if   __DIME == __2D
+                          FORALL (i=1:Nm(1),j=1:Nm(2))
+                             DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)+FieldMinVal_
+#elif __DIME == __3D
+                          FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                             DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)+FieldMinVal_
+#endif
+                          END FORALL
+                       CASE (.TRUE.)
+#if   __DIME == __2D
+                          DO j=lo_a(2),hi_a(2)
+                             DO i=lo_a(1),hi_a(1)
+                                DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)+FieldMinVal_
+                             ENDDO !i=lo_a(1),hi_a(1)
+                          ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                          DO k=lo_a(3),hi_a(3)
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)+FieldMinVal_
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+                          ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                       END SELECT
+
+                    CASE (ppm_type_real_single)
+                       CALL sbpitr%get_field(FieldIn1,DTYPE(wp1),info)
+                       or_fail("Failed to get field i_wp data.")
+
+                       IF (ppm_kind.EQ.ppm_kind_double) THEN
+                          CALL sbpitr%get_field(FieldIn2,DTYPE(wp2s),info)
+                          or_fail("Failed to get field wp data.")
+
+                          SELECT CASE (withGhost_)
+                          CASE (.FALSE.)
+#if   __DIME == __2D
+                             FORALL (i=1:Nm(1),j=1:Nm(2))
+                                DTYPE(wp2s)(i,j)=REAL(DTYPE(wp1)(i,j)+FieldMinVal_,ppm_kind_single)
+#elif __DIME == __3D
+                             FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                                DTYPE(wp2s)(i,j,k)=REAL(DTYPE(wp1)(i,j,k)+FieldMinVal_,ppm_kind_single)
+#endif
+                             END FORALL
+                          CASE (.TRUE.)
+#if   __DIME == __2D
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2s)(i,j)=REAL(DTYPE(wp1)(i,j)+FieldMinVal_,ppm_kind_single)
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                             DO k=lo_a(3),hi_a(3)
+                                DO j=lo_a(2),hi_a(2)
+                                   DO i=lo_a(1),hi_a(1)
+                                      DTYPE(wp2s)(i,j,k)=REAL(DTYPE(wp1)(i,j,k)+FieldMinVal_,ppm_kind_single)
+                                   ENDDO !i=lo_a(1),hi_a(1)
+                                ENDDO !j=lo_a(2),hi_a(2)
+                             ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                          END SELECT
+
+                       ELSE IF (ppm_kind.EQ.ppm_kind_single) THEN
+                          CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
+                          or_fail("Failed to get field wp data.")
+
+                          SELECT CASE (withGhost_)
+                          CASE (.FALSE.)
+#if   __DIME == __2D
+                             FORALL (i=1:Nm(1),j=1:Nm(2))
+                                DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)+FieldMinVal_
+#elif __DIME == __3D
+                             FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                                DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)+FieldMinVal_
+#endif
+                             END FORALL
+                          CASE (.TRUE.)
+#if   __DIME == __2D
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)+FieldMinVal_
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                             DO k=lo_a(3),hi_a(3)
+                                DO j=lo_a(2),hi_a(2)
+                                   DO i=lo_a(1),hi_a(1)
+                                      DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)+FieldMinVal_
+                                   ENDDO !i=lo_a(1),hi_a(1)
+                                ENDDO !j=lo_a(2),hi_a(2)
+                             ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                          END SELECT
+                       ENDIF
+
+                    CASE (ppm_type_int)
+                       CALL sbpitr%get_field(FieldIn1,DTYPE(wpi1),info)
+                       or_fail("Failed to get field i_wp data.")
+
+                       CALL sbpitr%get_field(FieldIn2,DTYPE(wpi2),info)
+                       or_fail("Failed to get field wp data.")
+
+                       SELECT CASE (withGhost_)
+                       CASE (.FALSE.)
+#if   __DIME == __2D
+                          FORALL (i=1:Nm(1),j=1:Nm(2))
+                             DTYPE(wpi2)(i,j)=DTYPE(wpi1)(i,j)
+#elif __DIME == __3D
+                          FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                             DTYPE(wpi2)(i,j,k)=DTYPE(wpi1)(i,j,k)
+#endif
+                          END FORALL
+                       CASE (.TRUE.)
+#if   __DIME == __2D
+                          DO j=lo_a(2),hi_a(2)
+                             DO i=lo_a(1),hi_a(1)
+                                DTYPE(wpi2)(i,j)=DTYPE(wpi1)(i,j)
+                             ENDDO !i=lo_a(1),hi_a(1)
+                          ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                          DO k=lo_a(3),hi_a(3)
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wpi2)(i,j,k)=DTYPE(wpi1)(i,j,k)
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+                          ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                       END SELECT !withGhost_
+
+                    END SELECT !FieldIn2%data_type
+
+                    sbpitr => MeshIn%subpatch%next()
+                 ENDDO
+              ELSE
+                 sbpitr => MeshIn%subpatch%begin()
+                 DO WHILE (ASSOCIATED(sbpitr))
+                    Nm   => sbpitr%nnodes
+                    hi_a => sbpitr%hi_a
+                    lo_a => sbpitr%lo_a
+
+                    SELECT CASE (FieldIn2%data_type)
+                    CASE (ppm_type_real)
+                       CALL sbpitr%get_field(FieldIn1,DTYPE(wp1),info)
+                       or_fail("Failed to get field i_wp data.")
+
+                       CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
+                       or_fail("Failed to get field wp data.")
+
+                       SELECT CASE (withGhost_)
+                       CASE (.FALSE.)
+#if   __DIME == __2D
+                          FORALL (i=1:Nm(1),j=1:Nm(2))
+                             DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)
+#elif __DIME == __3D
+                          FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                             DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)
+#endif
+                          END FORALL
+                       CASE (.TRUE.)
+#if   __DIME == __2D
+                          DO j=lo_a(2),hi_a(2)
+                             DO i=lo_a(1),hi_a(1)
+                                DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)
+                             ENDDO !i=lo_a(1),hi_a(1)
+                          ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                          DO k=lo_a(3),hi_a(3)
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+                          ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                       END SELECT
+
+                    CASE (ppm_type_real_single)
+                       CALL sbpitr%get_field(FieldIn1,DTYPE(wp1),info)
+                       or_fail("Failed to get field i_wp data.")
+
+                       IF (ppm_kind.EQ.ppm_kind_double) THEN
+                          CALL sbpitr%get_field(FieldIn2,DTYPE(wp2s),info)
+                          or_fail("Failed to get field wp data.")
+
+                          SELECT CASE (withGhost_)
+                          CASE (.FALSE.)
+#if   __DIME == __2D
+                             FORALL (i=1:Nm(1),j=1:Nm(2))
+                                DTYPE(wp2s)(i,j)=REAL(DTYPE(wp1)(i,j),ppm_kind_single)
+#elif __DIME == __3D
+                             FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                                DTYPE(wp2s)(i,j,k)=REAL(DTYPE(wp1)(i,j,k),ppm_kind_single)
+#endif
+                             END FORALL
+                          CASE (.TRUE.)
+#if   __DIME == __2D
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2s)(i,j)=REAL(DTYPE(wp1)(i,j),ppm_kind_single)
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                             DO k=lo_a(3),hi_a(3)
+                                DO j=lo_a(2),hi_a(2)
+                                   DO i=lo_a(1),hi_a(1)
+                                      DTYPE(wp2s)(i,j,k)=REAL(DTYPE(wp1)(i,j,k),ppm_kind_single)
+                                   ENDDO !i=lo_a(1),hi_a(1)
+                                ENDDO !j=lo_a(2),hi_a(2)
+                             ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                          END SELECT
+
+                       ELSE IF (ppm_kind.EQ.ppm_kind_single) THEN
+                          CALL sbpitr%get_field(FieldIn2,DTYPE(wp2),info)
+                          or_fail("Failed to get field wp data.")
+
+                          SELECT CASE (withGhost_)
+                          CASE (.FALSE.)
+#if   __DIME == __2D
+                             FORALL (i=1:Nm(1),j=1:Nm(2))
+                                DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)
+#elif __DIME == __3D
+                             FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                                DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)
+#endif
+                             END FORALL
+                          CASE (.TRUE.)
+#if   __DIME == __2D
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wp2)(i,j)=DTYPE(wp1)(i,j)
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                             DO k=lo_a(3),hi_a(3)
+                                DO j=lo_a(2),hi_a(2)
+                                   DO i=lo_a(1),hi_a(1)
+                                      DTYPE(wp2)(i,j,k)=DTYPE(wp1)(i,j,k)
+                                   ENDDO !i=lo_a(1),hi_a(1)
+                                ENDDO !j=lo_a(2),hi_a(2)
+                             ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                          END SELECT
+                       ENDIF
+
+                    CASE (ppm_type_int)
+                       CALL sbpitr%get_field(FieldIn1,DTYPE(wpi1),info)
+                       or_fail("Failed to get field i_wp data.")
+
+                       CALL sbpitr%get_field(FieldIn2,DTYPE(wpi2),info)
+                       or_fail("Failed to get field wp data.")
+
+                       SELECT CASE (withGhost_)
+                       CASE (.FALSE.)
+#if   __DIME == __2D
+                          FORALL (i=1:Nm(1),j=1:Nm(2))
+                             DTYPE(wpi2)(i,j)=DTYPE(wpi1)(i,j)
+#elif __DIME == __3D
+                          FORALL (i=1:Nm(1),j=1:Nm(2),k=1:Nm(3))
+                             DTYPE(wpi2)(i,j,k)=DTYPE(wpi1)(i,j,k)
+#endif
+                          END FORALL
+                       CASE (.TRUE.)
+#if   __DIME == __2D
+                          DO j=lo_a(2),hi_a(2)
+                             DO i=lo_a(1),hi_a(1)
+                                DTYPE(wpi2)(i,j)=DTYPE(wpi1)(i,j)
+                             ENDDO !i=lo_a(1),hi_a(1)
+                          ENDDO !j=lo_a(2),hi_a(2)
+#elif __DIME == __3D
+                          DO k=lo_a(3),hi_a(3)
+                             DO j=lo_a(2),hi_a(2)
+                                DO i=lo_a(1),hi_a(1)
+                                   DTYPE(wpi2)(i,j,k)=DTYPE(wpi1)(i,j,k)
+                                ENDDO !i=lo_a(1),hi_a(1)
+                             ENDDO !j=lo_a(2),hi_a(2)
+                          ENDDO !k=lo_a(3),hi_a(3)
+#endif
+                       END SELECT !withGhost_
+
+                    END SELECT !FieldIn2%data_type
+
+                    sbpitr => MeshIn%subpatch%next()
+                 ENDDO
+              ENDIF !FieldMinVal_.GT.zero.OR.FieldMinVal_.LT.zero
+           ENDIF !Scalefac_.GT.oneplus.OR.Scalefac_.LT.oneminus
 
         END SELECT !Normalize_
 
@@ -495,9 +1071,19 @@
          IF (FieldIn1%data_type.NE.FieldIn2%data_type) THEN
             fail("FieldIn1 data type is not the same as FieldIn2 data type!",exit_point=8888)
          ENDIF
-         IF (PRESENT(FieldMinVal).OR.PRESENT(FieldMaxVal)) THEN
+         IF (PRESENT(FieldMaxVal)) THEN
             IF (rank.EQ.0) THEN
-               stdout("Warning !!! The Min and Max values are not computed !!! The returned values are wrong!!!")
+               stdout("Warning !!! The Max value is not computed !!! The returned values are wrong!!!")
+            ENDIF
+         ENDIF
+         IF (PRESENT(FieldMinVal)) THEN
+            IF (FieldIn2%data_type.EQ.ppm_type_int) THEN
+               fail("Integer Field data type can only be used for copying the data not shift and scale!",exit_point=8888)
+            ENDIF
+         ENDIF
+         IF (PRESENT(Scalefac)) THEN
+            IF (FieldIn2%data_type.EQ.ppm_type_int) THEN
+               fail("Integer Field data type can only be used for copying the data not shift and scale!",exit_point=8888)
             ENDIF
          ENDIF
       END SELECT

@@ -78,6 +78,7 @@ private:
 extern "C" {
   int MTInitialize(unsigned int *iseed)
   {
+    //seed used on construction or seeding
     NumberGeneratorBoost.seed(*iseed);
     return 0;
   }

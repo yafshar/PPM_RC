@@ -42,7 +42,7 @@ inline __attribute__((always_inline)) uint32_t getblock32 (const uint32_t * p, i
 //-----------------------------------------------------------------------------
 extern "C" {
 
-  uint32_t HashKey (const void *key, uint32_t *seed, uint32_t *tablenrow)
+  uint32_t HashFunc (const void *key, uint32_t *seed, uint32_t *tablenrow)
   {
     const uint8_t * data = (const uint8_t*)key;
 
@@ -80,7 +80,7 @@ extern "C" {
     return h1;
   }
 
-  uint32_t HashKey_XY (uint32_t *X, uint32_t *Y, uint32_t *seed, uint32_t *tablenrow, int64_t *XY)
+  uint32_t HashFunc_XY (uint32_t *X, uint32_t *Y, uint32_t *seed, uint32_t *tablenrow, int64_t *XY)
   {
     //this is fine as *X and *Y are positive numbers and less than 2^16 (<=65535)
     *XY = *Y<<16 | *X;
@@ -121,7 +121,7 @@ extern "C" {
     return h1;
   }
 
-  uint32_t HashKey_XYLabel (uint32_t *X, uint32_t *Y, uint32_t *Label, uint32_t *seed, uint32_t *tablenrow, int64_t *XYLabel)
+  uint32_t HashFunc_XYLabel (uint32_t *X, uint32_t *Y, uint32_t *Label, uint32_t *seed, uint32_t *tablenrow, int64_t *XYLabel)
   {
     // Label is less than 2^31 and this shifting is safe here
     *XYLabel  = 0;
@@ -164,12 +164,12 @@ extern "C" {
     return h1;
   }
 
-  uint32_t HashKey_XYZ (uint32_t *X, uint32_t *Y, uint32_t *Z, uint32_t *seed, uint32_t *tablenrow, int64_t *XYZ)
+  uint32_t HashFunc_XYZ (uint32_t *X, uint32_t *Y, uint32_t *Z, uint32_t *seed, uint32_t *tablenrow, int64_t *XYZ)
   {
     *XYZ  = 0;
     *XYZ |= *Z;
-    //this is fine as *X and *Y are positive numbers and less than 2^16 (<=65535)
-    *XYZ  = *XYZ << 32 | *Y << 16 | *X;
+    //this is fine as *X and *Y are positive numbers and less than 2^11 (<=2047)
+    *XYZ  = *XYZ << 22 | *Y << 11 | *X;
 
     const uint8_t * data = (const uint8_t*)XYZ;
 
@@ -207,7 +207,7 @@ extern "C" {
     return h1;
   }
 
-  uint32_t HashKey_XYZLabel (uint32_t *X, uint32_t *Y, uint32_t *Z, uint32_t *Label, uint32_t *seed, uint32_t *tablenrow, int64_t *XYZLabel)
+  uint32_t HashFunc_XYZLabel (uint32_t *X, uint32_t *Y, uint32_t *Z, uint32_t *Label, uint32_t *seed, uint32_t *tablenrow, int64_t *XYZLabel)
   {
     // Label is less than 2^31 and this shifting is safe here
     *XYZLabel  =0;
